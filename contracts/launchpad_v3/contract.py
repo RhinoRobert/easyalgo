@@ -22,7 +22,8 @@ from algopy import ARC4Contract, BoxMap, Global, GlobalState, Txn, UInt64, arc4,
 
 DECIMALS = 6
 ALGO_SWAP_INPUT = 1_000_000
-QUOTE_MAX_AGE_ROUNDS = 10
+# Price protection is the launcher's minimum PNET (and a fresh one-percent floor), so the quote may be a couple of minutes old.
+QUOTE_MAX_AGE_ROUNDS = 60
 SLIPPAGE_BPS = 100
 MAX_PRICE_IMPACT_BPS = 500
 BURN_BPS = 8_000
@@ -597,8 +598,10 @@ class PNETInstantLaunchpad(ARC4Contract):
 
     @arc4.abimethod
     def cancel_launch(self, asset_id: UInt64) -> None:
-        """Resolve an escrowed launch after the immutable cancellation delay."""
-        assert Global.group_size == UInt64(1), "Cancel must be standalone"
+        """Resolve an escrowed launch after the immutable cancellation delay.
+
+        The launcher's recovery opt-ins (ASA and PNET) may sit earlier in the same group, so cancelling is one approval.
+        """
         assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
         assert Txn.sender in self.pending, "Unknown launch"
         pending = self.pending[Txn.sender].copy()

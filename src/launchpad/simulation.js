@@ -1,17 +1,18 @@
 import algosdk from "algosdk";
 
 function requestFor(signedTransactions) {
-  const unsignedGroup = signedTransactions.every((txn) => !txn.sig && !txn.lsig && !txn.msig);
+  // Wallet transactions are still unsigned at this point; an already signed group (or one signed by a LogicSig) has none.
+  const anyUnsigned = signedTransactions.some((txn) => !txn.sig && !txn.lsig && !txn.msig);
   return new algosdk.modelsv2.SimulateRequest({
     txnGroups: [new algosdk.modelsv2.SimulateRequestTransactionGroup({
       txns: signedTransactions,
     })],
-    allowEmptySignatures: unsignedGroup,
+    allowEmptySignatures: anyUnsigned,
     allowMoreLogging: true,
     allowUnnamedResources: false,
     extraOpcodeBudget: 0,
-    // Algod rejects fixSigners unless empty signatures are allowed, so a group that is already signed must not ask for it.
-    fixSigners: unsignedGroup,
+    // Algod rejects fixSigners unless empty signatures are allowed, so a group that is fully signed must not ask for it.
+    fixSigners: anyUnsigned,
     execTraceConfig: new algosdk.modelsv2.SimulateTraceConfig({
       enable: true,
       scratchChange: false,
@@ -41,8 +42,11 @@ function validateSimulation(response) {
   };
 }
 
-export async function simulateSignerGroup(algodClient, signerTransactions) {
-  const unsigned = signerTransactions.map(({ txn }) => new algosdk.SignedTransaction({ txn }));
+/** Simulate a group of `{ txn, signers }`; `presigned` maps group index to a blob already signed (for example by a LogicSig). */
+export async function simulateSignerGroup(algodClient, signerTransactions, presigned = {}) {
+  const unsigned = signerTransactions.map(({ txn }, index) => (
+    presigned[index] ? algosdk.decodeSignedTransaction(presigned[index]) : new algosdk.SignedTransaction({ txn })
+  ));
   const response = await algodClient.simulateTransactions(requestFor(unsigned)).do();
   return validateSimulation(response);
 }

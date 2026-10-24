@@ -73,3 +73,13 @@ def test_cancel_needs_recovery_opt_ins(lp, user, proto, dev):
     dev.advance(lp.cancel_delay + 1)
     with pytest.raises(TxFailed):
         lp._run(lp.cancel_group(addr, sk, asset_id))
+
+
+def test_cancel_with_recovery_opt_ins_in_the_same_group(lp, user, proto, dev):
+    """One approval: the ASA opt-in, the PNET opt-in and the cancel call travel in one atomic group."""
+    sk, addr = user
+    asset_id = lp.start(addr, sk, total_raw=TOTAL)
+    dev.advance(lp.cancel_delay + 1)
+    assert not dev.holds(addr, asset_id)
+    lp._run(lp.cancel_group(addr, sk, asset_id, with_opt_ins=True))
+    assert dev.balance(addr, asset_id) == TOTAL // 2

@@ -32,9 +32,9 @@ test("launch quote uses full supply and conserves estimated LP", () => {
   const split = quote.estimatedLpSplit;
   assert.equal(split.burnedLp + split.creatorLp + split.platformLp, quote.estimatedReceivedLp);
   assert.equal(split.platformLp - split.creatorLp <= 1n, true);
-  assert.equal(quoteIsExpired(quote, 110, 120_999), false);
-  assert.equal(quoteIsExpired(quote, 111, 120_999), true);
-  assert.equal(quoteIsExpired(quote, 100, 121_000), true);
+  assert.equal(quoteIsExpired(quote, 140, 109_999), false);
+  assert.equal(quoteIsExpired(quote, 141, 109_999), true);
+  assert.equal(quoteIsExpired(quote, 100, 111_000), true);
 });
 
 test("quote blocks source pools above five percent impact", () => {

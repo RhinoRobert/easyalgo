@@ -1,28 +1,32 @@
 import {
-  CREATE_FUNDING,
+  ARC54_LP_HOLDING_MBR,
   EXACT_ALGO_INPUT,
+  LAUNCH_START_FUNDING,
+  LP_HOLDING_MBR,
   QUOTE_MAX_AGE_MS,
   QUOTE_MAX_ROUNDS,
+  SAFETY_RESERVE,
+  VESTIGE_FUNDING,
 } from "./config.js";
 import { integerSqrt, splitTokenSupply, splitUserLp } from "./amounts.js";
+import { FINISH_BASE_FEE, START_FEE } from "./launchpadClient.js";
 
 export const BPS = 10_000n;
 export const MAX_IMPACT_BPS = 500n;
 export const SLIPPAGE_BPS = 100n;
 
+// Everything the wallet must hold for the two approvals, apart from the 1 ALGO swap and the Tinyman pool bootstrap
+// (which the quote adds from the Tinyman helper). Deposits are prepaid so a launch never draws on the app's own balance;
+// 0.0669 ALGO of the first deposit comes straight back when the launch completes.
 export const FIXED_COSTS = {
-  assetAndDirectoryMbr: CREATE_FUNDING,
-  creatorLpOptInMbr: 100_000n,
-  launchpadLpOptInMbr: 100_000n,
-  arc54LpOptInMbr: 100_000n,
-  vestigeMbr: 100_000n,
-  createGroupFees: 3_000n,
-  swapGroupFees: 5_000n,
-  finalizeGroupFees: 14_000n,
-  vestigeGroupFees: 3_000n,
-  safetyReserve: 250_000n,
+  tokenAndRecordDeposits: LAUNCH_START_FUNDING - EXACT_ALGO_INPUT,
+  lpHoldingDeposit: LP_HOLDING_MBR,
+  arc54LpDeposit: ARC54_LP_HOLDING_MBR,
+  vestigeDeposit: VESTIGE_FUNDING,
+  startGroupFees: 1_000n + START_FEE,
+  finishGroupFees: 2_000n + FINISH_BASE_FEE + 3_000n + 2_000n + 1_000n,
+  safetyReserve: SAFETY_RESERVE,
 };
-
 function ceilDiv(value, divisor) {
   return (value + divisor - 1n) / divisor;
 }

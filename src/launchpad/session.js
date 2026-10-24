@@ -1,12 +1,6 @@
-export const SESSION_VERSION = 4;
-export const LAUNCH_STEPS = [
-  "quote",
-  "asset_create",
-  "pnet_swap",
-  "pool_bootstrap",
-  "finalize",
-  "vestige",
-];
+export const SESSION_VERSION = 5;
+// Two wallet approvals: "start" (create the token and buy PNET) and "finish" (pool, liquidity, LP split, Vestige).
+export const LAUNCH_STEPS = ["quote", "start", "finish"];
 
 const bigintReplacer = (_key, value) => typeof value === "bigint" ? `${value}n` : value;
 const bigintReviver = (_key, value) => typeof value === "string" && /^\d+n$/.test(value) ? BigInt(value.slice(0, -1)) : value;
@@ -41,7 +35,7 @@ export function createLaunchSession({ network, wallet, form, quote }) {
 }
 
 export function sessionKey(network, wallet) {
-  return `pnet-launchpad-v2:${SESSION_VERSION}:${network}:${wallet}`;
+  return `pnet-launchpad-v3:${SESSION_VERSION}:${network}:${wallet}`;
 }
 
 export function saveSession(session, storage = globalThis.localStorage) {
@@ -106,25 +100,14 @@ export function reconcileSessionFromChain(session, snapshot) {
   const pending = snapshot?.pending ?? null;
   const launch = snapshot?.launch ?? null;
   if (pending) {
+    // A pending record only exists after the start call: the token is created and the PNET is escrowed.
     current.assetId = pending.assetId;
     current.actualPnetOutput = pending.pnetOutput || null;
-    current = confirmStep(current, "asset_create", {
-      txId: pending.createTxId,
-      confirmedRound: pending.createdRound,
-    });
-    if (pending.status === 1n) {
-      current = confirmStep(current, "pnet_swap", {
-        txId: pending.swapTxId,
-        confirmedRound: pending.swapRound,
-      });
-    }
+    current = confirmStep(current, "start", { txId: pending.createTxId, confirmedRound: pending.createdRound });
   }
-  if (snapshot?.pool?.ready) {
+  if (snapshot?.pool?.exists) {
     current.poolAddress = snapshot.pool.address;
     current.lpAssetId = snapshot.pool.lpAssetId;
-    current = confirmStep(current, "pool_bootstrap", {
-      transactionIds: current.steps.pool_bootstrap.transactionIds,
-    });
   }
   if (launch) {
     current.assetId = launch.assetId;
@@ -135,17 +118,9 @@ export function reconcileSessionFromChain(session, snapshot) {
     current.creatorLp = launch.creatorLp;
     current.platformLp = launch.platformLp;
     current.terminalStatus = launch.status === 3n ? "cancelled" : "complete";
-    current = confirmStep(current, "asset_create", { txId: launch.createTxId, confirmedRound: launch.createdRound });
-    current = confirmStep(current, "pnet_swap", { txId: launch.swapTxId, confirmedRound: launch.swapRound });
+    current = confirmStep(current, "start", { txId: launch.createTxId, confirmedRound: launch.createdRound });
     if (launch.status === 2n) {
-      current = confirmStep(current, "pool_bootstrap");
-      current = confirmStep(current, "finalize", {
-        txId: launch.terminalTxId,
-        confirmedRound: launch.terminalRound,
-      });
-      if (launch.vestigeGranted === 1n) {
-        current = confirmStep(current, "vestige", { txId: launch.vestigeTxId });
-      }
+      current = confirmStep(current, "finish", { txId: launch.terminalTxId, confirmedRound: launch.terminalRound });
     }
   }
   return current;

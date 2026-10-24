@@ -1,18 +1,20 @@
-import {
-  Bootstrap,
-  poolUtils,
-  tinymanJSSDKConfig,
-} from "@tinymanorg/tinyman-js-sdk";
-import { simulateSignedGroup } from "./simulation.js";
+import algosdk from "algosdk";
 
-tinymanJSSDKConfig.setClientName("algoflow-pnet-launchpad-v2");
-
+// Tinyman v2 helpers written against the protocol itself instead of the SDK's wallet-signing flow: the launch needs the
+// bootstrap pair inside the launchpad's own atomic group, and one algosdk instance keeps every address an `Address`.
 const decoder = new TextDecoder();
+const encoder = new TextEncoder();
+
+// Pool LogicSig template from tinyman-js-sdk 5.1.4 (`pool_logicsig`): bytes 3..27 are validator app id, asset 1, asset 2.
+const POOL_LOGICSIG_TEMPLATE = Uint8Array.from(atob("BoAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgQBbNQA0ADEYEkQxGYEBEkSBAUM="), (char) => char.charCodeAt(0));
+const MIN_FEE = 1_000n;
+const ASA_ASA_BOOTSTRAP = { callFee: 7n * MIN_FEE, funding: 1_049_000n };
+const ASA_ALGO_BOOTSTRAP = { callFee: 6n * MIN_FEE, funding: 948_000n };
 
 export function asSafeAssetId(value, label = "asset ID") {
   const id = BigInt(value);
   if (id <= 0n || id > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new Error(`${label} cannot be represented safely by the Tinyman SDK`);
+    throw new Error(`${label} cannot be represented safely`);
   }
   return Number(id);
 }
@@ -60,8 +62,89 @@ export async function readTinymanSourcePool({ algodClient, sourcePool, tinymanAp
   };
 }
 
-export async function readTinymanPoolState({ algodClient, poolAddress, tinymanAppId }) {
-  const account = await algodClient.accountInformation(poolAddress).do();
+function uint64Bytes(value) {
+  return algosdk.bigIntToBytes(BigInt(value), 8);
+}
+
+function orderedPair(assetA, assetB) {
+  const a = BigInt(assetA);
+  const b = BigInt(assetB);
+  if (a === b) throw new Error("Pool assets are the same");
+  return a > b ? [a, b] : [b, a];
+}
+
+/** The deterministic pool LogicSig for (validator, asset pair); its address is the pool account. */
+export function poolLogicSig(validatorAppId, assetA, assetB) {
+  const [asset1, asset2] = orderedPair(assetA, assetB);
+  const program = new Uint8Array(POOL_LOGICSIG_TEMPLATE.length);
+  program.set(POOL_LOGICSIG_TEMPLATE);
+  program.set(uint64Bytes(validatorAppId), 3);
+  program.set(uint64Bytes(asset1), 11);
+  program.set(uint64Bytes(asset2), 19);
+  return new algosdk.LogicSigAccount(program);
+}
+
+export function poolAddress(validatorAppId, assetA, assetB) {
+  return poolLogicSig(validatorAppId, assetA, assetB).address().toString();
+}
+
+export function bootstrapParts(assetA, assetB) {
+  return orderedPair(assetA, assetB)[1] === 0n ? ASA_ALGO_BOOTSTRAP : ASA_ASA_BOOTSTRAP;
+}
+
+/** Total ALGO a wallet pays for the bootstrap pair (funding payment, call fee, payment fee). */
+export function tinymanBootstrapCost(isAlgoPair = false) {
+  const parts = isAlgoPair ? ASA_ALGO_BOOTSTRAP : ASA_ASA_BOOTSTRAP;
+  return parts.funding + parts.callFee + MIN_FEE;
+}
+
+/** The two-transaction pool bootstrap exactly as Tinyman's SDK builds it: [funding payment, pool opt-in call]. */
+export function buildBootstrapTxns({ wallet, validatorAppId, assetA, assetB, suggestedParams }) {
+  const [asset1, asset2] = orderedPair(assetA, assetB);
+  const logicSig = poolLogicSig(validatorAppId, asset1, asset2);
+  const pool = logicSig.address().toString();
+  const parts = bootstrapParts(asset1, asset2);
+  const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender: wallet,
+    receiver: pool,
+    amount: parts.funding,
+    suggestedParams: { ...suggestedParams, fee: MIN_FEE, flatFee: true },
+  });
+  const call = algosdk.makeApplicationOptInTxnFromObject({
+    sender: pool,
+    appIndex: Number(validatorAppId),
+    appArgs: [encoder.encode("bootstrap")],
+    foreignAssets: [Number(asset1), Number(asset2)],
+    rekeyTo: algosdk.getApplicationAddress(Number(validatorAppId)),
+    suggestedParams: { ...suggestedParams, fee: parts.callFee, flatFee: true },
+  });
+  return { txns: [funding, call], logicSig, poolAddress: pool };
+}
+
+/** Signed blob for a transaction the pool LogicSig authorises (no wallet involved). */
+export function signWithPoolLogicSig(txn, logicSig) {
+  return algosdk.signLogicSigTransactionObject(txn, logicSig).blob;
+}
+
+/** Pool existence and live state for an asset pair: `{ exists, address, state, lpAssetId }`. */
+export async function readPool({ algodClient, validatorAppId, assetA, assetB }) {
+  const address = poolAddress(validatorAppId, assetA, assetB);
+  let account;
+  try {
+    account = await algodClient.accountInformation(address).do();
+  } catch (error) {
+    const status = error?.status ?? error?.response?.status;
+    if (status === 404) return { exists: false, address, state: null, lpAssetId: null };
+    throw error;
+  }
+  let state = null;
+  try { state = decodeTinymanLocalState(account, validatorAppId); } catch { /* not bootstrapped */ }
+  if (!state?.pool_token_asset_id) return { exists: false, address, state: null, lpAssetId: null };
+  return { exists: true, address, state, lpAssetId: state.pool_token_asset_id };
+}
+
+export async function readTinymanPoolState({ algodClient, poolAddress: address, tinymanAppId }) {
+  const account = await algodClient.accountInformation(address).do();
   const state = decodeTinymanLocalState(account, tinymanAppId);
   return {
     asset1Id: state.asset_1_id,
@@ -70,79 +153,5 @@ export async function readTinymanPoolState({ algodClient, poolAddress, tinymanAp
     asset2Reserve: state.asset_2_reserves,
     issuedPoolTokens: state.issued_pool_tokens,
     lpAssetId: state.pool_token_asset_id,
-  };
-}
-
-export function tinymanBootstrapCost(minFee = 1_000n) {
-  return BigInt(Bootstrap.v2.getTotalCost(false, BigInt(minFee)));
-}
-
-export async function discoverTinymanV2Pool({ algodClient, network, pnetAssetId, launchedAssetId }) {
-  return poolUtils.v2.getPoolInfo({
-    client: algodClient,
-    network,
-    asset1ID: asSafeAssetId(pnetAssetId, "PNET asset ID"),
-    asset2ID: asSafeAssetId(launchedAssetId, "launched asset ID"),
-  });
-}
-
-export async function bootstrapTinymanV2Pool({
-  algodClient,
-  network,
-  walletAddress,
-  pnetAssetId,
-  launchedAssetId,
-  launchedUnitName,
-  initiatorSigner,
-  onProgress = () => {},
-}) {
-  let pool = await discoverTinymanV2Pool({ algodClient, network, pnetAssetId, launchedAssetId });
-  if (poolUtils.isPoolReady(pool)) {
-    const reserves = await poolUtils.v2.getPoolReserves(algodClient, pool);
-    if (!poolUtils.isPoolEmpty(reserves)) {
-      throw new Error("The deterministic Tinyman pool already contains liquidity");
-    }
-    onProgress({ step: "pool_bootstrap", status: "confirmed", skipped: true, pool });
-    return { pool, skipped: true, transactionIds: [] };
-  }
-  if (!poolUtils.isPoolNotCreated(pool)) {
-    throw new Error(`Tinyman pool is not bootstrappable (status: ${pool.status})`);
-  }
-
-  onProgress({ step: "pool_bootstrap", status: "signing", pool });
-  const txGroup = await Bootstrap.v2.generateTxns({
-    network,
-    client: algodClient,
-    asset_1: { id: String(launchedAssetId), unit_name: launchedUnitName },
-    asset_2: { id: String(pnetAssetId), unit_name: "PNET" },
-    initiatorAddr: walletAddress,
-  });
-  const { signedTxns, txnIDs } = await Bootstrap.v2.signTxns({
-    network,
-    txGroup,
-    initiatorSigner,
-    asset1ID: asSafeAssetId(launchedAssetId),
-    asset2ID: asSafeAssetId(pnetAssetId),
-  });
-  const simulation = await simulateSignedGroup(algodClient, signedTxns);
-  onProgress({ step: "pool_bootstrap", status: "simulated", simulation, transactionIds: txnIDs });
-  onProgress({ step: "pool_bootstrap", status: "submitting", transactionIds: txnIDs });
-  pool = await Bootstrap.v2.execute({
-    network,
-    client: algodClient,
-    pool: { asset1ID: pool.asset1ID, asset2ID: pool.asset2ID },
-    txGroup,
-    signedTxns,
-  });
-  onProgress({ step: "pool_bootstrap", status: "confirmed", pool, transactionIds: txnIDs });
-  return { pool, skipped: false, transactionIds: txnIDs, simulation };
-}
-
-export function poolSnapshot(pool) {
-  if (!pool || !poolUtils.isPoolReady(pool) || !pool.poolTokenID) return { ready: false };
-  return {
-    ready: true,
-    address: pool.account.address().toString(),
-    lpAssetId: BigInt(pool.poolTokenID),
   };
 }

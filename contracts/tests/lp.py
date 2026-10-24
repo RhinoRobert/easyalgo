@@ -281,8 +281,14 @@ class Launchpad:
         )
         return atc
 
-    def cancel_group(self, user: str, user_sk: str, asset_id: int, fee: int = 8 * MIN_FEE) -> AtomicTransactionComposer:
+    def cancel_group(self, user: str, user_sk: str, asset_id: int, fee: int = 8 * MIN_FEE,
+                     with_opt_ins: bool = False) -> AtomicTransactionComposer:
         atc = AtomicTransactionComposer()
+        if with_opt_ins:
+            signer = AccountTransactionSigner(user_sk)
+            for asset in (asset_id, self.proto.pnet):
+                if not self.dev.holds(user, asset):
+                    atc.add_transaction(TransactionWithSigner(tx.AssetTransferTxn(user, self.dev.params(), user, 0, asset), signer))
         self._composer_call(
             atc, M_CANCEL, user, user_sk, [asset_id], fee,
             [pending_box(user), launch_box(asset_id), index_box(self.total_records()), allocation_box(asset_id)],

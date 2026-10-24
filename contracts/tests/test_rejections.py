@@ -34,7 +34,7 @@ def test_start_wrong_funding_rejected(lp, user):
 def test_start_stale_future_and_over_limit_quotes(lp, user, dev):
     sk, addr = user
     with pytest.raises(TxFailed):
-        lp.start(addr, sk, total_raw=TOTAL, quote_round=dev.round() - 11)
+        lp.start(addr, sk, total_raw=TOTAL, quote_round=dev.round() - 61)
     with pytest.raises(TxFailed):
         lp.start(addr, sk, total_raw=TOTAL, quote_round=dev.round() + 50)
     with pytest.raises(TxFailed):  # asks for more PNET than the pool can give

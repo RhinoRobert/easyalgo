@@ -7,12 +7,19 @@ const env = import.meta.env ?? {};
 
 export const PLATFORM_WALLET = "CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E";
 export const LEGACY_MAINNET_APP_ID = 3_609_729_732;
-export const CREATE_FUNDING = 289_500n;
 export const EXACT_ALGO_INPUT = 1_000_000n;
-export const INITIALIZE_FUNDING = 1_200_000n;
-export const CANCEL_DELAY_ROUNDS = 20_000;
-export const QUOTE_MAX_ROUNDS = 10;
-export const QUOTE_MAX_AGE_MS = 120_000;
+// Mirrors contracts/launchpad_v3/contract.py (a test reads both and compares them).
+export const INITIALIZE_FUNDING = 500_000n;
+export const PENDING_BOX_MBR = 66_900n;
+export const LAUNCH_START_FUNDING = 1_359_600n;
+export const LP_HOLDING_MBR = 100_000n;
+export const ARC54_LP_HOLDING_MBR = 100_000n;
+export const VESTIGE_FUNDING = 100_000n;
+export const CANCEL_DELAY_ROUNDS = 3_000;
+export const SAFETY_RESERVE = 250_000n;
+// The contract accepts a quote up to 60 rounds old; the app refreshes its own quote well inside that.
+export const QUOTE_MAX_ROUNDS = 40;
+export const QUOTE_MAX_AGE_MS = 110_000;
 export const MAINNET_ENABLE_PHRASE = "I_ACCEPT_CONTROLLED_MAINNET_CANARY";
 
 const envBigInt = (name, fallback = 0n) => {

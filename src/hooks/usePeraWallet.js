@@ -81,13 +81,20 @@ async function signAndSend(algodClient, txns) {
   return txId;
 }
 
-async function signAndSubmit(algodClient, signerTxns, maxRounds = 12) {
+// `presigned` maps a group index to a blob signed without the wallet (the Tinyman pool's own LogicSig transaction). Those
+// entries carry `signers: []`, so Pera is asked only for the wallet's transactions and the blobs are merged back in order.
+async function signAndSubmit(algodClient, signerTxns, maxRounds = 12, presigned = {}) {
   const { account } = state;
   if (!account) throw new Error("Wallet not connected");
-  const signed = await peraWallet.signTransaction([signerTxns], account);
-  if (!signed?.length) throw new Error("Wallet returned no signed transactions");
+  const walletSigned = await peraWallet.signTransaction([signerTxns], account);
+  const walletCount = signerTxns.length - Object.keys(presigned).length;
+  if (!walletSigned?.length || walletSigned.length !== walletCount) {
+    throw new Error("Wallet returned an unexpected number of signed transactions");
+  }
+  let next = 0;
+  const signed = signerTxns.map((_, index) => presigned[index] ?? walletSigned[next++]);
   const response = await algodClient.sendRawTransaction(signed).do();
-  const txId = response.txId ?? response.txid ?? signerTxns[0].txn.txID().toString();
+  const txId = response.txId ?? response.txid ?? signerTxns.at(-1).txn.txID().toString();
   const confirmation = await waitForConfirmation(algodClient, txId, maxRounds);
   return { txId, confirmation, signed };
 }

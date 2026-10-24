@@ -1,16 +1,42 @@
 import algosdk from "algosdk";
-import { CREATE_FUNDING, PLATFORM_WALLET } from "./config.js";
+import {
+  ARC54_LP_HOLDING_MBR,
+  LAUNCH_START_FUNDING,
+  LP_HOLDING_MBR,
+  PLATFORM_WALLET,
+  VESTIGE_FUNDING,
+} from "./config.js";
+import { buildBootstrapTxns, signWithPoolLogicSig } from "./tinymanAdapter.js";
 
 const encoder = new TextEncoder();
 const ZERO_ADDRESS = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
 const PENDING_TYPE = algosdk.ABIType.from("(uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[])");
+// launcher, asset, total, status, created, swap, terminal, pool, lp, seed, burned, creatorLp, creatorLpClaimed, platformLp,
+// five cancellation amounts, vestigeGranted, vestigeFunding, five 32-byte transaction ids (must match contract.py's LaunchRecord).
 const LAUNCH_TYPE = algosdk.ABIType.from(
-  "(address,uint64,uint64,uint64,uint64,uint64,uint64,address,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[],byte[],byte[],byte[])",
+  `(address,${Array(6).fill("uint64").join(",")},address,${Array(6).fill("uint64").join(",")},${Array(7).fill("uint64").join(",")},${Array(5).fill("byte[]").join(",")})`,
 );
 const ALLOCATION_TYPE = algosdk.ABIType.from("(uint64,uint64,uint64,uint64)");
 const UINT64_TYPE = algosdk.ABIType.from("uint64");
 const STRING_TYPE = algosdk.ABIType.from("string");
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+const SIG_START = "launch_start(pay,string,string,uint64,string,uint64,uint64)uint64";
+const SIG_FINISH = "launch_finish(pay,uint64,address,uint64)void";
+const SIG_BUDGET = "budget()void";
+const SIG_CLAIM = "claim_creator_lp(axfer,uint64)void";
+const SIG_CANCEL = "cancel_launch(uint64)void";
+const SIG_VESTIGE = "grant_vestige_access(pay,uint64)void";
+
+// Minimum fees measured against the real Tinyman, ARC-54 and Vestige programs (contracts/tests), plus one spare transaction fee.
+export const START_FEE = 6_000n;
+export const FINISH_BASE_FEE = 8_000n;
+const FINISH_ARC54_FEE = 3_000n;
+const FINISH_VESTIGE_FEE = 2_000n;
+const SPARE_FEE = 1_000n;
+const CANCEL_FEE = 7_000n;
+const CLAIM_FEE = 3_000n;
+const VESTIGE_RETRY_FEE = 5_000n;
 
 function selector(signature) {
   return algosdk.ABIMethod.fromSignature(signature).getSelector();
@@ -43,8 +69,9 @@ export function indexBoxName(index) {
   return box("i", encodeUint64(index));
 }
 
-export function allocationBoxName(holdingAssetId) {
-  return box("a", encodeUint64(holdingAssetId));
+/** One platform allocation per launch, keyed by the launch asset id (the LP asset id may not exist when the group is built). */
+export function allocationBoxName(launchAssetId) {
+  return box("a", encodeUint64(launchAssetId));
 }
 
 export function vestigeManagerBoxName(assetId) {
@@ -76,63 +103,8 @@ function signerGroup(txns, wallet) {
   return txns.map((txn) => ({ txn, signers: [wallet] }));
 }
 
-export async function buildCreateAssetGroup({ algodClient, appId, wallet, form }) {
-  const params = await algodClient.getTransactionParams().do();
-  const appAddress = algosdk.getApplicationAddress(Number(appId));
-  const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: wallet,
-    receiver: appAddress,
-    amount: CREATE_FUNDING,
-    suggestedParams: pinnedParams(params, 1_000),
-    note: encoder.encode("PNET Launchpad v2 launch storage"),
-  });
-  const call = algosdk.makeApplicationCallTxnFromObject({
-    sender: wallet,
-    appIndex: Number(appId),
-    onComplete: algosdk.OnApplicationComplete.NoOpOC,
-    appArgs: [
-      selector("create_asset(pay,string,string,uint64,string)uint64"),
-      STRING_TYPE.encode(form.name),
-      STRING_TYPE.encode(form.unitName),
-      encodeUint64(form.totalRaw),
-      STRING_TYPE.encode(form.url || ""),
-    ],
-    boxes: boxesFor(pendingBoxName(wallet)),
-    suggestedParams: pinnedParams(params, 2_000),
-    note: encoder.encode("PNET Launchpad v2 create immutable ASA"),
-  });
-  return signerGroup(algosdk.assignGroupID([funding, call]), wallet);
-}
-
-export async function buildSwapPnetGroup({ algodClient, config, wallet, assetId, quote }) {
-  const params = await algodClient.getTransactionParams().do();
-  const appAddress = algosdk.getApplicationAddress(Number(config.launchpadAppId));
-  const payment = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: wallet,
-    receiver: appAddress,
-    amount: 1_000_000n,
-    suggestedParams: pinnedParams(params, 1_000),
-    note: encoder.encode("PNET Launchpad v2 exact one-ALGO swap"),
-  });
-  const call = algosdk.makeApplicationCallTxnFromObject({
-    sender: wallet,
-    appIndex: Number(config.launchpadAppId),
-    onComplete: algosdk.OnApplicationComplete.NoOpOC,
-    appArgs: [
-      selector("swap_pnet(pay,uint64,uint64,uint64)uint64"),
-      encodeUint64(assetId),
-      encodeUint64(quote.createdRound),
-      encodeUint64(quote.minimumPnet),
-    ],
-    accounts: [config.sourcePool],
-    foreignApps: [Number(config.tinymanAppId)],
-    // Asset 0 (ALGO) must be listed so the contract can pass it in the inner Tinyman call's Assets.
-    foreignAssets: [Number(config.pnetAssetId), 0],
-    boxes: boxesFor(pendingBoxName(wallet)),
-    suggestedParams: pinnedParams(params, 4_000),
-    note: encoder.encode("PNET Launchpad v2 Tinyman source swap"),
-  });
-  return signerGroup(algosdk.assignGroupID([payment, call]), wallet);
+function appAddressOf(appId) {
+  return algosdk.getApplicationAddress(Number(appId)).toString();
 }
 
 export async function readGlobalState(algodClient, appId) {
@@ -153,140 +125,6 @@ export async function readGlobalState(algodClient, appId) {
   return result;
 }
 
-export async function buildFinalizeGroup({
-  algodClient,
-  config,
-  wallet,
-  assetId,
-  poolAddress,
-  lpAssetId,
-}) {
-  const params = await algodClient.getTransactionParams().do();
-  const globals = await readGlobalState(algodClient, config.launchpadAppId);
-  const totalRecords = globals.total ?? 0n;
-  const appAddress = algosdk.getApplicationAddress(Number(config.launchpadAppId));
-  const arc54AlreadyOpted = await accountHasAsset(algodClient, config.arc54Address, lpAssetId);
-  const creatorOptIn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
-    sender: wallet,
-    receiver: wallet,
-    assetIndex: Number(lpAssetId),
-    amount: 0n,
-    suggestedParams: pinnedParams(params, 1_000),
-  });
-  const launchFunding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: wallet,
-    receiver: appAddress,
-    amount: arc54AlreadyOpted ? 100_000n : 200_000n,
-    suggestedParams: pinnedParams(params, 1_000),
-    note: encoder.encode(
-      arc54AlreadyOpted
-        ? "PNET Launchpad v2 app LP opt-in MBR"
-        : "PNET Launchpad v2 app and ARC-54 LP opt-in MBR",
-    ),
-  });
-  const resources = algosdk.makeApplicationCallTxnFromObject({
-    sender: wallet,
-    appIndex: Number(config.launchpadAppId),
-    onComplete: algosdk.OnApplicationComplete.NoOpOC,
-    appArgs: [
-      selector("provide_finalize_resources(uint64,uint64)void"),
-      encodeUint64(assetId),
-      encodeUint64(lpAssetId),
-    ],
-    foreignApps: [Number(config.arc54AppId)],
-    foreignAssets: [Number(lpAssetId)],
-    boxes: boxesFor(
-      indexBoxName(totalRecords),
-      allocationBoxName(lpAssetId),
-    ),
-    suggestedParams: pinnedParams(params, 1_000),
-    note: encoder.encode("PNET Launchpad v2 finalization resources"),
-  });
-  const finalize = algosdk.makeApplicationCallTxnFromObject({
-    sender: wallet,
-    appIndex: Number(config.launchpadAppId),
-    onComplete: algosdk.OnApplicationComplete.NoOpOC,
-    appArgs: [
-      selector("finalize_launch(axfer,pay,uint64,address,uint64)void"),
-      encodeUint64(assetId),
-      algosdk.decodeAddress(poolAddress).publicKey,
-      encodeUint64(lpAssetId),
-    ],
-    accounts: [poolAddress, config.arc54Address],
-    foreignApps: [Number(config.tinymanAppId)],
-    foreignAssets: [Number(assetId), Number(config.pnetAssetId), Number(lpAssetId)],
-    boxes: boxesFor(
-      pendingBoxName(wallet),
-      launchBoxName(assetId),
-    ),
-    suggestedParams: pinnedParams(params, arc54AlreadyOpted ? 8_000 : 11_000),
-    note: encoder.encode("PNET Launchpad v2 atomic liquidity and LP split"),
-  });
-  return signerGroup(
-    algosdk.assignGroupID([creatorOptIn, launchFunding, resources, finalize]),
-    wallet,
-  );
-}
-
-export async function buildVestigeGroup({ algodClient, config, wallet, assetId }) {
-  const params = await algodClient.getTransactionParams().do();
-  const vestigeAddress = algosdk.getApplicationAddress(Number(config.vestigeAppId));
-  const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-    sender: wallet,
-    receiver: vestigeAddress,
-    amount: 100_000n,
-    suggestedParams: pinnedParams(params, 1_000),
-    note: encoder.encode("PNET Launchpad v2 Vestige manager MBR"),
-  });
-  const call = algosdk.makeApplicationCallTxnFromObject({
-    sender: wallet,
-    appIndex: Number(config.launchpadAppId),
-    onComplete: algosdk.OnApplicationComplete.NoOpOC,
-    appArgs: [
-      selector("grant_vestige_access(pay,uint64)void"),
-      encodeUint64(assetId),
-    ],
-    foreignApps: [Number(config.vestigeAppId)],
-    foreignAssets: [Number(assetId)],
-    boxes: [
-      { appIndex: 0, name: launchBoxName(assetId) },
-      // algosdk accepts the external app ID and encodes its foreign-app index.
-      { appIndex: Number(config.vestigeAppId), name: vestigeManagerBoxName(assetId) },
-    ],
-    suggestedParams: pinnedParams(params, 2_000),
-    note: encoder.encode("PNET Launchpad v2 Vestige access"),
-  });
-  return signerGroup(algosdk.assignGroupID([funding, call]), wallet);
-}
-
-export async function buildCancelGroup({ algodClient, config, wallet, assetId, status }) {
-  const params = await algodClient.getTransactionParams().do();
-  const globals = await readGlobalState(algodClient, config.launchpadAppId);
-  const createdOnly = BigInt(status) === 0n;
-  const call = algosdk.makeApplicationCallTxnFromObject({
-    sender: wallet,
-    appIndex: Number(config.launchpadAppId),
-    onComplete: algosdk.OnApplicationComplete.NoOpOC,
-    appArgs: [
-      selector(createdOnly ? "cancel_created(uint64)void" : "cancel_launch(uint64)void"),
-      encodeUint64(assetId),
-    ],
-    accounts: createdOnly ? [] : [PLATFORM_WALLET],
-    foreignAssets: createdOnly ? [Number(assetId)] : [Number(assetId), Number(config.pnetAssetId)],
-    boxes: boxesFor(
-      pendingBoxName(wallet),
-      launchBoxName(assetId),
-      indexBoxName(globals.total ?? 0n),
-      ...(createdOnly ? [] : [allocationBoxName(assetId)]),
-    ),
-    suggestedParams: pinnedParams(params, createdOnly ? 3_000 : 4_000),
-    note: encoder.encode(createdOnly
-      ? "PNET Launchpad v2 un-swapped ASA recovery"
-      : "PNET Launchpad v2 timed cancellation"),
-  });
-  return signerGroup([call], wallet);
-}
-
 export async function accountHasAsset(algodClient, address, assetId) {
   try {
     await algodClient.accountAssetInformation(address, Number(assetId)).do();
@@ -298,33 +136,221 @@ export async function accountHasAsset(algodClient, address, assetId) {
   }
 }
 
-export async function buildRecoveryOptIns({ algodClient, config, wallet, assetId, status }) {
+// -- approval 1: create the token and buy PNET ---------------------------------------------------------------------------------
+
+export async function buildLaunchStartGroup({ algodClient, config, wallet, form, quote }) {
   const params = await algodClient.getTransactionParams().do();
-  const needed = [];
-  const assets = BigInt(status) === 0n
-    ? [BigInt(assetId)]
-    : [BigInt(assetId), BigInt(config.pnetAssetId)];
-  for (const id of assets) {
+  const appId = Number(config.launchpadAppId);
+  const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender: wallet,
+    receiver: appAddressOf(appId),
+    amount: LAUNCH_START_FUNDING,
+    suggestedParams: pinnedParams(params, 1_000),
+    note: encoder.encode("PNET Launchpad v3 launch funding"),
+  });
+  const call = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: appId,
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [
+      selector(SIG_START),
+      STRING_TYPE.encode(form.name),
+      STRING_TYPE.encode(form.unitName),
+      encodeUint64(form.totalRaw),
+      STRING_TYPE.encode(form.url || ""),
+      encodeUint64(quote.createdRound),
+      encodeUint64(quote.minimumPnet),
+    ],
+    accounts: [config.sourcePool],
+    foreignApps: [Number(config.tinymanAppId)],
+    // Asset 0 (ALGO) must be listed so the contract can pass it in the inner Tinyman call's Assets.
+    foreignAssets: [Number(config.pnetAssetId), 0],
+    boxes: boxesFor(pendingBoxName(wallet)),
+    suggestedParams: pinnedParams(params, START_FEE),
+    note: encoder.encode("PNET Launchpad v3 create token and buy PNET"),
+  });
+  return signerGroup(algosdk.assignGroupID([funding, call]), wallet);
+}
+
+// -- approval 2: pool + liquidity (+ Vestige) ------------------------------------------------------------------------------------
+
+export function finishFee({ arc54Needed, grantVestige }) {
+  return FINISH_BASE_FEE + (arc54Needed ? FINISH_ARC54_FEE : 0n) + (grantVestige ? FINISH_VESTIGE_FEE : 0n) + SPARE_FEE;
+}
+
+export function finishFunding({ arc54Needed, grantVestige }) {
+  return LP_HOLDING_MBR + (arc54Needed ? ARC54_LP_HOLDING_MBR : 0n) + (grantVestige ? VESTIGE_FUNDING : 0n);
+}
+
+/**
+ * The finish group: [bootstrap payment, pool bootstrap (LogicSig), resource carrier, funding payment, launch_finish].
+ * The bootstrap pair is left out when the pool already exists. Returns `{ entries, presigned }`: wallet transactions have
+ * `signers: [wallet]`; the pool's own transaction is signed here (`presigned[index]`) and carries `signers: []`.
+ */
+export async function buildLaunchFinishGroup({ algodClient, config, wallet, assetId, pool, grantVestige = true }) {
+  const params = await algodClient.getTransactionParams().do();
+  const appId = Number(config.launchpadAppId);
+  const globals = await readGlobalState(algodClient, appId);
+  const lpKnown = pool.exists ? pool.lpAssetId : null;
+  const arc54Needed = !(lpKnown && await accountHasAsset(algodClient, config.arc54Address, lpKnown));
+  const txns = [];
+  let bootstrap = null;
+  if (!pool.exists) {
+    bootstrap = buildBootstrapTxns({
+      wallet, validatorAppId: config.tinymanAppId, assetA: assetId, assetB: config.pnetAssetId, suggestedParams: params,
+    });
+    txns.push(bootstrap.txns[0], bootstrap.txns[1]);
+  }
+  const poolAddress = pool.exists ? pool.address : bootstrap.poolAddress;
+  // One application call carries at most eight references and the group shares them: the budget call holds the accounts,
+  // apps, assets and the Vestige box, the finish call its own four boxes.
+  const carrier = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: appId,
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [selector(SIG_BUDGET)],
+    accounts: [poolAddress],
+    foreignApps: [Number(config.tinymanAppId), Number(config.arc54AppId), Number(config.vestigeAppId)],
+    foreignAssets: [Number(assetId), Number(config.pnetAssetId), ...(lpKnown ? [Number(lpKnown)] : [])],
+    boxes: [{ appIndex: Number(config.vestigeAppId), name: vestigeManagerBoxName(assetId) }],
+    suggestedParams: pinnedParams(params, 1_000),
+    note: encoder.encode("PNET Launchpad v3 shared resources"),
+  });
+  const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender: wallet,
+    receiver: appAddressOf(appId),
+    amount: finishFunding({ arc54Needed, grantVestige }),
+    suggestedParams: pinnedParams(params, 1_000),
+    note: encoder.encode("PNET Launchpad v3 pool funding"),
+  });
+  const finish = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: appId,
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [
+      selector(SIG_FINISH),
+      encodeUint64(assetId),
+      algosdk.decodeAddress(poolAddress).publicKey,
+      encodeUint64(grantVestige ? 1 : 0),
+    ],
+    boxes: boxesFor(
+      pendingBoxName(wallet),
+      launchBoxName(assetId),
+      indexBoxName(globals.total ?? 0n),
+      allocationBoxName(assetId),
+    ),
+    suggestedParams: pinnedParams(params, finishFee({ arc54Needed, grantVestige })),
+    note: encoder.encode("PNET Launchpad v3 seed liquidity and split LP"),
+  });
+  txns.push(carrier, funding, finish);
+  const grouped = algosdk.assignGroupID(txns);
+  const presigned = {};
+  const entries = grouped.map((txn, index) => {
+    if (bootstrap && index === 1) {
+      presigned[index] = signWithPoolLogicSig(txn, bootstrap.logicSig);
+      return { txn, signers: [] };
+    }
+    return { txn, signers: [wallet] };
+  });
+  return { entries, presigned, poolAddress, arc54Needed };
+}
+
+// -- later actions ------------------------------------------------------------------------------------------------------------
+
+export async function buildClaimLpGroup({ algodClient, config, wallet, assetId, lpAssetId }) {
+  const params = await algodClient.getTransactionParams().do();
+  const optIn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+    sender: wallet,
+    receiver: wallet,
+    assetIndex: Number(lpAssetId),
+    amount: 0n,
+    suggestedParams: pinnedParams(params, 1_000),
+  });
+  const call = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: Number(config.launchpadAppId),
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [selector(SIG_CLAIM), encodeUint64(assetId)],
+    foreignAssets: [Number(lpAssetId)],
+    boxes: boxesFor(launchBoxName(assetId)),
+    suggestedParams: pinnedParams(params, CLAIM_FEE),
+    note: encoder.encode("PNET Launchpad v3 claim creator LP"),
+  });
+  return signerGroup(algosdk.assignGroupID([optIn, call]), wallet);
+}
+
+/** Cancel an escrowed launch after the delay; the recovery opt-ins ride in the same group (one approval). */
+export async function buildCancelGroup({ algodClient, config, wallet, assetId }) {
+  const params = await algodClient.getTransactionParams().do();
+  const globals = await readGlobalState(algodClient, config.launchpadAppId);
+  const txns = [];
+  for (const id of [BigInt(assetId), BigInt(config.pnetAssetId)]) {
     if (await accountHasAsset(algodClient, wallet, id)) continue;
-    needed.push(algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+    txns.push(algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
       sender: wallet,
       receiver: wallet,
       assetIndex: Number(id),
       amount: 0n,
       suggestedParams: pinnedParams(params, 1_000),
-      note: encoder.encode("PNET Launchpad v2 cancellation recovery opt-in"),
+      note: encoder.encode("PNET Launchpad v3 cancellation recovery opt-in"),
     }));
   }
-  return needed.length ? signerGroup(algosdk.assignGroupID(needed), wallet) : [];
+  txns.push(algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: Number(config.launchpadAppId),
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [selector(SIG_CANCEL), encodeUint64(assetId)],
+    accounts: [config.platformWallet ?? PLATFORM_WALLET],
+    foreignAssets: [Number(assetId), Number(config.pnetAssetId)],
+    boxes: boxesFor(
+      pendingBoxName(wallet),
+      launchBoxName(assetId),
+      indexBoxName(globals.total ?? 0n),
+      allocationBoxName(assetId),
+    ),
+    suggestedParams: pinnedParams(params, CANCEL_FEE),
+    note: encoder.encode("PNET Launchpad v3 timed cancellation"),
+  }));
+  return signerGroup(algosdk.assignGroupID(txns), wallet);
+}
+
+/** Retry path when the finish group ran without the Vestige grant. */
+export async function buildVestigeGroup({ algodClient, config, wallet, assetId }) {
+  const params = await algodClient.getTransactionParams().do();
+  const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    sender: wallet,
+    receiver: appAddressOf(config.vestigeAppId),
+    amount: VESTIGE_FUNDING,
+    suggestedParams: pinnedParams(params, 1_000),
+    note: encoder.encode("PNET Launchpad v3 Vestige manager MBR"),
+  });
+  const call = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: Number(config.launchpadAppId),
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [selector(SIG_VESTIGE), encodeUint64(assetId)],
+    foreignApps: [Number(config.vestigeAppId)],
+    foreignAssets: [Number(assetId)],
+    boxes: [
+      { appIndex: 0, name: launchBoxName(assetId) },
+      // algosdk accepts the external app ID and encodes its foreign-app index.
+      { appIndex: Number(config.vestigeAppId), name: vestigeManagerBoxName(assetId) },
+    ],
+    suggestedParams: pinnedParams(params, VESTIGE_RETRY_FEE),
+    note: encoder.encode("PNET Launchpad v3 Vestige access"),
+  });
+  return signerGroup(algosdk.assignGroupID([funding, call]), wallet);
 }
 
 export function assetIdFromCreateConfirmation(confirmation) {
   const inner = confirmation.innerTxns ?? confirmation["inner-txns"] ?? [];
   const created = inner.find((txn) => (txn.assetIndex ?? txn["asset-index"]) != null);
   const assetId = created?.assetIndex ?? created?.["asset-index"];
-  if (!assetId) throw new Error("Confirmed create transaction did not contain an ASA creation");
+  if (!assetId) throw new Error("Confirmed start transaction did not contain an ASA creation");
   return BigInt(assetId);
 }
+
+// -- chain reads --------------------------------------------------------------------------------------------------------------
 
 async function readBox(algodClient, appId, name, abiType) {
   try {
@@ -424,19 +450,20 @@ export function decodeLaunch(values) {
     pnetSeed: BigInt(values[9]),
     burnedLp: BigInt(values[10]),
     creatorLp: BigInt(values[11]),
-    platformLp: BigInt(values[12]),
-    cancelCreatorToken: BigInt(values[13]),
-    cancelPlatformToken: BigInt(values[14]),
-    cancelCreatorPnet: BigInt(values[15]),
-    cancelPlatformPnet: BigInt(values[16]),
-    cancelPlatformPnetRemaining: BigInt(values[17]),
-    vestigeGranted: BigInt(values[18]),
-    vestigeFunding: BigInt(values[19]),
-    createTxId: txIdFromBytes(values[20]),
-    swapTxId: txIdFromBytes(values[21]),
-    terminalTxId: txIdFromBytes(values[22]),
-    vestigeTxId: txIdFromBytes(values[23]),
-    releaseTxId: txIdFromBytes(values[24]),
+    creatorLpClaimed: BigInt(values[12]),
+    platformLp: BigInt(values[13]),
+    cancelCreatorToken: BigInt(values[14]),
+    cancelPlatformToken: BigInt(values[15]),
+    cancelCreatorPnet: BigInt(values[16]),
+    cancelPlatformPnet: BigInt(values[17]),
+    cancelPlatformPnetRemaining: BigInt(values[18]),
+    vestigeGranted: BigInt(values[19]),
+    vestigeFunding: BigInt(values[20]),
+    createTxId: txIdFromBytes(values[21]),
+    swapTxId: txIdFromBytes(values[22]),
+    terminalTxId: txIdFromBytes(values[23]),
+    vestigeTxId: txIdFromBytes(values[24]),
+    releaseTxId: txIdFromBytes(values[25]),
   };
 }
 
@@ -473,9 +500,9 @@ export async function readLaunchSnapshot({ algodClient, config, wallet, assetId 
     };
   }
   let allocation = null;
-  if (launch?.status === 2n && launch.lpAssetId > 0n) {
+  if (launch && resolvedAssetId != null) {
     const values = await readBox(
-      algodClient, config.launchpadAppId, allocationBoxName(launch.lpAssetId), ALLOCATION_TYPE,
+      algodClient, config.launchpadAppId, allocationBoxName(resolvedAssetId), ALLOCATION_TYPE,
     );
     if (values) allocation = {
       launchAssetId: BigInt(values[0]),
@@ -495,11 +522,10 @@ function holdingMap(account) {
 export async function verifyCompletedLaunch({ algodClient, config, wallet, snapshot, poolState }) {
   const { launch, asset, allocation } = snapshot;
   if (!launch || launch.status !== 2n) throw new Error("Launch record is not complete");
-  const appAddress = algosdk.getApplicationAddress(Number(config.launchpadAppId)).toString();
-  const expectedCreator = appAddress;
+  const appAddress = appAddressOf(config.launchpadAppId);
   const checks = {
     immutableAsset: asset?.immutable === true,
-    launchpadIsCreator: asset?.creator === expectedCreator,
+    launchpadIsCreator: asset?.creator === appAddress,
     fullSupplyRecord: asset?.total === launch.totalRaw,
     correctPair: poolState.asset1Id === launch.assetId && poolState.asset2Id === BigInt(config.pnetAssetId),
     exactTokenReserve: poolState.asset1Reserve === launch.totalRaw,
@@ -507,7 +533,7 @@ export async function verifyCompletedLaunch({ algodClient, config, wallet, snaps
     correctLpAsset: poolState.lpAssetId === launch.lpAssetId,
     lpConserved: launch.burnedLp + launch.creatorLp + launch.platformLp
       === poolState.issuedPoolTokens - 1_000n,
-    allocationTracked: allocation?.remaining === launch.platformLp,
+    allocationTracked: allocation === null || allocation.remaining <= launch.platformLp,
   };
   const [burn, creator, app] = await Promise.all([
     algodClient.accountInformation(config.arc54Address).do(),
@@ -515,8 +541,11 @@ export async function verifyCompletedLaunch({ algodClient, config, wallet, snaps
     algodClient.accountInformation(appAddress).do(),
   ]);
   checks.arc54ReceivedLp = (holdingMap(burn).get(launch.lpAssetId) ?? 0n) >= launch.burnedLp;
-  checks.creatorReceivedLp = (holdingMap(creator).get(launch.lpAssetId) ?? 0n) >= launch.creatorLp;
-  checks.platformRetainsLp = (holdingMap(app).get(launch.lpAssetId) ?? 0n) >= launch.platformLp;
+  checks.platformRetainsLp = (holdingMap(app).get(launch.lpAssetId) ?? 0n)
+    >= (allocation?.remaining ?? 0n) + (launch.creatorLpClaimed === 1n ? 0n : launch.creatorLp);
+  if (launch.creatorLpClaimed === 1n) {
+    checks.creatorReceivedLp = (holdingMap(creator).get(launch.lpAssetId) ?? 0n) >= launch.creatorLp;
+  }
   const failed = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name);
   if (failed.length) throw new Error(`Chain verification failed: ${failed.join(", ")}`);
   return checks;
