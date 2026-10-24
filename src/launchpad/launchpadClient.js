@@ -494,7 +494,7 @@ function holdingMap(account) {
 export async function verifyCompletedLaunch({ algodClient, config, wallet, snapshot, poolState }) {
   const { launch, asset, allocation } = snapshot;
   if (!launch || launch.status !== 2n) throw new Error("Launch record is not complete");
-  const appAddress = algosdk.getApplicationAddress(Number(config.launchpadAppId));
+  const appAddress = algosdk.getApplicationAddress(Number(config.launchpadAppId)).toString();
   const expectedCreator = appAddress;
   const checks = {
     immutableAsset: asset?.immutable === true,

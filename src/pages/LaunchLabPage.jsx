@@ -160,7 +160,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
     const reconciled = reconcileSessionFromChain(pendingReconciled, { ...snapshot, pool });
     setChain({ ...snapshot, pool });
     if (snapshot.asset) {
-      const expectedCreator = algosdk.getApplicationAddress(Number(launchNetwork.launchpadAppId));
+      const expectedCreator = algosdk.getApplicationAddress(Number(launchNetwork.launchpadAppId)).toString();
       if (!snapshot.asset.immutable || snapshot.asset.creator !== expectedCreator) {
         throw new Error("Chain recovery found an ASA that is not immutable or was not created by launchpad v2");
       }
