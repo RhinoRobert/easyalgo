@@ -1,0 +1,14 @@
+{
+ "mainnet_app_id": 1257620981,
+ "approval-program": "CSACAAExGCINgQYLMRkIjQcAJgAAAAAAAAAAAAAANAA2GgEXwDCIAAIjQ4oBALGBBLIQMgqyFIv/shEishIisgGziSNDgAS4RHs2NhoAjgH/8QCABET41d42GgCOAf/AAA==",
+ "clear-state-program": "CYEBQw==",
+ "extra-program-pages": 3,
+ "global-state-schema": {
+  "num-byte-slice": 16,
+  "num-uint": 16
+ },
+ "local-state-schema": {
+  "num-byte-slice": 0,
+  "num-uint": 0
+ }
+}

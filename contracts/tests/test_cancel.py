@@ -1,0 +1,75 @@
+"""The timed cancellation: the only way out when a launch cannot finish."""
+
+import pytest
+
+from lp import TxFailed
+
+TOTAL = 1_000_000 * 10**6
+
+
+def started(lp, user, proto, dev):
+    sk, addr = user
+    pnet_before = dev.balance(addr, proto.pnet)
+    free_before = lp.free_balance()
+    asset_id = lp.start(addr, sk, total_raw=TOTAL)
+    pnet_seed = dev.balance(lp.address, proto.pnet)
+    dev.opt_in(sk, addr, asset_id)  # recovery opt-in the UI performs for the launcher
+    return sk, addr, asset_id, pnet_seed, pnet_before, free_before
+
+
+def test_cancel_before_delay_is_refused(lp, user, proto, dev):
+    sk, addr, asset_id, *_ = started(lp, user, proto, dev)
+    with pytest.raises(TxFailed):
+        lp._run(lp.cancel_group(addr, sk, asset_id))
+
+
+def test_cancel_after_delay_with_platform_opted_in(lp, user, proto, dev):
+    sk, addr, asset_id, pnet_seed, pnet_before, free_before = started(lp, user, proto, dev)
+    psk, paddr = lp.admin_sk, lp.admin
+    dev.opt_in(psk, paddr, proto.pnet)  # platform can receive its PNET half straight away
+    dev.advance(lp.cancel_delay + 1)
+    token_before = dev.balance(addr, asset_id)
+    platform_pnet_before = dev.balance(paddr, proto.pnet)
+
+    lp._run(lp.cancel_group(addr, sk, asset_id))
+
+    assert dev.balance(addr, asset_id) - token_before == TOTAL // 2
+    assert dev.balance(addr, proto.pnet) - pnet_before == pnet_seed // 2
+    assert dev.balance(paddr, proto.pnet) - platform_pnet_before == pnet_seed - pnet_seed // 2
+    assert dev.balance(lp.address, proto.pnet) == 0
+    assert dev.balance(lp.address, asset_id) == TOTAL - TOTAL // 2  # the platform's token half stays as a recorded allocation
+    assert lp.free_balance() == free_before, "cancel returns the pending deposit and consumes the prepaid records: net zero"
+
+    # the platform releases its recorded token half to itself
+    dev.opt_in(psk, paddr, asset_id)
+    lp._run(lp.release_platform_group(asset_id, asset_id, paddr, TOTAL - TOTAL // 2))
+    assert dev.balance(paddr, asset_id) == TOTAL - TOTAL // 2
+    # a cancelled launch cannot be cancelled or finished again
+    with pytest.raises(TxFailed):
+        lp._run(lp.cancel_group(addr, sk, asset_id))
+
+
+def test_cancel_with_platform_not_opted_in_defers_pnet(lp, user, proto, dev):
+    sk, addr, asset_id, pnet_seed, pnet_before, free_before = started(lp, user, proto, dev)
+    psk, paddr = lp.admin_sk, lp.admin
+    dev.advance(lp.cancel_delay + 1)
+    lp._run(lp.cancel_group(addr, sk, asset_id))
+    deferred = pnet_seed - pnet_seed // 2
+    assert dev.balance(lp.address, proto.pnet) == deferred
+    # not releasable until the platform opts in; then it receives exactly the deferred amount
+    with pytest.raises(TxFailed):
+        lp._run(lp.release_pnet_group(asset_id))
+    dev.opt_in(psk, paddr, proto.pnet)
+    lp._run(lp.release_pnet_group(asset_id))
+    assert dev.balance(paddr, proto.pnet) == deferred
+    assert dev.balance(lp.address, proto.pnet) == 0
+    with pytest.raises(TxFailed):  # nothing left to release
+        lp._run(lp.release_pnet_group(asset_id))
+
+
+def test_cancel_needs_recovery_opt_ins(lp, user, proto, dev):
+    sk, addr = user
+    asset_id = lp.start(addr, sk, total_raw=TOTAL)  # launcher has NOT opted into the new asset
+    dev.advance(lp.cancel_delay + 1)
+    with pytest.raises(TxFailed):
+        lp._run(lp.cancel_group(addr, sk, asset_id))

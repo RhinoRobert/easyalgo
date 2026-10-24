@@ -1,0 +1,4410 @@
+#pragma version 11
+#pragma typetrack false
+
+// algopy.arc4.ARC4Contract.approval_program() -> uint64:
+main:
+    intcblock 0 1 8 2 10000 100000 1000000 224 66900
+    bytecblock 0x706e6574 0x7265736572766564 0x70 base32(CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6A) 0x0020 0x151f7c75 0x746f74616c 0x706c6174706e6574 0x6c 0x6275726e 0x696e6974 0x736f75726365 0x74696e796d616e 0x76657374696765 0x61 0x61737365745f315f6964 0x61737365745f325f6964 0x6172633534 0x64656c6179 0x00 0x69 0x706f6f6c5f746f6b656e5f61737365745f6964 0x61737365745f315f7265736572766573 0x61737365745f325f7265736572766573 0x6973737565645f706f6f6c5f746f6b656e73 0x504e4554204c61756e63687061642076332070656e64696e67207265636f7264206465706f73697420726566756e64 0x00200000000000000000000000000000000000000000000000000000000000000000 0x504e4554204c61756e636870616420763320566573746967652064656c65676174696f6e 0xbdff4342 0x00e2
+    // launchpad_v3/contract.py:163
+    // class PNETInstantLaunchpad(ARC4Contract):
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_create_NoOp@20
+    pushbytess 0x956b8e8e 0xeb150f12 0x385b567e 0xe7c5e806 0xa16d35c6 0xda900c0d 0x39f92fa3 0x1bb32380 0xfc82fe0a 0xd0f99147 0xb3094bf3 0x9e3a7de6 0x7acd6e47 0x670804af // method "initialize(pay)void", method "budget()void", method "launch_start(pay,string,string,uint64,string,uint64,uint64)uint64", method "launch_finish(pay,uint64,address,uint64)void", method "claim_creator_lp(axfer,uint64)void", method "cancel_launch(uint64)void", method "release_cancelled_pnet(uint64)uint64", method "grant_vestige_access(pay,uint64)void", method "release_platform_allocation(uint64,address,uint64)uint64", method "get_pending(address)(uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[])", method "get_launch(uint64)(address,uint64,uint64,uint64,uint64,uint64,uint64,address,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[],byte[],byte[],byte[])", method "get_asset_at(uint64)uint64", method "get_platform_allocation(uint64)(uint64,uint64,uint64,uint64)", method "get_config()(address,address,address,uint64,uint64,uint64,uint64,uint64,uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match initialize main_budget_route@6 launch_start launch_finish claim_creator_lp cancel_launch release_cancelled_pnet grant_vestige_access release_platform_allocation get_pending get_launch get_asset_at get_platform_allocation get_config
+    err
+
+main_budget_route@6:
+    // launchpad_v3/contract.py:263
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+main_create_NoOp@20:
+    // launchpad_v3/contract.py:163
+    // class PNETInstantLaunchpad(ARC4Contract):
+    pushbytes 0x9b157dc1 // method "create(address,address,uint64,uint64,uint64,uint64,uint64)void"
+    txna ApplicationArgs 0
+    match create
+    err
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.create[routing]() -> void:
+create:
+    intc_0 // 0
+    dupn 2
+    pushbytes ""
+    dupn 4
+    // launchpad_v3/contract.py:184
+    // @arc4.abimethod(allow_actions=["NoOp"], create="require")
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 3
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    cover 2
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    cover 3
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    cover 5
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    cover 7
+    txna ApplicationArgs 7
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    cover 9
+    // launchpad_v3/contract.py:195
+    // assert Global.group_size == UInt64(1), "Create must be standalone"
+    global GroupSize
+    intc_1 // 1
+    ==
+    assert // Create must be standalone
+    // launchpad_v3/contract.py:196
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:197
+    // assert source_pool != algopy.Account(), "Tinyman source pool required"
+    global ZeroAddress
+    uncover 2
+    !=
+    assert // Tinyman source pool required
+    // launchpad_v3/contract.py:198
+    // assert burn_account != algopy.Account(), "ARC-54 account required"
+    dig 1
+    global ZeroAddress
+    !=
+    assert // ARC-54 account required
+    // launchpad_v3/contract.py:199
+    // assert algopy.Account(PLATFORM_WALLET_ADDRESS) != burn_account, "Platform and burn must differ"
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    uncover 2
+    !=
+    assert // Platform and burn must differ
+    // launchpad_v3/contract.py:200
+    // assert cancel_delay_rounds >= UInt64(MIN_CANCEL_DELAY_ROUNDS), "Cancel delay too short"
+    pushint 10
+    >=
+    assert // Cancel delay too short
+    // launchpad_v3/contract.py:202
+    // if Global.genesis_hash == algopy.Bytes.from_base64(MAINNET_GENESIS_HASH):
+    global GenesisHash
+    pushbytes base64(wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=)
+    ==
+    bz create_after_if_else@3
+    // launchpad_v3/contract.py:203
+    // assert pnet_asset_id == UInt64(MAINNET_PNET_ASSET_ID), "Wrong MainNet PNET"
+    dup
+    pushint 3169177585
+    ==
+    assert // Wrong MainNet PNET
+    // launchpad_v3/contract.py:204
+    // assert tinyman_app_id == UInt64(MAINNET_TINYMAN_APP_ID), "Wrong MainNet Tinyman"
+    dig 1
+    pushint 1002541853
+    ==
+    assert // Wrong MainNet Tinyman
+    // launchpad_v3/contract.py:205
+    // assert vestige_app_id == UInt64(MAINNET_VESTIGE_APP_ID), "Wrong MainNet Vestige"
+    dig 3
+    pushint 3129810607
+    ==
+    assert // Wrong MainNet Vestige
+    // launchpad_v3/contract.py:206
+    // assert arc54_app_id == UInt64(MAINNET_ARC54_APP_ID), "Wrong MainNet ARC-54"
+    dig 5
+    pushint 1257620981
+    ==
+    assert // Wrong MainNet ARC-54
+    // launchpad_v3/contract.py:207
+    // assert source_pool == algopy.Account(MAINNET_SOURCE_POOL), "Wrong MainNet source pool"
+    dig 4
+    pushbytes base32(ANESQRCMZ5KWZFKDGESLJEWQLRCVUZU725FJL7NO3BMKJEYMAB3Q) // addr ANESQRCMZ5KWZFKDGESLJEWQLRCVUZU725FJL7NO3BMKJEYMAB3TR56R3E
+    ==
+    assert // Wrong MainNet source pool
+    // launchpad_v3/contract.py:208
+    // assert cancel_delay_rounds == UInt64(MAINNET_CANCEL_DELAY_ROUNDS), "Wrong MainNet cancel delay"
+    dig 6
+    pushint 3000
+    ==
+    assert // Wrong MainNet cancel delay
+
+create_after_if_else@3:
+    // launchpad_v3/contract.py:210
+    // pnet_decimals, pnet_exists = op.AssetParamsGet.asset_decimals(pnet_asset_id)
+    dup
+    asset_params_get AssetDecimals
+    swap
+    bury 10
+    // launchpad_v3/contract.py:211
+    // tinyman_address, tinyman_exists = op.AppParamsGet.app_address(tinyman_app_id)
+    dig 2
+    app_params_get AppAddress
+    cover 6
+    bury 16
+    // launchpad_v3/contract.py:212
+    // vestige_address, vestige_exists = op.AppParamsGet.app_address(vestige_app_id)
+    dig 4
+    app_params_get AppAddress
+    cover 3
+    bury 16
+    // launchpad_v3/contract.py:213
+    // official_burn, arc54_exists = op.AppParamsGet.app_address(arc54_app_id)
+    dig 8
+    app_params_get AppAddress
+    cover 2
+    bury 19
+    // launchpad_v3/contract.py:214
+    // assert pnet_exists and pnet_decimals == UInt64(DECIMALS), "PNET must be six decimals"
+    bz create_bool_false@6
+    dig 11
+    pushint 6
+    ==
+    bz create_bool_false@6
+    intc_1 // 1
+
+create_bool_merge@7:
+    // launchpad_v3/contract.py:214
+    // assert pnet_exists and pnet_decimals == UInt64(DECIMALS), "PNET must be six decimals"
+    assert // PNET must be six decimals
+    // launchpad_v3/contract.py:215
+    // assert tinyman_exists and tinyman_address != algopy.Account(), "Invalid Tinyman app"
+    uncover 6
+    bz create_bool_false@10
+    dig 15
+    global ZeroAddress
+    !=
+    bz create_bool_false@10
+    intc_1 // 1
+
+create_bool_merge@11:
+    // launchpad_v3/contract.py:215
+    // assert tinyman_exists and tinyman_address != algopy.Account(), "Invalid Tinyman app"
+    assert // Invalid Tinyman app
+    // launchpad_v3/contract.py:216
+    // assert vestige_exists and vestige_address != algopy.Account(), "Invalid Vestige app"
+    uncover 2
+    bz create_bool_false@14
+    dig 13
+    global ZeroAddress
+    !=
+    bz create_bool_false@14
+    intc_1 // 1
+
+create_bool_merge@15:
+    // launchpad_v3/contract.py:216
+    // assert vestige_exists and vestige_address != algopy.Account(), "Invalid Vestige app"
+    assert // Invalid Vestige app
+    // launchpad_v3/contract.py:217
+    // assert arc54_exists and official_burn == burn_account, "ARC-54 app/address mismatch"
+    bz create_bool_false@18
+    dig 14
+    dig 3
+    ==
+    bz create_bool_false@18
+    intc_1 // 1
+
+create_bool_merge@19:
+    // launchpad_v3/contract.py:217
+    // assert arc54_exists and official_burn == burn_account, "ARC-54 app/address mismatch"
+    assert // ARC-54 app/address mismatch
+    // launchpad_v3/contract.py:220
+    // asset_1, has_a1 = op.AppLocal.get_ex_uint64(source_pool, tinyman, b"asset_1_id")
+    dig 4
+    dup
+    dig 3
+    dup
+    cover 3
+    bytec 15 // 0x61737365745f315f6964
+    app_local_get_ex
+    cover 3
+    cover 5
+    // launchpad_v3/contract.py:221
+    // asset_2, has_a2 = op.AppLocal.get_ex_uint64(source_pool, tinyman, b"asset_2_id")
+    dup
+    dig 2
+    bytec 16 // 0x61737365745f325f6964
+    app_local_get_ex
+    bury 16
+    bury 16
+    // launchpad_v3/contract.py:222
+    // pool_token, has_lp = op.AppLocal.get_ex_uint64(source_pool, tinyman, b"pool_token_asset_id")
+    swap
+    bytec 21 // 0x706f6f6c5f746f6b656e5f61737365745f6964
+    app_local_get_ex
+    bury 13
+    bury 10
+    // launchpad_v3/contract.py:223
+    // assert has_a1 and has_a2 and has_lp and pool_token > UInt64(0), "Invalid source pool state"
+    bz create_bool_false@24
+    dig 11
+    bz create_bool_false@24
+    dig 10
+    bz create_bool_false@24
+    dig 8
+    bz create_bool_false@24
+    intc_1 // 1
+
+create_bool_merge@25:
+    // launchpad_v3/contract.py:223
+    // assert has_a1 and has_a2 and has_lp and pool_token > UInt64(0), "Invalid source pool state"
+    assert // Invalid source pool state
+    // launchpad_v3/contract.py:224
+    // assert asset_1 == pnet_asset_id and asset_2 == UInt64(0), "Source pool must be PNET/ALGO"
+    uncover 2
+    dig 1
+    ==
+    bz create_bool_false@28
+    dig 11
+    bnz create_bool_false@28
+    intc_1 // 1
+
+create_bool_merge@29:
+    // launchpad_v3/contract.py:224
+    // assert asset_1 == pnet_asset_id and asset_2 == UInt64(0), "Source pool must be PNET/ALGO"
+    assert // Source pool must be PNET/ALGO
+    // launchpad_v3/contract.py:226
+    // self.burn_account.value = burn_account
+    bytec 9 // 0x6275726e
+    uncover 3
+    app_global_put
+    // launchpad_v3/contract.py:227
+    // self.source_pool.value = source_pool
+    bytec 11 // 0x736f75726365
+    uncover 4
+    app_global_put
+    // launchpad_v3/contract.py:228
+    // self.pnet_asset_id.value = pnet_asset_id
+    bytec_0 // 0x706e6574
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:229
+    // self.tinyman_app_id.value = tinyman_app_id
+    bytec 12 // 0x74696e796d616e
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:230
+    // self.vestige_app_id.value = vestige_app_id
+    bytec 13 // 0x76657374696765
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:231
+    // self.arc54_app_id.value = arc54_app_id
+    bytec 17 // 0x6172633534
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:232
+    // self.cancel_delay.value = cancel_delay_rounds
+    bytec 18 // 0x64656c6179
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:233
+    // self.total_records.value = UInt64(0)
+    bytec 6 // 0x746f74616c
+    intc_0 // 0
+    app_global_put
+    // launchpad_v3/contract.py:234
+    // self.initialized.value = UInt64(0)
+    bytec 10 // 0x696e6974
+    intc_0 // 0
+    app_global_put
+    // launchpad_v3/contract.py:235
+    // self.reserved_pnet.value = UInt64(0)
+    bytec_1 // 0x7265736572766564
+    intc_0 // 0
+    app_global_put
+    // launchpad_v3/contract.py:236
+    // self.platform_pnet.value = UInt64(0)
+    bytec 7 // 0x706c6174706e6574
+    intc_0 // 0
+    app_global_put
+    // launchpad_v3/contract.py:184
+    // @arc4.abimethod(allow_actions=["NoOp"], create="require")
+    intc_1 // 1
+    return
+
+create_bool_false@28:
+    intc_0 // 0
+    b create_bool_merge@29
+
+create_bool_false@24:
+    intc_0 // 0
+    b create_bool_merge@25
+
+create_bool_false@18:
+    intc_0 // 0
+    b create_bool_merge@19
+
+create_bool_false@14:
+    intc_0 // 0
+    b create_bool_merge@15
+
+create_bool_false@10:
+    intc_0 // 0
+    b create_bool_merge@11
+
+create_bool_false@6:
+    intc_0 // 0
+    b create_bool_merge@7
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.initialize[routing]() -> void:
+initialize:
+    // launchpad_v3/contract.py:238
+    // @arc4.abimethod
+    txn GroupIndex
+    intc_1 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_1 // pay
+    ==
+    assert // transaction type is pay
+    // launchpad_v3/contract.py:241
+    // assert self.initialized.value == UInt64(0), "Already initialized"
+    intc_0 // 0
+    bytec 10 // 0x696e6974
+    app_global_get_ex
+    assert // check self.initialized exists
+    !
+    assert // Already initialized
+    // launchpad_v3/contract.py:242
+    // assert Global.group_size == UInt64(2), "Initialize requires payment and app call"
+    global GroupSize
+    intc_3 // 2
+    ==
+    assert // Initialize requires payment and app call
+    // launchpad_v3/contract.py:243
+    // assert reserve_payment.group_index + UInt64(1) == Txn.group_index, "Payment must precede call"
+    dup
+    gtxns GroupIndex
+    intc_1 // 1
+    +
+    txn GroupIndex
+    ==
+    assert // Payment must precede call
+    // launchpad_v3/contract.py:244
+    // assert reserve_payment.sender == Txn.sender, "Funding sender mismatch"
+    dup
+    gtxns Sender
+    txn Sender
+    ==
+    assert // Funding sender mismatch
+    // launchpad_v3/contract.py:245
+    // assert reserve_payment.receiver == Global.current_application_address, "Wrong funding receiver"
+    dup
+    gtxns Receiver
+    global CurrentApplicationAddress
+    ==
+    assert // Wrong funding receiver
+    // launchpad_v3/contract.py:246
+    // assert reserve_payment.amount == UInt64(INITIALIZE_FUNDING), "Wrong initialization funding"
+    dup
+    gtxns Amount
+    pushint 500000
+    ==
+    assert // Wrong initialization funding
+    // launchpad_v3/contract.py:247
+    // assert reserve_payment.close_remainder_to == algopy.Account(), "No close remainder"
+    dup
+    gtxns CloseRemainderTo
+    global ZeroAddress
+    ==
+    assert // No close remainder
+    // launchpad_v3/contract.py:248
+    // assert reserve_payment.rekey_to == algopy.Account(), "No payment rekey"
+    gtxns RekeyTo
+    global ZeroAddress
+    ==
+    assert // No payment rekey
+    // launchpad_v3/contract.py:249
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:252
+    // Global.current_application_address, self.pnet_asset_id.value
+    global CurrentApplicationAddress
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:251-253
+    // app_pnet_balance, app_opted = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, self.pnet_asset_id.value
+    // )
+    swap
+    dig 1
+    asset_holding_get AssetBalance
+    bury 1
+    // launchpad_v3/contract.py:254
+    // assert not app_opted, "App already opted into PNET"
+    !
+    assert // App already opted into PNET
+    // launchpad_v3/contract.py:255-260
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value,
+    //     asset_receiver=Global.current_application_address,
+    //     asset_amount=UInt64(0),
+    //     fee=UInt64(0),
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:257
+    // asset_receiver=Global.current_application_address,
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:258
+    // asset_amount=UInt64(0),
+    intc_0 // 0
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:255
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:259
+    // fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:255-260
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value,
+    //     asset_receiver=Global.current_application_address,
+    //     asset_amount=UInt64(0),
+    //     fee=UInt64(0),
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:261
+    // self.initialized.value = UInt64(1)
+    bytec 10 // 0x696e6974
+    intc_1 // 1
+    app_global_put
+    // launchpad_v3/contract.py:238
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.launch_start[routing]() -> void:
+launch_start:
+    pushbytes ""
+    dupn 6
+    // launchpad_v3/contract.py:267
+    // @arc4.abimethod
+    txn GroupIndex
+    intc_1 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_1 // pay
+    ==
+    assert // transaction type is pay
+    txna ApplicationArgs 1
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 3
+    dup
+    cover 4
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    cover 2
+    cover 4
+    txna ApplicationArgs 4
+    dup
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    cover 6
+    // launchpad_v3/contract.py:279
+    // assert self.initialized.value == UInt64(1), "Initialize launchpad first"
+    intc_0 // 0
+    bytec 10 // 0x696e6974
+    app_global_get_ex
+    assert // check self.initialized exists
+    intc_1 // 1
+    ==
+    assert // Initialize launchpad first
+    // launchpad_v3/contract.py:280
+    // assert Global.group_size == UInt64(2), "Start requires funding and app call"
+    global GroupSize
+    intc_3 // 2
+    ==
+    assert // Start requires funding and app call
+    // launchpad_v3/contract.py:281
+    // assert funding.group_index + UInt64(1) == Txn.group_index, "Funding must precede call"
+    dig 5
+    gtxns GroupIndex
+    intc_1 // 1
+    +
+    txn GroupIndex
+    ==
+    assert // Funding must precede call
+    // launchpad_v3/contract.py:282
+    // assert funding.sender == Txn.sender, "Funding sender mismatch"
+    dig 5
+    gtxns Sender
+    txn Sender
+    ==
+    assert // Funding sender mismatch
+    // launchpad_v3/contract.py:283
+    // assert funding.receiver == Global.current_application_address, "Wrong funding receiver"
+    dig 5
+    gtxns Receiver
+    global CurrentApplicationAddress
+    ==
+    assert // Wrong funding receiver
+    // launchpad_v3/contract.py:284
+    // assert funding.amount == UInt64(LAUNCH_START_FUNDING), "Wrong launch funding"
+    dig 5
+    gtxns Amount
+    pushint 1359600
+    ==
+    assert // Wrong launch funding
+    // launchpad_v3/contract.py:285
+    // assert funding.close_remainder_to == algopy.Account(), "No close remainder"
+    dig 5
+    gtxns CloseRemainderTo
+    global ZeroAddress
+    ==
+    assert // No close remainder
+    // launchpad_v3/contract.py:286
+    // assert funding.rekey_to == algopy.Account(), "No funding rekey"
+    uncover 5
+    gtxns RekeyTo
+    global ZeroAddress
+    ==
+    assert // No funding rekey
+    // launchpad_v3/contract.py:287
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:288
+    // assert total_raw >= UInt64(2_000), "Supply too small for Tinyman"
+    uncover 3
+    pushint 2000
+    >=
+    assert // Supply too small for Tinyman
+    // launchpad_v3/contract.py:289
+    // assert Txn.sender not in self.pending, "Finish current launch first"
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    box_len
+    bury 1
+    !
+    assert // Finish current launch first
+    // launchpad_v3/contract.py:290
+    // assert quote_round <= Global.round, "Quote round is in the future"
+    dup
+    global Round
+    <=
+    assert // Quote round is in the future
+    // launchpad_v3/contract.py:291
+    // assert Global.round - quote_round <= UInt64(QUOTE_MAX_AGE_ROUNDS), "Quote expired"
+    global Round
+    swap
+    -
+    pushint 10
+    <=
+    assert // Quote expired
+    // launchpad_v3/contract.py:293-294
+    // # ARC-4 strings carry a two-byte length header; the ASA fields must be the text itself.
+    // raw_name = name.native.bytes
+    uncover 2
+    extract 2 0
+    dup
+    cover 4
+    // launchpad_v3/contract.py:295
+    // raw_unit = unit_name.native.bytes
+    uncover 2
+    extract 2 0
+    cover 2
+    // launchpad_v3/contract.py:296
+    // raw_url = url.native.bytes
+    swap
+    extract 2 0
+    swap
+    // launchpad_v3/contract.py:297
+    // assert raw_name.length > UInt64(0) and raw_name.length <= UInt64(32), "Invalid name length"
+    len
+    dup
+    cover 4
+    bz launch_start_bool_false@4
+    dig 3
+    pushint 32
+    <=
+    bz launch_start_bool_false@4
+    intc_1 // 1
+
+launch_start_bool_merge@5:
+    // launchpad_v3/contract.py:297
+    // assert raw_name.length > UInt64(0) and raw_name.length <= UInt64(32), "Invalid name length"
+    assert // Invalid name length
+    // launchpad_v3/contract.py:298
+    // assert raw_unit.length > UInt64(0) and raw_unit.length <= UInt64(8), "Invalid unit length"
+    dig 1
+    len
+    dup
+    bury 9
+    bz launch_start_bool_false@8
+    dig 7
+    intc_2 // 8
+    <=
+    bz launch_start_bool_false@8
+    intc_1 // 1
+
+launch_start_bool_merge@9:
+    // launchpad_v3/contract.py:298
+    // assert raw_unit.length > UInt64(0) and raw_unit.length <= UInt64(8), "Invalid unit length"
+    assert // Invalid unit length
+    // launchpad_v3/contract.py:299
+    // assert raw_url.length <= UInt64(96), "URL exceeds 96 bytes"
+    dup
+    len
+    pushint 96
+    <=
+    assert // URL exceeds 96 bytes
+    // launchpad_v3/contract.py:301-302
+    // # Quote the Tinyman source pool before any state changes.
+    // tinyman = algopy.Application(self.tinyman_app_id.value)
+    intc_0 // 0
+    bytec 12 // 0x74696e796d616e
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 11
+    assert // check self.tinyman_app_id exists
+    // launchpad_v3/contract.py:303
+    // asset_1, has_a1 = op.AppLocal.get_ex_uint64(self.source_pool.value, tinyman, b"asset_1_id")
+    intc_0 // 0
+    bytec 11 // 0x736f75726365
+    app_global_get_ex
+    assert // check self.source_pool exists
+    dup
+    dig 2
+    bytec 15 // 0x61737365745f315f6964
+    app_local_get_ex
+    cover 3
+    cover 6
+    // launchpad_v3/contract.py:304
+    // asset_2, has_a2 = op.AppLocal.get_ex_uint64(self.source_pool.value, tinyman, b"asset_2_id")
+    dup
+    dig 2
+    bytec 16 // 0x61737365745f325f6964
+    app_local_get_ex
+    bury 18
+    bury 18
+    // launchpad_v3/contract.py:305
+    // reserve_1, has_r1 = op.AppLocal.get_ex_uint64(self.source_pool.value, tinyman, b"asset_1_reserves")
+    dup
+    dig 2
+    bytec 22 // 0x61737365745f315f7265736572766573
+    app_local_get_ex
+    bury 16
+    cover 5
+    // launchpad_v3/contract.py:306
+    // reserve_2, has_r2 = op.AppLocal.get_ex_uint64(self.source_pool.value, tinyman, b"asset_2_reserves")
+    dup
+    dig 2
+    bytec 23 // 0x61737365745f325f7265736572766573
+    app_local_get_ex
+    bury 16
+    cover 5
+    // launchpad_v3/contract.py:307
+    // fee_share, has_fee = op.AppLocal.get_ex_uint64(self.source_pool.value, tinyman, b"total_fee_share")
+    swap
+    pushbytes 0x746f74616c5f6665655f7368617265
+    app_local_get_ex
+    bury 17
+    swap
+    // launchpad_v3/contract.py:308
+    // assert has_a1 and has_a2 and has_r1 and has_r2 and has_fee, "Invalid source pool"
+    bz launch_start_bool_false@15
+    dig 16
+    bz launch_start_bool_false@15
+    dig 14
+    bz launch_start_bool_false@15
+    dig 13
+    bz launch_start_bool_false@15
+    dig 15
+    bz launch_start_bool_false@15
+    intc_1 // 1
+
+launch_start_bool_merge@16:
+    // launchpad_v3/contract.py:308
+    // assert has_a1 and has_a2 and has_r1 and has_r2 and has_fee, "Invalid source pool"
+    assert // Invalid source pool
+    // launchpad_v3/contract.py:309
+    // assert asset_1 == self.pnet_asset_id.value and asset_2 == UInt64(0), "Wrong source pair"
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    uncover 7
+    ==
+    bz launch_start_bool_false@19
+    dig 16
+    bnz launch_start_bool_false@19
+    intc_1 // 1
+
+launch_start_bool_merge@20:
+    // launchpad_v3/contract.py:309
+    // assert asset_1 == self.pnet_asset_id.value and asset_2 == UInt64(0), "Wrong source pair"
+    assert // Wrong source pair
+    // launchpad_v3/contract.py:312
+    // assert algo_reserve > UInt64(0) and pnet_reserve > UInt64(0), "Empty source pool"
+    dig 3
+    bz launch_start_bool_false@23
+    dig 4
+    bz launch_start_bool_false@23
+    intc_1 // 1
+
+launch_start_bool_merge@24:
+    // launchpad_v3/contract.py:312
+    // assert algo_reserve > UInt64(0) and pnet_reserve > UInt64(0), "Empty source pool"
+    assert // Empty source pool
+    // launchpad_v3/contract.py:313
+    // assert fee_share < UInt64(BPS_DENOMINATOR), "Invalid Tinyman fee"
+    dup
+    intc 4 // 10000
+    <
+    assert // Invalid Tinyman fee
+    // launchpad_v3/contract.py:315
+    // fee_amount = (UInt64(ALGO_SWAP_INPUT) * fee_share) // UInt64(BPS_DENOMINATOR)
+    intc 6 // 1000000
+    *
+    intc 4 // 10000
+    /
+    // launchpad_v3/contract.py:316
+    // swap_amount = UInt64(ALGO_SWAP_INPUT) - fee_amount
+    intc 6 // 1000000
+    swap
+    -
+    // launchpad_v3/contract.py:317
+    // k_high, k_low = op.mulw(algo_reserve, pnet_reserve)
+    uncover 3
+    dup
+    uncover 5
+    dup
+    cover 4
+    mulw
+    // launchpad_v3/contract.py:318
+    // remaining_pnet = op.divw(k_high, k_low, algo_reserve + swap_amount)
+    dig 2
+    uncover 4
+    +
+    divw
+    // launchpad_v3/contract.py:319
+    // assert pnet_reserve > remaining_pnet + UInt64(1), "No executable output"
+    dup
+    intc_1 // 1
+    +
+    dig 3
+    <
+    assert // No executable output
+    // launchpad_v3/contract.py:320
+    // expected_pnet = pnet_reserve - remaining_pnet - UInt64(1)
+    dig 2
+    swap
+    -
+    intc_1 // 1
+    -
+    // launchpad_v3/contract.py:322
+    // rate_high, rate_low = op.mulw(expected_pnet, algo_reserve)
+    dup
+    uncover 2
+    mulw
+    // launchpad_v3/contract.py:323
+    // effective_pool_units = op.divw(rate_high, rate_low, UInt64(ALGO_SWAP_INPUT))
+    intc 6 // 1000000
+    divw
+    // launchpad_v3/contract.py:325
+    // (pnet_reserve // UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - MAX_PRICE_IMPACT_BPS)
+    dig 2
+    intc 4 // 10000
+    /
+    pushint 9500
+    *
+    // launchpad_v3/contract.py:326
+    // + ((pnet_reserve % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - MAX_PRICE_IMPACT_BPS)
+    uncover 3
+    intc 4 // 10000
+    %
+    pushint 9500
+    *
+    // launchpad_v3/contract.py:327
+    // + UInt64(BPS_DENOMINATOR - 1)) // UInt64(BPS_DENOMINATOR)
+    pushint 9999
+    // launchpad_v3/contract.py:326-327
+    // + ((pnet_reserve % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - MAX_PRICE_IMPACT_BPS)
+    //    + UInt64(BPS_DENOMINATOR - 1)) // UInt64(BPS_DENOMINATOR)
+    +
+    // launchpad_v3/contract.py:327
+    // + UInt64(BPS_DENOMINATOR - 1)) // UInt64(BPS_DENOMINATOR)
+    intc 4 // 10000
+    // launchpad_v3/contract.py:326-327
+    // + ((pnet_reserve % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - MAX_PRICE_IMPACT_BPS)
+    //    + UInt64(BPS_DENOMINATOR - 1)) // UInt64(BPS_DENOMINATOR)
+    /
+    // launchpad_v3/contract.py:325-327
+    // (pnet_reserve // UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - MAX_PRICE_IMPACT_BPS)
+    // + ((pnet_reserve % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - MAX_PRICE_IMPACT_BPS)
+    //    + UInt64(BPS_DENOMINATOR - 1)) // UInt64(BPS_DENOMINATOR)
+    +
+    // launchpad_v3/contract.py:329
+    // assert effective_pool_units >= min_effective_units, "Price impact exceeds five percent"
+    >=
+    assert // Price impact exceeds five percent
+    // launchpad_v3/contract.py:331
+    // (expected_pnet // UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - SLIPPAGE_BPS)
+    dup
+    intc 4 // 10000
+    /
+    pushint 9900
+    *
+    // launchpad_v3/contract.py:332
+    // + ((expected_pnet % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - SLIPPAGE_BPS))
+    dig 1
+    intc 4 // 10000
+    %
+    pushint 9900
+    *
+    // launchpad_v3/contract.py:333
+    // // UInt64(BPS_DENOMINATOR)
+    intc 4 // 10000
+    // launchpad_v3/contract.py:332-333
+    // + ((expected_pnet % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - SLIPPAGE_BPS))
+    // // UInt64(BPS_DENOMINATOR)
+    /
+    // launchpad_v3/contract.py:331-333
+    // (expected_pnet // UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - SLIPPAGE_BPS)
+    // + ((expected_pnet % UInt64(BPS_DENOMINATOR)) * UInt64(BPS_DENOMINATOR - SLIPPAGE_BPS))
+    // // UInt64(BPS_DENOMINATOR)
+    +
+    dup
+    cover 2
+    // launchpad_v3/contract.py:335
+    // assert minimum_pnet <= expected_pnet, "Quoted output is no longer available"
+    dig 5
+    dup
+    uncover 3
+    <=
+    assert // Quoted output is no longer available
+    // launchpad_v3/contract.py:338
+    // if minimum_pnet > swap_minimum:
+    <
+    bnz launch_start_if_body@25
+    uncover 3
+    pop
+    cover 2
+
+launch_start_after_if_else@26:
+    // launchpad_v3/contract.py:341-354
+    // asset_txn = itxn.AssetConfig(
+    //     total=total_raw,
+    //     decimals=UInt64(DECIMALS),
+    //     asset_name=raw_name,
+    //     unit_name=raw_unit,
+    //     url=raw_url,
+    //     default_frozen=False,
+    //     manager=algopy.Account(),
+    //     reserve=algopy.Account(),
+    //     freeze=algopy.Account(),
+    //     clawback=algopy.Account(),
+    //     fee=UInt64(0),
+    //     note=b"PNET Instant Launchpad v3",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:348
+    // manager=algopy.Account(),
+    global ZeroAddress
+    // launchpad_v3/contract.py:349-351
+    // reserve=algopy.Account(),
+    // freeze=algopy.Account(),
+    // clawback=algopy.Account(),
+    dupn 3
+    // launchpad_v3/contract.py:353
+    // note=b"PNET Instant Launchpad v3",
+    pushbytes 0x504e455420496e7374616e74204c61756e6368706164207633
+    itxn_field Note
+    itxn_field ConfigAssetClawback
+    itxn_field ConfigAssetFreeze
+    itxn_field ConfigAssetReserve
+    itxn_field ConfigAssetManager
+    // launchpad_v3/contract.py:347
+    // default_frozen=False,
+    intc_0 // 0
+    itxn_field ConfigAssetDefaultFrozen
+    itxn_field ConfigAssetURL
+    itxn_field ConfigAssetUnitName
+    dig 2
+    itxn_field ConfigAssetName
+    // launchpad_v3/contract.py:343
+    // decimals=UInt64(DECIMALS),
+    pushint 6
+    itxn_field ConfigAssetDecimals
+    dig 3
+    itxn_field ConfigAssetTotal
+    // launchpad_v3/contract.py:341
+    // asset_txn = itxn.AssetConfig(
+    pushint 3 // acfg
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:352
+    // fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:341-354
+    // asset_txn = itxn.AssetConfig(
+    //     total=total_raw,
+    //     decimals=UInt64(DECIMALS),
+    //     asset_name=raw_name,
+    //     unit_name=raw_unit,
+    //     url=raw_url,
+    //     default_frozen=False,
+    //     manager=algopy.Account(),
+    //     reserve=algopy.Account(),
+    //     freeze=algopy.Account(),
+    //     clawback=algopy.Account(),
+    //     fee=UInt64(0),
+    //     note=b"PNET Instant Launchpad v3",
+    // ).submit()
+    itxn_submit
+    itxn CreatedAssetID
+    swap
+    // launchpad_v3/contract.py:358
+    // Global.current_application_address, self.pnet_asset_id.value
+    global CurrentApplicationAddress
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:357-359
+    // before_pnet, app_opted = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, self.pnet_asset_id.value
+    // )
+    swap
+    dig 1
+    asset_holding_get AssetBalance
+    swap
+    cover 2
+    // launchpad_v3/contract.py:360
+    // assert app_opted, "Launchpad is not opted into PNET"
+    assert // Launchpad is not opted into PNET
+    // launchpad_v3/contract.py:361-370
+    // itxn.submit_txns(
+    //     itxn.Payment(receiver=self.source_pool.value, amount=UInt64(ALGO_SWAP_INPUT), fee=UInt64(0)),
+    //     itxn.ApplicationCall(
+    //         app_id=tinyman,
+    //         app_args=(b"swap", b"fixed-input", op.itob(swap_minimum)),
+    //         accounts=(self.source_pool.value,),
+    //         assets=(algopy.Asset(self.pnet_asset_id.value), algopy.Asset(UInt64(0))),
+    //         fee=UInt64(0), note=b"PNET Launchpad v3 one-ALGO acquisition",
+    //     ),
+    // )
+    itxn_begin
+    // launchpad_v3/contract.py:362
+    // itxn.Payment(receiver=self.source_pool.value, amount=UInt64(ALGO_SWAP_INPUT), fee=UInt64(0)),
+    intc_0 // 0
+    bytec 11 // 0x736f75726365
+    app_global_get_ex
+    assert // check self.source_pool exists
+    intc 6 // 1000000
+    itxn_field Amount
+    dup
+    itxn_field Receiver
+    intc_1 // pay
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:363-369
+    // itxn.ApplicationCall(
+    //     app_id=tinyman,
+    //     app_args=(b"swap", b"fixed-input", op.itob(swap_minimum)),
+    //     accounts=(self.source_pool.value,),
+    //     assets=(algopy.Asset(self.pnet_asset_id.value), algopy.Asset(UInt64(0))),
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 one-ALGO acquisition",
+    // ),
+    itxn_next
+    // launchpad_v3/contract.py:365
+    // app_args=(b"swap", b"fixed-input", op.itob(swap_minimum)),
+    dig 3
+    itob
+    dup
+    cover 5
+    // launchpad_v3/contract.py:368
+    // fee=UInt64(0), note=b"PNET Launchpad v3 one-ALGO acquisition",
+    pushbytes 0x504e4554204c61756e6368706164207633206f6e652d414c474f206163717569736974696f6e
+    itxn_field Note
+    dig 2
+    itxn_field Assets
+    // launchpad_v3/contract.py:367
+    // assets=(algopy.Asset(self.pnet_asset_id.value), algopy.Asset(UInt64(0))),
+    intc_0 // 0
+    itxn_field Assets
+    swap
+    itxn_field Accounts
+    // launchpad_v3/contract.py:365
+    // app_args=(b"swap", b"fixed-input", op.itob(swap_minimum)),
+    pushbytes 0x73776170
+    itxn_field ApplicationArgs
+    pushbytes 0x66697865642d696e707574
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    dig 10
+    itxn_field ApplicationID
+    // launchpad_v3/contract.py:363
+    // itxn.ApplicationCall(
+    pushint 6 // appl
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:368
+    // fee=UInt64(0), note=b"PNET Launchpad v3 one-ALGO acquisition",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:361-370
+    // itxn.submit_txns(
+    //     itxn.Payment(receiver=self.source_pool.value, amount=UInt64(ALGO_SWAP_INPUT), fee=UInt64(0)),
+    //     itxn.ApplicationCall(
+    //         app_id=tinyman,
+    //         app_args=(b"swap", b"fixed-input", op.itob(swap_minimum)),
+    //         accounts=(self.source_pool.value,),
+    //         assets=(algopy.Asset(self.pnet_asset_id.value), algopy.Asset(UInt64(0))),
+    //         fee=UInt64(0), note=b"PNET Launchpad v3 one-ALGO acquisition",
+    //     ),
+    // )
+    itxn_submit
+    // launchpad_v3/contract.py:372
+    // Global.current_application_address, self.pnet_asset_id.value
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:371-373
+    // after_pnet, still_opted = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, self.pnet_asset_id.value
+    // )
+    swap
+    asset_holding_get AssetBalance
+    // launchpad_v3/contract.py:374
+    // assert still_opted and after_pnet > before_pnet, "Tinyman returned no PNET"
+    bz launch_start_bool_false@32
+    dup
+    dig 2
+    >
+    bz launch_start_bool_false@32
+    intc_1 // 1
+
+launch_start_bool_merge@33:
+    // launchpad_v3/contract.py:374
+    // assert still_opted and after_pnet > before_pnet, "Tinyman returned no PNET"
+    assert // Tinyman returned no PNET
+    // launchpad_v3/contract.py:375
+    // confirmed_output = after_pnet - before_pnet
+    swap
+    -
+    // launchpad_v3/contract.py:376
+    // assert confirmed_output >= swap_minimum, "Tinyman output below minimum"
+    dup
+    uncover 2
+    >=
+    assert // Tinyman output below minimum
+    // launchpad_v3/contract.py:379
+    // asset_id=arc4.UInt64(asset_id), total_raw=arc4.UInt64(total_raw),
+    uncover 2
+    itob
+    // launchpad_v3/contract.py:380
+    // status=arc4.UInt64(UInt64(STATUS_ESCROWED)), created_round=arc4.UInt64(Global.round),
+    intc_1 // 1
+    itob
+    global Round
+    itob
+    // launchpad_v3/contract.py:381
+    // swap_round=arc4.UInt64(Global.round), pnet_output=arc4.UInt64(confirmed_output),
+    global Round
+    itob
+    dig 4
+    itob
+    // launchpad_v3/contract.py:382
+    // quote_minimum=arc4.UInt64(swap_minimum), create_tx_id=arc4.DynamicBytes(Txn.tx_id),
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    // launchpad_v3/contract.py:383
+    // swap_tx_id=arc4.DynamicBytes(Txn.tx_id),
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    // launchpad_v3/contract.py:378-384
+    // self.pending[Txn.sender] = PendingLaunch(
+    //     asset_id=arc4.UInt64(asset_id), total_raw=arc4.UInt64(total_raw),
+    //     status=arc4.UInt64(UInt64(STATUS_ESCROWED)), created_round=arc4.UInt64(Global.round),
+    //     swap_round=arc4.UInt64(Global.round), pnet_output=arc4.UInt64(confirmed_output),
+    //     quote_minimum=arc4.UInt64(swap_minimum), create_tx_id=arc4.DynamicBytes(Txn.tx_id),
+    //     swap_tx_id=arc4.DynamicBytes(Txn.tx_id),
+    // ).copy()
+    dig 6
+    dig 13
+    dup
+    cover 9
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    dig 3
+    concat
+    uncover 7
+    concat
+    pushbytes 0x003c
+    concat
+    dig 2
+    len
+    pushint 60
+    +
+    itob
+    extract 6 2
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    // launchpad_v3/contract.py:378
+    // self.pending[Txn.sender] = PendingLaunch(
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    // launchpad_v3/contract.py:378-384
+    // self.pending[Txn.sender] = PendingLaunch(
+    //     asset_id=arc4.UInt64(asset_id), total_raw=arc4.UInt64(total_raw),
+    //     status=arc4.UInt64(UInt64(STATUS_ESCROWED)), created_round=arc4.UInt64(Global.round),
+    //     swap_round=arc4.UInt64(Global.round), pnet_output=arc4.UInt64(confirmed_output),
+    //     quote_minimum=arc4.UInt64(swap_minimum), create_tx_id=arc4.DynamicBytes(Txn.tx_id),
+    //     swap_tx_id=arc4.DynamicBytes(Txn.tx_id),
+    // ).copy()
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    // launchpad_v3/contract.py:385
+    // self.reserved_pnet.value = self.reserved_pnet.value + confirmed_output
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    uncover 4
+    +
+    bytec_1 // 0x7265736572766564
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:387
+    // arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(total_raw), arc4.UInt64(confirmed_output),
+    txn Sender
+    // launchpad_v3/contract.py:386-388
+    // arc4.emit(LaunchStarted(
+    //     arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(total_raw), arc4.UInt64(confirmed_output),
+    // ))
+    dig 2
+    concat
+    uncover 3
+    concat
+    swap
+    concat
+    pushbytes 0xfffb791f // method "LaunchStarted(address,uint64,uint64,uint64)"
+    swap
+    concat
+    log
+    // launchpad_v3/contract.py:267
+    // @arc4.abimethod
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+launch_start_bool_false@32:
+    intc_0 // 0
+    b launch_start_bool_merge@33
+
+launch_start_if_body@25:
+    pop
+    b launch_start_after_if_else@26
+
+launch_start_bool_false@23:
+    intc_0 // 0
+    b launch_start_bool_merge@24
+
+launch_start_bool_false@19:
+    intc_0 // 0
+    b launch_start_bool_merge@20
+
+launch_start_bool_false@15:
+    intc_0 // 0
+    b launch_start_bool_merge@16
+
+launch_start_bool_false@8:
+    intc_0 // 0
+    b launch_start_bool_merge@9
+
+launch_start_bool_false@4:
+    intc_0 // 0
+    b launch_start_bool_merge@5
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.launch_finish[routing]() -> void:
+launch_finish:
+    intc_0 // 0
+    pushbytes ""
+    dupn 5
+    // launchpad_v3/contract.py:391
+    // @arc4.abimethod
+    txn GroupIndex
+    intc_1 // 1
+    -
+    dupn 2
+    gtxns TypeEnum
+    intc_1 // pay
+    ==
+    assert // transaction type is pay
+    txna ApplicationArgs 1
+    dup
+    cover 3
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    uncover 2
+    txna ApplicationArgs 2
+    dup
+    cover 5
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    cover 5
+    // launchpad_v3/contract.py:404
+    // assert Txn.group_index >= UInt64(1), "Funding must precede call"
+    txn GroupIndex
+    assert // Funding must precede call
+    // launchpad_v3/contract.py:405
+    // assert funding.group_index + UInt64(1) == Txn.group_index, "Funding must precede call"
+    uncover 2
+    gtxns GroupIndex
+    intc_1 // 1
+    +
+    txn GroupIndex
+    ==
+    assert // Funding must precede call
+    // launchpad_v3/contract.py:406
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:407
+    // assert grant_vestige <= UInt64(1), "Invalid Vestige flag"
+    intc_1 // 1
+    <=
+    assert // Invalid Vestige flag
+    // launchpad_v3/contract.py:408
+    // assert Txn.sender in self.pending, "Unknown launch"
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    box_len
+    bury 1
+    assert // Unknown launch
+    // launchpad_v3/contract.py:409
+    // pending = self.pending[Txn.sender].copy()
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    dup
+    cover 3
+    // launchpad_v3/contract.py:409-410
+    // pending = self.pending[Txn.sender].copy()
+    // assert pending.asset_id.as_uint64() == asset_id, "Asset mismatch"
+    dup
+    intc_0 // 0
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:410
+    // assert pending.asset_id.as_uint64() == asset_id, "Asset mismatch"
+    btoi
+    uncover 3
+    ==
+    assert // Asset mismatch
+    // launchpad_v3/contract.py:411
+    // assert pending.status.as_uint64() == UInt64(STATUS_ESCROWED), "PNET escrow required"
+    pushint 16
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    btoi
+    intc_1 // 1
+    ==
+    assert // PNET escrow required
+    // launchpad_v3/contract.py:413
+    // tinyman = algopy.Application(self.tinyman_app_id.value)
+    intc_0 // 0
+    bytec 12 // 0x74696e796d616e
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    cover 6
+    assert // check self.tinyman_app_id exists
+    // launchpad_v3/contract.py:414
+    // asset_1, has_a1 = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"asset_1_id")
+    dup2
+    bytec 15 // 0x61737365745f315f6964
+    app_local_get_ex
+    cover 3
+    cover 5
+    // launchpad_v3/contract.py:415
+    // asset_2, has_a2 = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"asset_2_id")
+    dup2
+    bytec 16 // 0x61737365745f325f6964
+    app_local_get_ex
+    cover 12
+    cover 11
+    // launchpad_v3/contract.py:416
+    // pool_token_id, has_lp = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"pool_token_asset_id")
+    dup2
+    bytec 21 // 0x706f6f6c5f746f6b656e5f61737365745f6964
+    app_local_get_ex
+    cover 12
+    cover 3
+    // launchpad_v3/contract.py:417
+    // issued_before, has_issued = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"issued_pool_tokens")
+    bytec 24 // 0x6973737565645f706f6f6c5f746f6b656e73
+    app_local_get_ex
+    cover 11
+    swap
+    // launchpad_v3/contract.py:418
+    // assert has_a1 and has_a2 and has_lp and has_issued, "Invalid Tinyman pool"
+    bz launch_finish_bool_false@6
+    dig 13
+    bz launch_finish_bool_false@6
+    dig 11
+    bz launch_finish_bool_false@6
+    dig 10
+    bz launch_finish_bool_false@6
+    intc_1 // 1
+
+launch_finish_bool_merge@7:
+    // launchpad_v3/contract.py:418
+    // assert has_a1 and has_a2 and has_lp and has_issued, "Invalid Tinyman pool"
+    assert // Invalid Tinyman pool
+    // launchpad_v3/contract.py:419
+    // assert pool_token_id > UInt64(0), "Pool token required"
+    dig 1
+    assert // Pool token required
+    // launchpad_v3/contract.py:420-421
+    // # Tinyman orders pool assets descending by asset id; launch assets are always newer than PNET on MainNet.
+    // assert asset_id > self.pnet_asset_id.value, "Launch ASA must be newer than PNET"
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    dig 4
+    dup
+    uncover 2
+    >
+    assert // Launch ASA must be newer than PNET
+    // launchpad_v3/contract.py:422
+    // assert asset_1 == asset_id and asset_2 == self.pnet_asset_id.value, "Wrong Tinyman pair/order"
+    uncover 5
+    ==
+    bz launch_finish_bool_false@10
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    dig 12
+    ==
+    bz launch_finish_bool_false@10
+    intc_1 // 1
+
+launch_finish_bool_merge@11:
+    // launchpad_v3/contract.py:422
+    // assert asset_1 == asset_id and asset_2 == self.pnet_asset_id.value, "Wrong Tinyman pair/order"
+    assert // Wrong Tinyman pair/order
+    // launchpad_v3/contract.py:423
+    // assert issued_before == UInt64(0), "Pool already has liquidity"
+    !
+    assert // Pool already has liquidity
+    // launchpad_v3/contract.py:426
+    // Global.current_application_address, asset_id
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:425-427
+    // app_token_balance, app_holds_token = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, asset_id
+    // )
+    dig 3
+    asset_holding_get AssetBalance
+    swap
+    bury 18
+    // launchpad_v3/contract.py:429
+    // Global.current_application_address, self.pnet_asset_id.value
+    global CurrentApplicationAddress
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:428-430
+    // app_pnet_balance, app_holds_pnet = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, self.pnet_asset_id.value
+    // )
+    asset_holding_get AssetBalance
+    cover 3
+    bury 20
+    // launchpad_v3/contract.py:432
+    // Global.current_application_address, pool_token_id
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:431-433
+    // _app_lp_balance, app_holds_lp = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, pool_token_id
+    // )
+    dig 2
+    dup
+    cover 2
+    asset_holding_get AssetBalance
+    cover 3
+    pop
+    // launchpad_v3/contract.py:435
+    // self.burn_account.value, pool_token_id
+    intc_0 // 0
+    bytec 9 // 0x6275726e
+    app_global_get_ex
+    assert // check self.burn_account exists
+    // launchpad_v3/contract.py:434-436
+    // _burn_lp_balance, burn_holds_lp = op.AssetHoldingGet.asset_balance(
+    //     self.burn_account.value, pool_token_id
+    // )
+    swap
+    asset_holding_get AssetBalance
+    cover 3
+    pop
+    // launchpad_v3/contract.py:437
+    // assert app_holds_token and app_token_balance == pending.total_raw.as_uint64(), "App must hold full supply"
+    bz launch_finish_bool_false@14
+    dig 4
+    intc_2 // 8
+    dup
+    box_extract // on error: index out of bounds
+    btoi
+    dig 20
+    ==
+    bz launch_finish_bool_false@14
+    intc_1 // 1
+
+launch_finish_bool_merge@15:
+    // launchpad_v3/contract.py:437
+    // assert app_holds_token and app_token_balance == pending.total_raw.as_uint64(), "App must hold full supply"
+    assert // App must hold full supply
+    // launchpad_v3/contract.py:438
+    // assert app_holds_pnet and app_pnet_balance >= self.reserved_pnet.value, "Escrowed PNET invariant failed"
+    uncover 3
+    bz launch_finish_bool_false@18
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    dig 20
+    <=
+    bz launch_finish_bool_false@18
+    intc_1 // 1
+
+launch_finish_bool_merge@19:
+    // launchpad_v3/contract.py:438
+    // assert app_holds_pnet and app_pnet_balance >= self.reserved_pnet.value, "Escrowed PNET invariant failed"
+    assert // Escrowed PNET invariant failed
+    // launchpad_v3/contract.py:439
+    // assert not app_holds_lp, "App already opted into LP"
+    !
+    assert // App already opted into LP
+    // launchpad_v3/contract.py:441
+    // expected_funding = UInt64(LP_HOLDING_MBR)
+    intc 5 // 100000
+    bury 17
+    // launchpad_v3/contract.py:442
+    // if not burn_holds_lp:
+    dup
+    bnz launch_finish_after_if_else@21
+    // launchpad_v3/contract.py:443
+    // expected_funding = expected_funding + UInt64(ARC54_LP_HOLDING_MBR)
+    pushint 200000
+    bury 17
+
+launch_finish_after_if_else@21:
+    // launchpad_v3/contract.py:444
+    // if grant_vestige == UInt64(1):
+    uncover 4
+    intc_1 // 1
+    ==
+    dup
+    cover 2
+    bz launch_finish_after_if_else@23
+    // launchpad_v3/contract.py:445
+    // expected_funding = expected_funding + UInt64(VESTIGE_FUNDING)
+    dig 16
+    intc 5 // 100000
+    +
+    bury 17
+
+launch_finish_after_if_else@23:
+    // launchpad_v3/contract.py:446
+    // assert funding.sender == Txn.sender, "Funding sender mismatch"
+    uncover 6
+    dup
+    gtxns Sender
+    txn Sender
+    ==
+    assert // Funding sender mismatch
+    // launchpad_v3/contract.py:447
+    // assert funding.receiver == Global.current_application_address, "Wrong funding receiver"
+    dup
+    gtxns Receiver
+    global CurrentApplicationAddress
+    ==
+    assert // Wrong funding receiver
+    // launchpad_v3/contract.py:448
+    // assert funding.amount == expected_funding, "Wrong launch funding"
+    dup
+    gtxns Amount
+    dig 17
+    ==
+    assert // Wrong launch funding
+    // launchpad_v3/contract.py:449
+    // assert funding.close_remainder_to == algopy.Account(), "No funding close"
+    dup
+    gtxns CloseRemainderTo
+    global ZeroAddress
+    ==
+    assert // No funding close
+    // launchpad_v3/contract.py:450
+    // assert funding.rekey_to == algopy.Account(), "No funding rekey"
+    gtxns RekeyTo
+    global ZeroAddress
+    ==
+    assert // No funding rekey
+    // launchpad_v3/contract.py:452
+    // if not burn_holds_lp:
+    bnz launch_finish_after_if_else@27
+    // launchpad_v3/contract.py:453-467
+    // itxn.submit_txns(
+    //     itxn.Payment(
+    //         receiver=self.burn_account.value,
+    //         amount=UInt64(ARC54_LP_HOLDING_MBR),
+    //         fee=UInt64(0),
+    //         note=b"PNET Launchpad v3 ARC-54 LP MBR",
+    //     ),
+    //     itxn.ApplicationCall(
+    //         app_id=algopy.Application(self.arc54_app_id.value),
+    //         app_args=(arc4.arc4_signature("arc54_optIntoASA(asset)void"), b"\x00"),
+    //         assets=(algopy.Asset(pool_token_id),),
+    //         fee=UInt64(0),
+    //         note=b"PNET Launchpad v3 ARC-54 LP opt-in",
+    //     ),
+    // )
+    itxn_begin
+    // launchpad_v3/contract.py:455
+    // receiver=self.burn_account.value,
+    intc_0 // 0
+    bytec 9 // 0x6275726e
+    app_global_get_ex
+    assert // check self.burn_account exists
+    // launchpad_v3/contract.py:458
+    // note=b"PNET Launchpad v3 ARC-54 LP MBR",
+    pushbytes 0x504e4554204c61756e6368706164207633204152432d3534204c50204d4252
+    itxn_field Note
+    // launchpad_v3/contract.py:456
+    // amount=UInt64(ARC54_LP_HOLDING_MBR),
+    intc 5 // 100000
+    itxn_field Amount
+    dup
+    itxn_field Receiver
+    // launchpad_v3/contract.py:454
+    // itxn.Payment(
+    intc_1 // pay
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:457
+    // fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:460-466
+    // itxn.ApplicationCall(
+    //     app_id=algopy.Application(self.arc54_app_id.value),
+    //     app_args=(arc4.arc4_signature("arc54_optIntoASA(asset)void"), b"\x00"),
+    //     assets=(algopy.Asset(pool_token_id),),
+    //     fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 ARC-54 LP opt-in",
+    // ),
+    itxn_next
+    // launchpad_v3/contract.py:461
+    // app_id=algopy.Application(self.arc54_app_id.value),
+    intc_0 // 0
+    bytec 17 // 0x6172633534
+    app_global_get_ex
+    assert // check self.arc54_app_id exists
+    // launchpad_v3/contract.py:465
+    // note=b"PNET Launchpad v3 ARC-54 LP opt-in",
+    pushbytes 0x504e4554204c61756e6368706164207633204152432d3534204c50206f70742d696e
+    itxn_field Note
+    dig 3
+    dup
+    cover 2
+    itxn_field Assets
+    // launchpad_v3/contract.py:462
+    // app_args=(arc4.arc4_signature("arc54_optIntoASA(asset)void"), b"\x00"),
+    pushbytes 0x44f8d5de // method "arc54_optIntoASA(asset)void"
+    itxn_field ApplicationArgs
+    bytec 19 // 0x00
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    // launchpad_v3/contract.py:460
+    // itxn.ApplicationCall(
+    pushint 6 // appl
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:464
+    // fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:453-467
+    // itxn.submit_txns(
+    //     itxn.Payment(
+    //         receiver=self.burn_account.value,
+    //         amount=UInt64(ARC54_LP_HOLDING_MBR),
+    //         fee=UInt64(0),
+    //         note=b"PNET Launchpad v3 ARC-54 LP MBR",
+    //     ),
+    //     itxn.ApplicationCall(
+    //         app_id=algopy.Application(self.arc54_app_id.value),
+    //         app_args=(arc4.arc4_signature("arc54_optIntoASA(asset)void"), b"\x00"),
+    //         assets=(algopy.Asset(pool_token_id),),
+    //         fee=UInt64(0),
+    //         note=b"PNET Launchpad v3 ARC-54 LP opt-in",
+    //     ),
+    // )
+    itxn_submit
+    // launchpad_v3/contract.py:468-470
+    // _burn_balance, burn_now_holds_lp = op.AssetHoldingGet.asset_balance(
+    //     self.burn_account.value, pool_token_id
+    // )
+    asset_holding_get AssetBalance
+    bury 1
+    // launchpad_v3/contract.py:471
+    // assert burn_now_holds_lp, "ARC-54 LP opt-in failed"
+    assert // ARC-54 LP opt-in failed
+
+launch_finish_after_if_else@27:
+    // launchpad_v3/contract.py:473-476
+    // itxn.AssetTransfer(
+    //     xfer_asset=pool_token_id, asset_receiver=Global.current_application_address,
+    //     asset_amount=UInt64(0), fee=UInt64(0),
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:474
+    // xfer_asset=pool_token_id, asset_receiver=Global.current_application_address,
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:475
+    // asset_amount=UInt64(0), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    dig 1
+    dup
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:473
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:475
+    // asset_amount=UInt64(0), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:473-476
+    // itxn.AssetTransfer(
+    //     xfer_asset=pool_token_id, asset_receiver=Global.current_application_address,
+    //     asset_amount=UInt64(0), fee=UInt64(0),
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:477-491
+    // itxn.submit_txns(
+    //     itxn.AssetTransfer(
+    //         xfer_asset=asset_id, asset_receiver=pool_address,
+    //         asset_amount=pending.total_raw.as_uint64(), fee=UInt64(0),
+    //     ),
+    //     itxn.AssetTransfer(
+    //         xfer_asset=self.pnet_asset_id.value, asset_receiver=pool_address,
+    //         asset_amount=pending.pnet_output.as_uint64(), fee=UInt64(0),
+    //     ),
+    //     itxn.ApplicationCall(
+    //         app_id=tinyman, app_args=(b"add_initial_liquidity",), accounts=(pool_address,),
+    //         assets=(algopy.Asset(pool_token_id),), fee=UInt64(0),
+    //         note=b"PNET Launchpad v3 initial liquidity",
+    //     ),
+    // )
+    itxn_begin
+    // launchpad_v3/contract.py:480
+    // asset_amount=pending.total_raw.as_uint64(), fee=UInt64(0),
+    dig 3
+    dup
+    intc_2 // 8
+    dup
+    box_extract // on error: index out of bounds
+    dup
+    cover 10
+    btoi
+    dup
+    cover 7
+    itxn_field AssetAmount
+    dig 8
+    dup
+    cover 2
+    itxn_field AssetReceiver
+    dig 6
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:478
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:480
+    // asset_amount=pending.total_raw.as_uint64(), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:482-485
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value, asset_receiver=pool_address,
+    //     asset_amount=pending.pnet_output.as_uint64(), fee=UInt64(0),
+    // ),
+    itxn_next
+    // launchpad_v3/contract.py:483
+    // xfer_asset=self.pnet_asset_id.value, asset_receiver=pool_address,
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:484
+    // asset_amount=pending.pnet_output.as_uint64(), fee=UInt64(0),
+    swap
+    pushint 40
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    dup
+    cover 12
+    btoi
+    dup
+    cover 6
+    itxn_field AssetAmount
+    dig 1
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:482
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:484
+    // asset_amount=pending.pnet_output.as_uint64(), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:486-490
+    // itxn.ApplicationCall(
+    //     app_id=tinyman, app_args=(b"add_initial_liquidity",), accounts=(pool_address,),
+    //     assets=(algopy.Asset(pool_token_id),), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 initial liquidity",
+    // ),
+    itxn_next
+    // launchpad_v3/contract.py:489
+    // note=b"PNET Launchpad v3 initial liquidity",
+    pushbytes 0x504e4554204c61756e636870616420763320696e697469616c206c6971756964697479
+    itxn_field Note
+    swap
+    itxn_field Assets
+    dup
+    itxn_field Accounts
+    // launchpad_v3/contract.py:487
+    // app_id=tinyman, app_args=(b"add_initial_liquidity",), accounts=(pool_address,),
+    pushbytes 0x6164645f696e697469616c5f6c6971756964697479
+    itxn_field ApplicationArgs
+    uncover 7
+    dup
+    itxn_field ApplicationID
+    // launchpad_v3/contract.py:486
+    // itxn.ApplicationCall(
+    pushint 6 // appl
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:488
+    // assets=(algopy.Asset(pool_token_id),), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:477-491
+    // itxn.submit_txns(
+    //     itxn.AssetTransfer(
+    //         xfer_asset=asset_id, asset_receiver=pool_address,
+    //         asset_amount=pending.total_raw.as_uint64(), fee=UInt64(0),
+    //     ),
+    //     itxn.AssetTransfer(
+    //         xfer_asset=self.pnet_asset_id.value, asset_receiver=pool_address,
+    //         asset_amount=pending.pnet_output.as_uint64(), fee=UInt64(0),
+    //     ),
+    //     itxn.ApplicationCall(
+    //         app_id=tinyman, app_args=(b"add_initial_liquidity",), accounts=(pool_address,),
+    //         assets=(algopy.Asset(pool_token_id),), fee=UInt64(0),
+    //         note=b"PNET Launchpad v3 initial liquidity",
+    //     ),
+    // )
+    itxn_submit
+    // launchpad_v3/contract.py:493
+    // reserve_1, has_r1 = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"asset_1_reserves")
+    dup2
+    bytec 22 // 0x61737365745f315f7265736572766573
+    app_local_get_ex
+    cover 3
+    cover 5
+    // launchpad_v3/contract.py:494
+    // reserve_2, has_r2 = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"asset_2_reserves")
+    dup2
+    bytec 23 // 0x61737365745f325f7265736572766573
+    app_local_get_ex
+    bury 21
+    cover 5
+    // launchpad_v3/contract.py:495
+    // issued_after, has_issued_after = op.AppLocal.get_ex_uint64(pool_address, tinyman, b"issued_pool_tokens")
+    bytec 24 // 0x6973737565645f706f6f6c5f746f6b656e73
+    app_local_get_ex
+    bury 21
+    swap
+    // launchpad_v3/contract.py:496
+    // assert has_r1 and has_r2 and has_issued_after, "Tinyman did not update pool state"
+    bz launch_finish_bool_false@35
+    dig 18
+    bz launch_finish_bool_false@35
+    dig 19
+    bz launch_finish_bool_false@35
+    intc_1 // 1
+
+launch_finish_bool_merge@36:
+    // launchpad_v3/contract.py:496
+    // assert has_r1 and has_r2 and has_issued_after, "Tinyman did not update pool state"
+    assert // Tinyman did not update pool state
+    // launchpad_v3/contract.py:497
+    // assert reserve_1 == pending.total_raw.as_uint64(), "Wrong token reserve"
+    uncover 4
+    uncover 8
+    ==
+    assert // Wrong token reserve
+    // launchpad_v3/contract.py:498
+    // assert reserve_2 == pending.pnet_output.as_uint64(), "Wrong PNET reserve"
+    uncover 3
+    dig 4
+    ==
+    assert // Wrong PNET reserve
+    // launchpad_v3/contract.py:501
+    // Global.current_application_address, pool_token_id
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:500-502
+    // received_lp, app_lp_opted = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, pool_token_id
+    // )
+    dig 3
+    asset_holding_get AssetBalance
+    // launchpad_v3/contract.py:503
+    // assert app_lp_opted and received_lp > UInt64(0), "No LP received"
+    bz launch_finish_bool_false@39
+    dup
+    bz launch_finish_bool_false@39
+    intc_1 // 1
+
+launch_finish_bool_merge@40:
+    // launchpad_v3/contract.py:503
+    // assert app_lp_opted and received_lp > UInt64(0), "No LP received"
+    assert // No LP received
+    // launchpad_v3/contract.py:504
+    // assert issued_after == received_lp + UInt64(LOCKED_TINYMAN_POOL_TOKENS), "LP issuance mismatch"
+    dup
+    pushint 1000
+    +
+    uncover 2
+    ==
+    assert // LP issuance mismatch
+    // launchpad_v3/contract.py:505
+    // burned_lp = ((received_lp // UInt64(BPS_DENOMINATOR)) * UInt64(BURN_BPS)
+    dup
+    intc 4 // 10000
+    /
+    pushint 8000
+    *
+    // launchpad_v3/contract.py:506
+    // + ((received_lp % UInt64(BPS_DENOMINATOR)) * UInt64(BURN_BPS))
+    dig 1
+    intc 4 // 10000
+    %
+    pushint 8000
+    *
+    // launchpad_v3/contract.py:507
+    // // UInt64(BPS_DENOMINATOR))
+    intc 4 // 10000
+    // launchpad_v3/contract.py:506-507
+    // + ((received_lp % UInt64(BPS_DENOMINATOR)) * UInt64(BURN_BPS))
+    // // UInt64(BPS_DENOMINATOR))
+    /
+    // launchpad_v3/contract.py:505-507
+    // burned_lp = ((received_lp // UInt64(BPS_DENOMINATOR)) * UInt64(BURN_BPS)
+    //              + ((received_lp % UInt64(BPS_DENOMINATOR)) * UInt64(BURN_BPS))
+    //              // UInt64(BPS_DENOMINATOR))
+    +
+    dup
+    cover 4
+    // launchpad_v3/contract.py:508
+    // distributable_lp = received_lp - burned_lp
+    swap
+    dig 1
+    -
+    // launchpad_v3/contract.py:509
+    // creator_lp = distributable_lp // UInt64(2)
+    dup
+    intc_3 // 2
+    /
+    dup
+    cover 5
+    // launchpad_v3/contract.py:510
+    // platform_lp = distributable_lp - creator_lp
+    -
+    swap
+    // launchpad_v3/contract.py:511
+    // assert burned_lp > UInt64(0) and creator_lp > UInt64(0) and platform_lp > UInt64(0), "Liquidity too small"
+    bz launch_finish_bool_false@44
+    dig 3
+    bz launch_finish_bool_false@44
+    dup
+    bz launch_finish_bool_false@44
+    intc_1 // 1
+
+launch_finish_bool_merge@45:
+    // launchpad_v3/contract.py:511
+    // assert burned_lp > UInt64(0) and creator_lp > UInt64(0) and platform_lp > UInt64(0), "Liquidity too small"
+    assert // Liquidity too small
+    // launchpad_v3/contract.py:513-516
+    // itxn.AssetTransfer(
+    //     xfer_asset=pool_token_id, asset_receiver=self.burn_account.value,
+    //     asset_amount=burned_lp, fee=UInt64(0), note=b"PNET Launchpad v3 ARC-54 LP burn",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:514
+    // xfer_asset=pool_token_id, asset_receiver=self.burn_account.value,
+    intc_0 // 0
+    bytec 9 // 0x6275726e
+    app_global_get_ex
+    assert // check self.burn_account exists
+    // launchpad_v3/contract.py:515
+    // asset_amount=burned_lp, fee=UInt64(0), note=b"PNET Launchpad v3 ARC-54 LP burn",
+    pushbytes 0x504e4554204c61756e6368706164207633204152432d3534204c50206275726e
+    itxn_field Note
+    dig 5
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    dig 2
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:513
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:515
+    // asset_amount=burned_lp, fee=UInt64(0), note=b"PNET Launchpad v3 ARC-54 LP burn",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:513-516
+    // itxn.AssetTransfer(
+    //     xfer_asset=pool_token_id, asset_receiver=self.burn_account.value,
+    //     asset_amount=burned_lp, fee=UInt64(0), note=b"PNET Launchpad v3 ARC-54 LP burn",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:517-521
+    // # The pending-record deposit was prepaid by the launcher; it comes back now that the record is gone.
+    // itxn.Payment(
+    //     receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 pending record deposit refund",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:519
+    // receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    txn Sender
+    // launchpad_v3/contract.py:520
+    // note=b"PNET Launchpad v3 pending record deposit refund",
+    bytec 25 // 0x504e4554204c61756e63687061642076332070656e64696e67207265636f7264206465706f73697420726566756e64
+    itxn_field Note
+    // launchpad_v3/contract.py:519
+    // receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    intc 8 // 66900
+    itxn_field Amount
+    itxn_field Receiver
+    // launchpad_v3/contract.py:517-518
+    // # The pending-record deposit was prepaid by the launcher; it comes back now that the record is gone.
+    // itxn.Payment(
+    intc_1 // pay
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:519
+    // receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:517-521
+    // # The pending-record deposit was prepaid by the launcher; it comes back now that the record is gone.
+    // itxn.Payment(
+    //     receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 pending record deposit refund",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:523
+    // vestige_granted = UInt64(0)
+    intc_0 // 0
+    bury 17
+    // launchpad_v3/contract.py:524
+    // vestige_tx_id = arc4.DynamicBytes(ZERO_TX_ID)
+    bytec 26 // 0x00200000000000000000000000000000000000000000000000000000000000000000
+    bury 23
+    // launchpad_v3/contract.py:525
+    // if grant_vestige == UInt64(1):
+    swap
+    bz launch_finish_after_if_else@51
+    // launchpad_v3/contract.py:526
+    // vestige = algopy.Application(self.vestige_app_id.value)
+    intc_0 // 0
+    bytec 13 // 0x76657374696765
+    app_global_get_ex
+    assert // check self.vestige_app_id exists
+    // launchpad_v3/contract.py:527-530
+    // itxn.Payment(
+    //     receiver=vestige.address, amount=UInt64(VESTIGE_FUNDING), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 Vestige manager MBR",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:528
+    // receiver=vestige.address, amount=UInt64(VESTIGE_FUNDING), fee=UInt64(0),
+    dup
+    app_params_get AppAddress
+    assert // application exists
+    // launchpad_v3/contract.py:529
+    // note=b"PNET Launchpad v3 Vestige manager MBR",
+    pushbytes 0x504e4554204c61756e63687061642076332056657374696765206d616e61676572204d4252
+    itxn_field Note
+    // launchpad_v3/contract.py:528
+    // receiver=vestige.address, amount=UInt64(VESTIGE_FUNDING), fee=UInt64(0),
+    intc 5 // 100000
+    itxn_field Amount
+    itxn_field Receiver
+    // launchpad_v3/contract.py:527
+    // itxn.Payment(
+    intc_1 // pay
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:528
+    // receiver=vestige.address, amount=UInt64(VESTIGE_FUNDING), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:527-530
+    // itxn.Payment(
+    //     receiver=vestige.address, amount=UInt64(VESTIGE_FUNDING), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 Vestige manager MBR",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:531-534
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    itxn_begin
+    // launchpad_v3/contract.py:532
+    // "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    txn Sender
+    // launchpad_v3/contract.py:533
+    // app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    bytec 27 // 0x504e4554204c61756e636870616420763320566573746967652064656c65676174696f6e
+    itxn_field Note
+    swap
+    itxn_field ApplicationID
+    dig 7
+    itxn_field Assets
+    // launchpad_v3/contract.py:531-534
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    bytec 28 // method "add_asset_metadata_manager(asset,address)void"
+    itxn_field ApplicationArgs
+    // launchpad_v3/contract.py:532
+    // "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    bytec 19 // 0x00
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    // launchpad_v3/contract.py:531-534
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    pushint 6 // appl
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:533
+    // app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:531-534
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    itxn_submit
+    // launchpad_v3/contract.py:535
+    // vestige_granted = UInt64(1)
+    intc_1 // 1
+    bury 16
+    // launchpad_v3/contract.py:536
+    // vestige_tx_id = arc4.DynamicBytes(Txn.tx_id)
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    bury 22
+
+launch_finish_after_if_else@51:
+    // launchpad_v3/contract.py:538
+    // self.reserved_pnet.value = self.reserved_pnet.value - pending.pnet_output.as_uint64()
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    uncover 5
+    -
+    bytec_1 // 0x7265736572766564
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:541
+    // arc4.UInt64(asset_id), arc4.UInt64(pool_token_id), arc4.UInt64(platform_lp),
+    swap
+    itob
+    swap
+    itob
+    // launchpad_v3/contract.py:542
+    // arc4.UInt64(UInt64(ALLOCATION_PLATFORM_LP)),
+    intc_3 // 2
+    itob
+    // launchpad_v3/contract.py:539-543
+    // # Keyed by the launch asset id (known when the group is built), because the LP asset id may not exist yet then.
+    // self.platform_allocations[asset_id] = PlatformAllocation(
+    //     arc4.UInt64(asset_id), arc4.UInt64(pool_token_id), arc4.UInt64(platform_lp),
+    //     arc4.UInt64(UInt64(ALLOCATION_PLATFORM_LP)),
+    // ).copy()
+    uncover 8
+    dup
+    cover 4
+    dig 3
+    concat
+    dig 2
+    concat
+    dig 1
+    concat
+    // launchpad_v3/contract.py:539-540
+    // # Keyed by the launch asset id (known when the group is built), because the LP asset id may not exist yet then.
+    // self.platform_allocations[asset_id] = PlatformAllocation(
+    uncover 8
+    itob
+    bytec 14 // 0x61
+    dig 1
+    concat
+    // launchpad_v3/contract.py:539-543
+    // # Keyed by the launch asset id (known when the group is built), because the LP asset id may not exist yet then.
+    // self.platform_allocations[asset_id] = PlatformAllocation(
+    //     arc4.UInt64(asset_id), arc4.UInt64(pool_token_id), arc4.UInt64(platform_lp),
+    //     arc4.UInt64(UInt64(ALLOCATION_PLATFORM_LP)),
+    // ).copy()
+    uncover 2
+    box_put
+    // launchpad_v3/contract.py:545
+    // launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    txn Sender
+    // launchpad_v3/contract.py:546
+    // status=arc4.UInt64(UInt64(STATUS_COMPLETE)), created_round=pending.created_round,
+    uncover 8
+    dup
+    pushint 24
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:547
+    // swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    dig 1
+    pushint 32
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    global Round
+    itob
+    // launchpad_v3/contract.py:549
+    // pnet_seed=pending.pnet_output, burned_lp=arc4.UInt64(burned_lp),
+    uncover 11
+    itob
+    // launchpad_v3/contract.py:550
+    // creator_lp=arc4.UInt64(creator_lp), creator_lp_claimed=arc4.UInt64(UInt64(0)),
+    uncover 11
+    itob
+    intc_0 // 0
+    itob
+    // launchpad_v3/contract.py:555
+    // vestige_granted=arc4.UInt64(vestige_granted),
+    dig 20
+    dup
+    itob
+    // launchpad_v3/contract.py:556
+    // vestige_funding=arc4.UInt64(vestige_granted * UInt64(VESTIGE_FUNDING)),
+    swap
+    intc 5 // 100000
+    *
+    itob
+    // launchpad_v3/contract.py:557
+    // create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    dig 8
+    pushint 60
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_3 // 2
+    +
+    dig 9
+    pushint 60
+    uncover 2
+    box_extract
+    dig 9
+    pushint 58
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 10
+    dig 1
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_3 // 2
+    +
+    uncover 11
+    cover 2
+    box_extract
+    // launchpad_v3/contract.py:558
+    // terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=vestige_tx_id.copy(),
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    // launchpad_v3/contract.py:544-560
+    // self.launches[asset_id] = LaunchRecord(
+    //     launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    //     status=arc4.UInt64(UInt64(STATUS_COMPLETE)), created_round=pending.created_round,
+    //     swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    //     pool_address=arc4.Address(pool_address), pool_token_id=arc4.UInt64(pool_token_id),
+    //     pnet_seed=pending.pnet_output, burned_lp=arc4.UInt64(burned_lp),
+    //     creator_lp=arc4.UInt64(creator_lp), creator_lp_claimed=arc4.UInt64(UInt64(0)),
+    //     platform_lp=arc4.UInt64(platform_lp),
+    //     cancel_creator_token=arc4.UInt64(UInt64(0)), cancel_platform_token=arc4.UInt64(UInt64(0)),
+    //     cancel_creator_pnet=arc4.UInt64(UInt64(0)), cancel_platform_pnet=arc4.UInt64(UInt64(0)),
+    //     cancel_platform_pnet_remaining=arc4.UInt64(UInt64(0)),
+    //     vestige_granted=arc4.UInt64(vestige_granted),
+    //     vestige_funding=arc4.UInt64(vestige_granted * UInt64(VESTIGE_FUNDING)),
+    //     create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    //     terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=vestige_tx_id.copy(),
+    //     release_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    // ).copy()
+    uncover 11
+    dig 16
+    concat
+    uncover 19
+    concat
+    uncover 13
+    concat
+    uncover 11
+    concat
+    uncover 10
+    concat
+    uncover 9
+    concat
+    uncover 13
+    concat
+    dig 11
+    concat
+    uncover 13
+    concat
+    dig 8
+    concat
+    dig 7
+    concat
+    dig 6
+    concat
+    dig 10
+    concat
+    dig 6
+    concat
+    dig 6
+    concat
+    dig 6
+    concat
+    dig 6
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    bytec 29 // 0x00e2
+    concat
+    dig 3
+    len
+    pushint 226
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    dig 3
+    len
+    uncover 2
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    dig 2
+    len
+    uncover 2
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    dig 21
+    dup
+    cover 3
+    len
+    uncover 2
+    +
+    itob
+    extract 6 2
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    // launchpad_v3/contract.py:524
+    // vestige_tx_id = arc4.DynamicBytes(ZERO_TX_ID)
+    bytec 26 // 0x00200000000000000000000000000000000000000000000000000000000000000000
+    // launchpad_v3/contract.py:544-560
+    // self.launches[asset_id] = LaunchRecord(
+    //     launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    //     status=arc4.UInt64(UInt64(STATUS_COMPLETE)), created_round=pending.created_round,
+    //     swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    //     pool_address=arc4.Address(pool_address), pool_token_id=arc4.UInt64(pool_token_id),
+    //     pnet_seed=pending.pnet_output, burned_lp=arc4.UInt64(burned_lp),
+    //     creator_lp=arc4.UInt64(creator_lp), creator_lp_claimed=arc4.UInt64(UInt64(0)),
+    //     platform_lp=arc4.UInt64(platform_lp),
+    //     cancel_creator_token=arc4.UInt64(UInt64(0)), cancel_platform_token=arc4.UInt64(UInt64(0)),
+    //     cancel_creator_pnet=arc4.UInt64(UInt64(0)), cancel_platform_pnet=arc4.UInt64(UInt64(0)),
+    //     cancel_platform_pnet_remaining=arc4.UInt64(UInt64(0)),
+    //     vestige_granted=arc4.UInt64(vestige_granted),
+    //     vestige_funding=arc4.UInt64(vestige_granted * UInt64(VESTIGE_FUNDING)),
+    //     create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    //     terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=vestige_tx_id.copy(),
+    //     release_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    // ).copy()
+    concat
+    // launchpad_v3/contract.py:544
+    // self.launches[asset_id] = LaunchRecord(
+    bytec 8 // 0x6c
+    dig 4
+    concat
+    // launchpad_v3/contract.py:544-560
+    // self.launches[asset_id] = LaunchRecord(
+    //     launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    //     status=arc4.UInt64(UInt64(STATUS_COMPLETE)), created_round=pending.created_round,
+    //     swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    //     pool_address=arc4.Address(pool_address), pool_token_id=arc4.UInt64(pool_token_id),
+    //     pnet_seed=pending.pnet_output, burned_lp=arc4.UInt64(burned_lp),
+    //     creator_lp=arc4.UInt64(creator_lp), creator_lp_claimed=arc4.UInt64(UInt64(0)),
+    //     platform_lp=arc4.UInt64(platform_lp),
+    //     cancel_creator_token=arc4.UInt64(UInt64(0)), cancel_platform_token=arc4.UInt64(UInt64(0)),
+    //     cancel_creator_pnet=arc4.UInt64(UInt64(0)), cancel_platform_pnet=arc4.UInt64(UInt64(0)),
+    //     cancel_platform_pnet_remaining=arc4.UInt64(UInt64(0)),
+    //     vestige_granted=arc4.UInt64(vestige_granted),
+    //     vestige_funding=arc4.UInt64(vestige_granted * UInt64(VESTIGE_FUNDING)),
+    //     create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    //     terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=vestige_tx_id.copy(),
+    //     release_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    // ).copy()
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    // launchpad_v3/contract.py:561
+    // self.launch_index[self.total_records.value] = asset_id
+    intc_0 // 0
+    bytec 6 // 0x746f74616c
+    app_global_get_ex
+    assert // check self.total_records exists
+    dup
+    itob
+    bytec 20 // 0x69
+    swap
+    concat
+    uncover 4
+    box_put
+    // launchpad_v3/contract.py:562
+    // self.total_records.value = self.total_records.value + UInt64(1)
+    intc_1 // 1
+    +
+    bytec 6 // 0x746f74616c
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:563
+    // del self.pending[Txn.sender]
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    box_del
+    pop
+    // launchpad_v3/contract.py:565
+    // arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(pool_token_id),
+    txn Sender
+    // launchpad_v3/contract.py:564-567
+    // arc4.emit(LaunchFinalized(
+    //     arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(pool_token_id),
+    //     arc4.UInt64(burned_lp), arc4.UInt64(creator_lp), arc4.UInt64(platform_lp),
+    // ))
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    pushbytes 0x181464fb // method "LaunchFinalized(address,uint64,uint64,uint64,uint64,uint64)"
+    swap
+    concat
+    log
+    // launchpad_v3/contract.py:391
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+launch_finish_bool_false@44:
+    intc_0 // 0
+    b launch_finish_bool_merge@45
+
+launch_finish_bool_false@39:
+    intc_0 // 0
+    b launch_finish_bool_merge@40
+
+launch_finish_bool_false@35:
+    intc_0 // 0
+    b launch_finish_bool_merge@36
+
+launch_finish_bool_false@18:
+    intc_0 // 0
+    b launch_finish_bool_merge@19
+
+launch_finish_bool_false@14:
+    intc_0 // 0
+    b launch_finish_bool_merge@15
+
+launch_finish_bool_false@10:
+    intc_0 // 0
+    b launch_finish_bool_merge@11
+
+launch_finish_bool_false@6:
+    intc_0 // 0
+    b launch_finish_bool_merge@7
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.claim_creator_lp[routing]() -> void:
+claim_creator_lp:
+    // launchpad_v3/contract.py:569
+    // @arc4.abimethod
+    txn GroupIndex
+    intc_1 // 1
+    -
+    dup
+    gtxns TypeEnum
+    pushint 4 // axfer
+    ==
+    assert // transaction type is axfer
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    // launchpad_v3/contract.py:572
+    // assert lp_opt_in.group_index + UInt64(1) == Txn.group_index, "LP opt-in must precede call"
+    dig 2
+    gtxns GroupIndex
+    intc_1 // 1
+    +
+    txn GroupIndex
+    ==
+    assert // LP opt-in must precede call
+    // launchpad_v3/contract.py:573
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:574
+    // assert asset_id in self.launches, "Unknown launch"
+    itob
+    bytec 8 // 0x6c
+    swap
+    concat
+    dup
+    box_len
+    bury 1
+    assert // Unknown launch
+    // launchpad_v3/contract.py:575-576
+    // record = self.launches[asset_id].copy()
+    // assert record.status.as_uint64() == UInt64(STATUS_COMPLETE), "Launch must be complete"
+    dup
+    pushint 48
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:576
+    // assert record.status.as_uint64() == UInt64(STATUS_COMPLETE), "Launch must be complete"
+    btoi
+    intc_3 // 2
+    ==
+    assert // Launch must be complete
+    // launchpad_v3/contract.py:577
+    // assert record.launcher.native == Txn.sender, "Only the launcher may claim"
+    dup
+    intc_0 // 0
+    pushint 32
+    box_extract // on error: index out of bounds
+    txn Sender
+    ==
+    assert // Only the launcher may claim
+    // launchpad_v3/contract.py:578
+    // assert record.creator_lp_claimed.as_uint64() == UInt64(0), "Creator LP already claimed"
+    dup
+    pushint 144
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    btoi
+    !
+    assert // Creator LP already claimed
+    // launchpad_v3/contract.py:580
+    // lp_id = record.pool_token_id.as_uint64()
+    dup
+    pushint 112
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    btoi
+    // launchpad_v3/contract.py:581
+    // assert lp_opt_in.sender == Txn.sender, "LP opt-in sender mismatch"
+    dig 3
+    gtxns Sender
+    txn Sender
+    ==
+    assert // LP opt-in sender mismatch
+    // launchpad_v3/contract.py:582
+    // assert lp_opt_in.asset_receiver == Txn.sender, "LP opt-in receiver mismatch"
+    dig 3
+    gtxns AssetReceiver
+    txn Sender
+    ==
+    assert // LP opt-in receiver mismatch
+    // launchpad_v3/contract.py:583
+    // assert lp_opt_in.xfer_asset.id == lp_id, "Wrong LP asset"
+    dig 3
+    gtxns XferAsset
+    dig 1
+    ==
+    assert // Wrong LP asset
+    // launchpad_v3/contract.py:584
+    // assert lp_opt_in.asset_amount == UInt64(0), "LP opt-in amount must be zero"
+    dig 3
+    gtxns AssetAmount
+    !
+    assert // LP opt-in amount must be zero
+    // launchpad_v3/contract.py:585
+    // assert lp_opt_in.asset_close_to == algopy.Account(), "No LP close"
+    dig 3
+    gtxns AssetCloseTo
+    global ZeroAddress
+    ==
+    assert // No LP close
+    // launchpad_v3/contract.py:586
+    // assert lp_opt_in.asset_sender == algopy.Account(), "No clawback sender"
+    dig 3
+    gtxns AssetSender
+    global ZeroAddress
+    ==
+    assert // No clawback sender
+    // launchpad_v3/contract.py:587
+    // assert lp_opt_in.rekey_to == algopy.Account(), "No LP opt-in rekey"
+    uncover 3
+    gtxns RekeyTo
+    global ZeroAddress
+    ==
+    assert // No LP opt-in rekey
+    // launchpad_v3/contract.py:589
+    // amount = record.creator_lp.as_uint64()
+    dig 1
+    pushint 136
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    dup
+    btoi
+    // launchpad_v3/contract.py:590-593
+    // itxn.AssetTransfer(
+    //     xfer_asset=lp_id, asset_receiver=Txn.sender, asset_amount=amount,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 creator LP",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:591
+    // xfer_asset=lp_id, asset_receiver=Txn.sender, asset_amount=amount,
+    txn Sender
+    // launchpad_v3/contract.py:592
+    // fee=UInt64(0), note=b"PNET Launchpad v3 creator LP",
+    pushbytes 0x504e4554204c61756e63687061642076332063726561746f72204c50
+    itxn_field Note
+    itxn_field AssetReceiver
+    itxn_field AssetAmount
+    swap
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:590
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:592
+    // fee=UInt64(0), note=b"PNET Launchpad v3 creator LP",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:590-593
+    // itxn.AssetTransfer(
+    //     xfer_asset=lp_id, asset_receiver=Txn.sender, asset_amount=amount,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 creator LP",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:594
+    // record.creator_lp_claimed = arc4.UInt64(UInt64(1))
+    intc_1 // 1
+    itob
+    // launchpad_v3/contract.py:594-595
+    // record.creator_lp_claimed = arc4.UInt64(UInt64(1))
+    // self.launches[asset_id] = record.copy()
+    uncover 2
+    pushint 144
+    uncover 2
+    box_replace // on error: index out of bounds
+    // launchpad_v3/contract.py:596
+    // arc4.emit(CreatorLpClaimed(arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(amount)))
+    txn Sender
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0xe2cde2c0 // method "CreatorLpClaimed(address,uint64,uint64)"
+    swap
+    concat
+    log
+    // launchpad_v3/contract.py:569
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.cancel_launch[routing]() -> void:
+cancel_launch:
+    // launchpad_v3/contract.py:598
+    // @arc4.abimethod
+    txna ApplicationArgs 1
+    dupn 2
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    dup
+    // launchpad_v3/contract.py:601
+    // assert Global.group_size == UInt64(1), "Cancel must be standalone"
+    global GroupSize
+    intc_1 // 1
+    ==
+    assert // Cancel must be standalone
+    // launchpad_v3/contract.py:602
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:603
+    // assert Txn.sender in self.pending, "Unknown launch"
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    box_len
+    bury 1
+    assert // Unknown launch
+    // launchpad_v3/contract.py:604
+    // pending = self.pending[Txn.sender].copy()
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    dup
+    cover 2
+    // launchpad_v3/contract.py:604-605
+    // pending = self.pending[Txn.sender].copy()
+    // assert pending.asset_id.as_uint64() == asset_id, "Asset mismatch"
+    dup
+    intc_0 // 0
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:605
+    // assert pending.asset_id.as_uint64() == asset_id, "Asset mismatch"
+    btoi
+    dig 2
+    ==
+    assert // Asset mismatch
+    // launchpad_v3/contract.py:606
+    // assert pending.status.as_uint64() == UInt64(STATUS_ESCROWED), "Nothing escrowed"
+    dup
+    pushint 16
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    btoi
+    intc_1 // 1
+    ==
+    assert // Nothing escrowed
+    // launchpad_v3/contract.py:607
+    // assert Global.round >= pending.swap_round.as_uint64(), "Invalid swap round"
+    global Round
+    dig 1
+    pushint 32
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    dup
+    cover 7
+    btoi
+    swap
+    dig 1
+    >=
+    assert // Invalid swap round
+    // launchpad_v3/contract.py:608
+    // assert Global.round - pending.swap_round.as_uint64() >= self.cancel_delay.value, "Cancellation delay active"
+    global Round
+    swap
+    -
+    intc_0 // 0
+    bytec 18 // 0x64656c6179
+    app_global_get_ex
+    assert // check self.cancel_delay exists
+    >=
+    assert // Cancellation delay active
+    // launchpad_v3/contract.py:611
+    // Global.current_application_address, self.pnet_asset_id.value
+    global CurrentApplicationAddress
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:610-612
+    // app_pnet_balance, app_pnet_opted = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, self.pnet_asset_id.value
+    // )
+    swap
+    dig 1
+    asset_holding_get AssetBalance
+    // launchpad_v3/contract.py:613
+    // assert app_pnet_opted, "Launchpad PNET holding missing"
+    assert // Launchpad PNET holding missing
+    // launchpad_v3/contract.py:614
+    // assert app_pnet_balance >= self.reserved_pnet.value + self.platform_pnet.value, "Escrowed PNET invariant failed"
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    intc_0 // 0
+    bytec 7 // 0x706c6174706e6574
+    app_global_get_ex
+    assert // check self.platform_pnet exists
+    +
+    >=
+    assert // Escrowed PNET invariant failed
+    // launchpad_v3/contract.py:616
+    // creator_token_balance, creator_token_opted = op.AssetHoldingGet.asset_balance(Txn.sender, asset_id)
+    txn Sender
+    dig 3
+    asset_holding_get AssetBalance
+    bury 1
+    // launchpad_v3/contract.py:618
+    // Txn.sender, self.pnet_asset_id.value
+    txn Sender
+    // launchpad_v3/contract.py:617-619
+    // creator_pnet_balance, creator_pnet_opted = op.AssetHoldingGet.asset_balance(
+    //     Txn.sender, self.pnet_asset_id.value
+    // )
+    dig 2
+    asset_holding_get AssetBalance
+    cover 2
+    pop
+    // launchpad_v3/contract.py:621
+    // algopy.Account(PLATFORM_WALLET_ADDRESS), self.pnet_asset_id.value
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    // launchpad_v3/contract.py:620-622
+    // platform_pnet_balance, platform_pnet_opted = op.AssetHoldingGet.asset_balance(
+    //     algopy.Account(PLATFORM_WALLET_ADDRESS), self.pnet_asset_id.value
+    // )
+    dig 3
+    asset_holding_get AssetBalance
+    cover 5
+    pop
+    // launchpad_v3/contract.py:623
+    // assert creator_token_opted and creator_pnet_opted, "Creator recovery opt-ins missing"
+    &&
+    assert // Creator recovery opt-ins missing
+    // launchpad_v3/contract.py:625
+    // creator_token = pending.total_raw.as_uint64() // UInt64(2)
+    dig 1
+    intc_2 // 8
+    dup
+    box_extract // on error: index out of bounds
+    dup
+    cover 8
+    btoi
+    dup
+    intc_3 // 2
+    /
+    dup
+    cover 6
+    // launchpad_v3/contract.py:626
+    // platform_token = pending.total_raw.as_uint64() - creator_token
+    swap
+    dig 1
+    -
+    cover 5
+    // launchpad_v3/contract.py:627
+    // creator_pnet = pending.pnet_output.as_uint64() // UInt64(2)
+    uncover 2
+    pushint 40
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    dup
+    cover 10
+    btoi
+    dup
+    cover 5
+    dup
+    intc_3 // 2
+    /
+    dup
+    cover 8
+    // launchpad_v3/contract.py:628
+    // platform_pnet = pending.pnet_output.as_uint64() - creator_pnet
+    swap
+    dig 1
+    -
+    cover 6
+    // launchpad_v3/contract.py:629-632
+    // itxn.AssetTransfer(
+    //     xfer_asset=asset_id, asset_receiver=Txn.sender, asset_amount=creator_token,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 cancellation token refund",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:630
+    // xfer_asset=asset_id, asset_receiver=Txn.sender, asset_amount=creator_token,
+    txn Sender
+    // launchpad_v3/contract.py:631
+    // fee=UInt64(0), note=b"PNET Launchpad v3 cancellation token refund",
+    pushbytes 0x504e4554204c61756e63687061642076332063616e63656c6c6174696f6e20746f6b656e20726566756e64
+    itxn_field Note
+    uncover 2
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    uncover 3
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:629
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:631
+    // fee=UInt64(0), note=b"PNET Launchpad v3 cancellation token refund",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:629-632
+    // itxn.AssetTransfer(
+    //     xfer_asset=asset_id, asset_receiver=Txn.sender, asset_amount=creator_token,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 cancellation token refund",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:633-636
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value, asset_receiver=Txn.sender, asset_amount=creator_pnet,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 cancellation PNET refund",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:634
+    // xfer_asset=self.pnet_asset_id.value, asset_receiver=Txn.sender, asset_amount=creator_pnet,
+    txn Sender
+    // launchpad_v3/contract.py:635
+    // fee=UInt64(0), note=b"PNET Launchpad v3 cancellation PNET refund",
+    pushbytes 0x504e4554204c61756e63687061642076332063616e63656c6c6174696f6e20504e455420726566756e64
+    itxn_field Note
+    itxn_field AssetReceiver
+    itxn_field AssetAmount
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:633
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:635
+    // fee=UInt64(0), note=b"PNET Launchpad v3 cancellation PNET refund",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:633-636
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value, asset_receiver=Txn.sender, asset_amount=creator_pnet,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 cancellation PNET refund",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:637-640
+    // itxn.Payment(
+    //     receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 pending record deposit refund",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:638
+    // receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    txn Sender
+    // launchpad_v3/contract.py:639
+    // note=b"PNET Launchpad v3 pending record deposit refund",
+    bytec 25 // 0x504e4554204c61756e63687061642076332070656e64696e67207265636f7264206465706f73697420726566756e64
+    itxn_field Note
+    // launchpad_v3/contract.py:638
+    // receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    intc 8 // 66900
+    itxn_field Amount
+    itxn_field Receiver
+    // launchpad_v3/contract.py:637
+    // itxn.Payment(
+    intc_1 // pay
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:638
+    // receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:637-640
+    // itxn.Payment(
+    //     receiver=Txn.sender, amount=UInt64(PENDING_BOX_MBR), fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 pending record deposit refund",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:641
+    // platform_pnet_remaining = UInt64(0)
+    intc_0 // 0
+    cover 12
+    // launchpad_v3/contract.py:642
+    // if platform_pnet_opted:
+    bz cancel_launch_else_body@7
+    // launchpad_v3/contract.py:643-646
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value, asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    //     asset_amount=platform_pnet, fee=UInt64(0), note=b"PNET Launchpad v3 cancelled platform PNET",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:644
+    // xfer_asset=self.pnet_asset_id.value, asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:645
+    // asset_amount=platform_pnet, fee=UInt64(0), note=b"PNET Launchpad v3 cancelled platform PNET",
+    pushbytes 0x504e4554204c61756e63687061642076332063616e63656c6c656420706c6174666f726d20504e4554
+    itxn_field Note
+    dig 2
+    itxn_field AssetAmount
+    // launchpad_v3/contract.py:644
+    // xfer_asset=self.pnet_asset_id.value, asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:643
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:645
+    // asset_amount=platform_pnet, fee=UInt64(0), note=b"PNET Launchpad v3 cancelled platform PNET",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:643-646
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value, asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    //     asset_amount=platform_pnet, fee=UInt64(0), note=b"PNET Launchpad v3 cancelled platform PNET",
+    // ).submit()
+    itxn_submit
+
+cancel_launch_after_if_else@8:
+    // launchpad_v3/contract.py:651
+    // self.reserved_pnet.value = self.reserved_pnet.value - pending.pnet_output.as_uint64()
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    swap
+    -
+    bytec_1 // 0x7265736572766564
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:653
+    // arc4.UInt64(asset_id), arc4.UInt64(asset_id), arc4.UInt64(platform_token),
+    swap
+    itob
+    // launchpad_v3/contract.py:654
+    // arc4.UInt64(UInt64(ALLOCATION_CANCELLED_ASA)),
+    intc_1 // 1
+    itob
+    // launchpad_v3/contract.py:652-655
+    // self.platform_allocations[asset_id] = PlatformAllocation(
+    //     arc4.UInt64(asset_id), arc4.UInt64(asset_id), arc4.UInt64(platform_token),
+    //     arc4.UInt64(UInt64(ALLOCATION_CANCELLED_ASA)),
+    // ).copy()
+    uncover 7
+    dup
+    dig 1
+    concat
+    dig 3
+    concat
+    uncover 2
+    concat
+    // launchpad_v3/contract.py:652
+    // self.platform_allocations[asset_id] = PlatformAllocation(
+    uncover 7
+    itob
+    bytec 14 // 0x61
+    dig 1
+    concat
+    // launchpad_v3/contract.py:652-655
+    // self.platform_allocations[asset_id] = PlatformAllocation(
+    //     arc4.UInt64(asset_id), arc4.UInt64(asset_id), arc4.UInt64(platform_token),
+    //     arc4.UInt64(UInt64(ALLOCATION_CANCELLED_ASA)),
+    // ).copy()
+    uncover 2
+    box_put
+    // launchpad_v3/contract.py:657
+    // launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    txn Sender
+    // launchpad_v3/contract.py:658
+    // status=arc4.UInt64(UInt64(STATUS_CANCELLED)), created_round=pending.created_round,
+    pushint 3
+    itob
+    uncover 8
+    dup
+    pushint 24
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:659
+    // swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    global Round
+    itob
+    // launchpad_v3/contract.py:660
+    // pool_address=arc4.Address(algopy.Account()), pool_token_id=arc4.UInt64(UInt64(0)),
+    global ZeroAddress
+    intc_0 // 0
+    itob
+    // launchpad_v3/contract.py:664
+    // cancel_creator_token=arc4.UInt64(creator_token), cancel_platform_token=arc4.UInt64(platform_token),
+    uncover 12
+    itob
+    // launchpad_v3/contract.py:665
+    // cancel_creator_pnet=arc4.UInt64(creator_pnet), cancel_platform_pnet=arc4.UInt64(platform_pnet),
+    uncover 12
+    itob
+    uncover 12
+    itob
+    // launchpad_v3/contract.py:666
+    // cancel_platform_pnet_remaining=arc4.UInt64(platform_pnet_remaining),
+    dig 16
+    itob
+    // launchpad_v3/contract.py:668
+    // create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    dig 8
+    pushint 60
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_3 // 2
+    +
+    dig 9
+    pushint 60
+    uncover 2
+    box_extract
+    dig 9
+    pushint 58
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 10
+    dig 1
+    intc_3 // 2
+    box_extract
+    btoi
+    intc_3 // 2
+    +
+    uncover 11
+    cover 2
+    box_extract
+    // launchpad_v3/contract.py:669
+    // terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    // launchpad_v3/contract.py:656-671
+    // self.launches[asset_id] = LaunchRecord(
+    //     launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    //     status=arc4.UInt64(UInt64(STATUS_CANCELLED)), created_round=pending.created_round,
+    //     swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    //     pool_address=arc4.Address(algopy.Account()), pool_token_id=arc4.UInt64(UInt64(0)),
+    //     pnet_seed=pending.pnet_output, burned_lp=arc4.UInt64(UInt64(0)),
+    //     creator_lp=arc4.UInt64(UInt64(0)), creator_lp_claimed=arc4.UInt64(UInt64(0)),
+    //     platform_lp=arc4.UInt64(UInt64(0)),
+    //     cancel_creator_token=arc4.UInt64(creator_token), cancel_platform_token=arc4.UInt64(platform_token),
+    //     cancel_creator_pnet=arc4.UInt64(creator_pnet), cancel_platform_pnet=arc4.UInt64(platform_pnet),
+    //     cancel_platform_pnet_remaining=arc4.UInt64(platform_pnet_remaining),
+    //     vestige_granted=arc4.UInt64(UInt64(0)), vestige_funding=arc4.UInt64(UInt64(0)),
+    //     create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    //     terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    //     release_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    // ).copy()
+    uncover 12
+    dig 14
+    concat
+    uncover 17
+    concat
+    uncover 12
+    concat
+    uncover 11
+    concat
+    uncover 15
+    concat
+    uncover 10
+    concat
+    uncover 9
+    concat
+    dig 8
+    concat
+    uncover 12
+    concat
+    dig 8
+    concat
+    dig 8
+    concat
+    dig 8
+    concat
+    dig 8
+    concat
+    dig 7
+    concat
+    uncover 11
+    concat
+    dig 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    dig 6
+    concat
+    uncover 6
+    concat
+    bytec 29 // 0x00e2
+    concat
+    dig 3
+    len
+    pushint 226
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    dig 3
+    len
+    uncover 2
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    dig 2
+    len
+    uncover 2
+    +
+    dup
+    itob
+    extract 6 2
+    uncover 2
+    swap
+    concat
+    swap
+    pushint 34
+    +
+    itob
+    extract 6 2
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x0020000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    concat
+    // launchpad_v3/contract.py:656
+    // self.launches[asset_id] = LaunchRecord(
+    bytec 8 // 0x6c
+    dig 4
+    concat
+    // launchpad_v3/contract.py:656-671
+    // self.launches[asset_id] = LaunchRecord(
+    //     launcher=arc4.Address(Txn.sender), asset_id=arc4.UInt64(asset_id), total_raw=pending.total_raw,
+    //     status=arc4.UInt64(UInt64(STATUS_CANCELLED)), created_round=pending.created_round,
+    //     swap_round=pending.swap_round, terminal_round=arc4.UInt64(Global.round),
+    //     pool_address=arc4.Address(algopy.Account()), pool_token_id=arc4.UInt64(UInt64(0)),
+    //     pnet_seed=pending.pnet_output, burned_lp=arc4.UInt64(UInt64(0)),
+    //     creator_lp=arc4.UInt64(UInt64(0)), creator_lp_claimed=arc4.UInt64(UInt64(0)),
+    //     platform_lp=arc4.UInt64(UInt64(0)),
+    //     cancel_creator_token=arc4.UInt64(creator_token), cancel_platform_token=arc4.UInt64(platform_token),
+    //     cancel_creator_pnet=arc4.UInt64(creator_pnet), cancel_platform_pnet=arc4.UInt64(platform_pnet),
+    //     cancel_platform_pnet_remaining=arc4.UInt64(platform_pnet_remaining),
+    //     vestige_granted=arc4.UInt64(UInt64(0)), vestige_funding=arc4.UInt64(UInt64(0)),
+    //     create_tx_id=pending.create_tx_id.copy(), swap_tx_id=pending.swap_tx_id.copy(),
+    //     terminal_tx_id=arc4.DynamicBytes(Txn.tx_id), vestige_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    //     release_tx_id=arc4.DynamicBytes(ZERO_TX_ID),
+    // ).copy()
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    // launchpad_v3/contract.py:672
+    // self.launch_index[self.total_records.value] = asset_id
+    intc_0 // 0
+    bytec 6 // 0x746f74616c
+    app_global_get_ex
+    assert // check self.total_records exists
+    dup
+    itob
+    bytec 20 // 0x69
+    swap
+    concat
+    uncover 4
+    box_put
+    // launchpad_v3/contract.py:673
+    // self.total_records.value = self.total_records.value + UInt64(1)
+    intc_1 // 1
+    +
+    bytec 6 // 0x746f74616c
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:674
+    // del self.pending[Txn.sender]
+    bytec_2 // 0x70
+    txn Sender
+    concat
+    box_del
+    pop
+    // launchpad_v3/contract.py:676
+    // arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(creator_token), arc4.UInt64(creator_pnet),
+    txn Sender
+    // launchpad_v3/contract.py:675-677
+    // arc4.emit(LaunchCancelled(
+    //     arc4.Address(Txn.sender), arc4.UInt64(asset_id), arc4.UInt64(creator_token), arc4.UInt64(creator_pnet),
+    // ))
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0xc47daa6c // method "LaunchCancelled(address,uint64,uint64,uint64)"
+    swap
+    concat
+    log
+    // launchpad_v3/contract.py:598
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+cancel_launch_else_body@7:
+    // launchpad_v3/contract.py:649
+    // self.platform_pnet.value = self.platform_pnet.value + platform_pnet
+    intc_0 // 0
+    bytec 7 // 0x706c6174706e6574
+    app_global_get_ex
+    assert // check self.platform_pnet exists
+    dig 2
+    dup
+    cover 2
+    +
+    bytec 7 // 0x706c6174706e6574
+    swap
+    app_global_put
+    bury 12
+    b cancel_launch_after_if_else@8
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.release_cancelled_pnet[routing]() -> void:
+release_cancelled_pnet:
+    // launchpad_v3/contract.py:679
+    // @arc4.abimethod
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // launchpad_v3/contract.py:682
+    // assert Txn.sender == algopy.Account(PLATFORM_WALLET_ADDRESS), "Platform authority required"
+    txn Sender
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    ==
+    assert // Platform authority required
+    // launchpad_v3/contract.py:683
+    // assert Global.group_size == UInt64(1), "PNET release must be standalone"
+    global GroupSize
+    intc_1 // 1
+    ==
+    assert // PNET release must be standalone
+    // launchpad_v3/contract.py:684
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:685
+    // assert asset_id in self.launches, "Unknown launch"
+    itob
+    bytec 8 // 0x6c
+    swap
+    concat
+    dupn 2
+    box_len
+    bury 1
+    assert // Unknown launch
+    // launchpad_v3/contract.py:686
+    // record = self.launches[asset_id].copy()
+    dup
+    box_get
+    pop
+    swap
+    // launchpad_v3/contract.py:686-687
+    // record = self.launches[asset_id].copy()
+    // assert record.status.as_uint64() == UInt64(STATUS_CANCELLED), "Launch is not cancelled"
+    dup
+    pushint 48
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:687
+    // assert record.status.as_uint64() == UInt64(STATUS_CANCELLED), "Launch is not cancelled"
+    btoi
+    pushint 3
+    ==
+    assert // Launch is not cancelled
+    // launchpad_v3/contract.py:688
+    // remaining = record.cancel_platform_pnet_remaining.as_uint64()
+    pushint 192
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    dup
+    cover 2
+    btoi
+    dup
+    // launchpad_v3/contract.py:689
+    // assert remaining > UInt64(0), "No deferred platform PNET"
+    assert // No deferred platform PNET
+    // launchpad_v3/contract.py:691
+    // algopy.Account(PLATFORM_WALLET_ADDRESS), self.pnet_asset_id.value
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    // launchpad_v3/contract.py:690-692
+    // platform_balance, platform_opted = op.AssetHoldingGet.asset_balance(
+    //     algopy.Account(PLATFORM_WALLET_ADDRESS), self.pnet_asset_id.value
+    // )
+    dig 1
+    asset_holding_get AssetBalance
+    cover 2
+    pop
+    // launchpad_v3/contract.py:694
+    // Global.current_application_address, self.pnet_asset_id.value
+    global CurrentApplicationAddress
+    // launchpad_v3/contract.py:693-695
+    // app_balance, app_opted = op.AssetHoldingGet.asset_balance(
+    //     Global.current_application_address, self.pnet_asset_id.value
+    // )
+    swap
+    asset_holding_get AssetBalance
+    swap
+    cover 6
+    // launchpad_v3/contract.py:696
+    // assert platform_opted, "Platform must opt into PNET"
+    swap
+    assert // Platform must opt into PNET
+    // launchpad_v3/contract.py:697
+    // assert app_opted and app_balance >= self.reserved_pnet.value + self.platform_pnet.value, "PNET custody invariant failed"
+    bz release_cancelled_pnet_bool_false@4
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    intc_0 // 0
+    bytec 7 // 0x706c6174706e6574
+    app_global_get_ex
+    assert // check self.platform_pnet exists
+    +
+    dig 5
+    <=
+    bz release_cancelled_pnet_bool_false@4
+    intc_1 // 1
+
+release_cancelled_pnet_bool_merge@5:
+    // launchpad_v3/contract.py:697
+    // assert app_opted and app_balance >= self.reserved_pnet.value + self.platform_pnet.value, "PNET custody invariant failed"
+    assert // PNET custody invariant failed
+    // launchpad_v3/contract.py:698
+    // assert self.platform_pnet.value >= remaining, "Tracked PNET allocation mismatch"
+    intc_0 // 0
+    bytec 7 // 0x706c6174706e6574
+    app_global_get_ex
+    assert // check self.platform_pnet exists
+    dup
+    uncover 2
+    dup
+    cover 2
+    >=
+    assert // Tracked PNET allocation mismatch
+    // launchpad_v3/contract.py:699-704
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value,
+    //     asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    //     asset_amount=remaining, fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 deferred cancellation PNET",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:700
+    // xfer_asset=self.pnet_asset_id.value,
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    // launchpad_v3/contract.py:703
+    // note=b"PNET Launchpad v3 deferred cancellation PNET",
+    pushbytes 0x504e4554204c61756e63687061642076332064656665727265642063616e63656c6c6174696f6e20504e4554
+    itxn_field Note
+    dig 1
+    itxn_field AssetAmount
+    // launchpad_v3/contract.py:701
+    // asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:699
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:702
+    // asset_amount=remaining, fee=UInt64(0),
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:699-704
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.pnet_asset_id.value,
+    //     asset_receiver=algopy.Account(PLATFORM_WALLET_ADDRESS),
+    //     asset_amount=remaining, fee=UInt64(0),
+    //     note=b"PNET Launchpad v3 deferred cancellation PNET",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:705
+    // self.platform_pnet.value = self.platform_pnet.value - remaining
+    -
+    bytec 7 // 0x706c6174706e6574
+    swap
+    app_global_put
+    // launchpad_v3/contract.py:706
+    // record.cancel_platform_pnet_remaining = arc4.UInt64(UInt64(0))
+    intc_0 // 0
+    itob
+    replace2 192
+    // launchpad_v3/contract.py:707
+    // record.release_tx_id = arc4.DynamicBytes(Txn.tx_id)
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    dig 1
+    intc 7 // 224
+    extract_uint16
+    uncover 2
+    intc_0 // 0
+    uncover 2
+    extract3
+    swap
+    concat
+    // launchpad_v3/contract.py:708
+    // self.launches[asset_id] = record.copy()
+    uncover 2
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    // launchpad_v3/contract.py:679
+    // @arc4.abimethod
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+release_cancelled_pnet_bool_false@4:
+    intc_0 // 0
+    b release_cancelled_pnet_bool_merge@5
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.grant_vestige_access[routing]() -> void:
+grant_vestige_access:
+    // launchpad_v3/contract.py:711
+    // @arc4.abimethod
+    txn GroupIndex
+    intc_1 // 1
+    -
+    dup
+    gtxns TypeEnum
+    intc_1 // pay
+    ==
+    assert // transaction type is pay
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    dup
+    btoi
+    // launchpad_v3/contract.py:716
+    // assert Global.group_size == UInt64(2), "Vestige requires funding and app call"
+    global GroupSize
+    intc_3 // 2
+    ==
+    assert // Vestige requires funding and app call
+    // launchpad_v3/contract.py:717
+    // assert vestige_funding.group_index + UInt64(1) == Txn.group_index, "Funding must precede call"
+    dig 2
+    gtxns GroupIndex
+    intc_1 // 1
+    +
+    txn GroupIndex
+    ==
+    assert // Funding must precede call
+    // launchpad_v3/contract.py:718
+    // assert vestige_funding.sender == Txn.sender, "Vestige funding sender mismatch"
+    dig 2
+    gtxns Sender
+    txn Sender
+    ==
+    assert // Vestige funding sender mismatch
+    // launchpad_v3/contract.py:719
+    // assert asset_id in self.launches, "Unknown launch"
+    dup
+    itob
+    bytec 8 // 0x6c
+    swap
+    concat
+    dup
+    box_len
+    bury 1
+    assert // Unknown launch
+    // launchpad_v3/contract.py:720
+    // record = self.launches[asset_id].copy()
+    dup
+    box_get
+    pop
+    cover 3
+    // launchpad_v3/contract.py:720-721
+    // record = self.launches[asset_id].copy()
+    // assert record.status.as_uint64() == UInt64(STATUS_COMPLETE), "Launch must be complete"
+    dup
+    pushint 48
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    // launchpad_v3/contract.py:721
+    // assert record.status.as_uint64() == UInt64(STATUS_COMPLETE), "Launch must be complete"
+    btoi
+    intc_3 // 2
+    ==
+    assert // Launch must be complete
+    // launchpad_v3/contract.py:722
+    // assert record.launcher.native == Txn.sender, "Only launcher may grant access"
+    dup
+    intc_0 // 0
+    pushint 32
+    box_extract // on error: index out of bounds
+    txn Sender
+    ==
+    assert // Only launcher may grant access
+    // launchpad_v3/contract.py:723
+    // assert record.vestige_granted.as_uint64() == UInt64(0), "Vestige already granted"
+    dup
+    pushint 200
+    intc_2 // 8
+    box_extract // on error: index out of bounds
+    btoi
+    !
+    assert // Vestige already granted
+    // launchpad_v3/contract.py:725
+    // vestige = algopy.Application(self.vestige_app_id.value)
+    intc_0 // 0
+    bytec 13 // 0x76657374696765
+    app_global_get_ex
+    assert // check self.vestige_app_id exists
+    // launchpad_v3/contract.py:726
+    // assert vestige_funding.receiver == vestige.address, "Wrong Vestige receiver"
+    dig 5
+    gtxns Receiver
+    dig 1
+    app_params_get AppAddress
+    assert // application exists
+    ==
+    assert // Wrong Vestige receiver
+    // launchpad_v3/contract.py:727
+    // assert vestige_funding.amount == UInt64(VESTIGE_FUNDING), "Wrong Vestige MBR"
+    dig 5
+    gtxns Amount
+    intc 5 // 100000
+    ==
+    assert // Wrong Vestige MBR
+    // launchpad_v3/contract.py:728
+    // assert vestige_funding.close_remainder_to == algopy.Account(), "No Vestige close"
+    dig 5
+    gtxns CloseRemainderTo
+    global ZeroAddress
+    ==
+    assert // No Vestige close
+    // launchpad_v3/contract.py:729
+    // assert vestige_funding.rekey_to == algopy.Account(), "No Vestige rekey"
+    uncover 5
+    gtxns RekeyTo
+    global ZeroAddress
+    ==
+    assert // No Vestige rekey
+    // launchpad_v3/contract.py:730
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:732-735
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    itxn_begin
+    // launchpad_v3/contract.py:733
+    // "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    txn Sender
+    // launchpad_v3/contract.py:734
+    // app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    bytec 27 // 0x504e4554204c61756e636870616420763320566573746967652064656c65676174696f6e
+    itxn_field Note
+    swap
+    itxn_field ApplicationID
+    uncover 2
+    itxn_field Assets
+    // launchpad_v3/contract.py:732-735
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    bytec 28 // method "add_asset_metadata_manager(asset,address)void"
+    itxn_field ApplicationArgs
+    // launchpad_v3/contract.py:733
+    // "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    bytec 19 // 0x00
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    // launchpad_v3/contract.py:732-735
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    pushint 6 // appl
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:734
+    // app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:732-735
+    // arc4.abi_call(
+    //     "add_asset_metadata_manager(asset,address)void", algopy.Asset(asset_id), arc4.Address(Txn.sender),
+    //     app_id=vestige, fee=UInt64(0), note=b"PNET Launchpad v3 Vestige delegation",
+    // )
+    itxn_submit
+    // launchpad_v3/contract.py:736
+    // record.vestige_granted = arc4.UInt64(UInt64(1))
+    intc_1 // 1
+    itob
+    uncover 3
+    swap
+    replace2 200
+    // launchpad_v3/contract.py:737
+    // record.vestige_funding = arc4.UInt64(UInt64(VESTIGE_FUNDING))
+    intc 5 // 100000
+    itob
+    replace2 208
+    // launchpad_v3/contract.py:738
+    // record.vestige_tx_id = arc4.DynamicBytes(Txn.tx_id)
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    dig 1
+    pushint 222
+    extract_uint16
+    dig 2
+    intc_0 // 0
+    dig 2
+    extract3
+    dig 2
+    concat
+    dig 3
+    intc 7 // 224
+    extract_uint16
+    dig 4
+    len
+    uncover 5
+    dig 2
+    uncover 2
+    substring3
+    uncover 2
+    swap
+    concat
+    dig 1
+    uncover 3
+    -
+    uncover 3
+    len
+    uncover 3
+    +
+    swap
+    -
+    itob
+    extract 6 2
+    replace2 224
+    // launchpad_v3/contract.py:739
+    // self.launches[asset_id] = record.copy()
+    dig 1
+    box_del
+    pop
+    box_put
+    // launchpad_v3/contract.py:740
+    // arc4.emit(VestigeAccessGranted(arc4.Address(Txn.sender), arc4.UInt64(asset_id)))
+    txn Sender
+    swap
+    concat
+    pushbytes 0x0a121a15 // method "VestigeAccessGranted(address,uint64)"
+    swap
+    concat
+    log
+    // launchpad_v3/contract.py:711
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.release_platform_allocation[routing]() -> void:
+release_platform_allocation:
+    // launchpad_v3/contract.py:742
+    // @arc4.abimethod
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // launchpad_v3/contract.py:747
+    // assert Txn.sender == algopy.Account(PLATFORM_WALLET_ADDRESS), "Platform authority required"
+    txn Sender
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    ==
+    assert // Platform authority required
+    // launchpad_v3/contract.py:748
+    // assert Global.group_size == UInt64(1), "Release must be standalone"
+    global GroupSize
+    intc_1 // 1
+    ==
+    assert // Release must be standalone
+    // launchpad_v3/contract.py:749
+    // assert Txn.rekey_to == algopy.Account(), "No app-call rekey"
+    txn RekeyTo
+    global ZeroAddress
+    ==
+    assert // No app-call rekey
+    // launchpad_v3/contract.py:750
+    // assert launch_asset_id in self.platform_allocations, "Unknown platform allocation"
+    dig 2
+    itob
+    bytec 14 // 0x61
+    dig 1
+    concat
+    dup
+    cover 5
+    dup
+    box_len
+    bury 1
+    assert // Unknown platform allocation
+    // launchpad_v3/contract.py:751
+    // assert receiver != algopy.Account(), "Receiver required"
+    dig 3
+    global ZeroAddress
+    !=
+    assert // Receiver required
+    // launchpad_v3/contract.py:752
+    // assert amount > UInt64(0), "Release amount required"
+    dig 2
+    assert // Release amount required
+    // launchpad_v3/contract.py:753
+    // allocation = self.platform_allocations[launch_asset_id].copy()
+    box_get
+    pop
+    // launchpad_v3/contract.py:754
+    // assert allocation.launch_asset_id.as_uint64() == launch_asset_id, "Allocation launch mismatch"
+    dup
+    intc_0 // 0
+    extract_uint64
+    uncover 5
+    ==
+    assert // Allocation launch mismatch
+    // launchpad_v3/contract.py:755
+    // assert amount <= allocation.remaining.as_uint64(), "Release exceeds platform allocation"
+    dup
+    pushint 16
+    extract_uint64
+    dig 3
+    dig 1
+    <=
+    assert // Release exceeds platform allocation
+    // launchpad_v3/contract.py:756
+    // holding_asset_id = allocation.holding_asset_id.as_uint64()
+    dig 1
+    extract 8 8
+    cover 5
+    swap
+    intc_2 // 8
+    extract_uint64
+    // launchpad_v3/contract.py:757
+    // receiver_balance, receiver_opted = op.AssetHoldingGet.asset_balance(receiver, holding_asset_id)
+    dig 4
+    dig 1
+    asset_holding_get AssetBalance
+    bury 1
+    // launchpad_v3/contract.py:758
+    // assert receiver_opted, "Receiver must opt into asset"
+    assert // Receiver must opt into asset
+    // launchpad_v3/contract.py:760-763
+    // itxn.AssetTransfer(
+    //     xfer_asset=holding_asset_id, asset_receiver=receiver, asset_amount=amount,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 platform allocation",
+    // ).submit()
+    itxn_begin
+    // launchpad_v3/contract.py:762
+    // fee=UInt64(0), note=b"PNET Launchpad v3 platform allocation",
+    pushbytes 0x504e4554204c61756e636870616420763320706c6174666f726d20616c6c6f636174696f6e
+    itxn_field Note
+    dig 3
+    itxn_field AssetAmount
+    uncover 4
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // launchpad_v3/contract.py:760
+    // itxn.AssetTransfer(
+    pushint 4 // axfer
+    itxn_field TypeEnum
+    // launchpad_v3/contract.py:762
+    // fee=UInt64(0), note=b"PNET Launchpad v3 platform allocation",
+    intc_0 // 0
+    itxn_field Fee
+    // launchpad_v3/contract.py:760-763
+    // itxn.AssetTransfer(
+    //     xfer_asset=holding_asset_id, asset_receiver=receiver, asset_amount=amount,
+    //     fee=UInt64(0), note=b"PNET Launchpad v3 platform allocation",
+    // ).submit()
+    itxn_submit
+    // launchpad_v3/contract.py:764
+    // remaining = allocation.remaining.as_uint64() - amount
+    uncover 2
+    -
+    dup
+    cover 2
+    // launchpad_v3/contract.py:765
+    // record = self.launches[launch_asset_id].copy()
+    bytec 8 // 0x6c
+    uncover 2
+    concat
+    dup
+    box_get
+    assert // check self.launches entry exists
+    // launchpad_v3/contract.py:766
+    // record.release_tx_id = arc4.DynamicBytes(Txn.tx_id)
+    bytec 4 // 0x0020
+    txn TxID
+    concat
+    dig 1
+    intc 7 // 224
+    extract_uint16
+    uncover 2
+    intc_0 // 0
+    uncover 2
+    extract3
+    swap
+    concat
+    // launchpad_v3/contract.py:767
+    // self.launches[launch_asset_id] = record.copy()
+    dig 1
+    box_del
+    pop
+    box_put
+    // launchpad_v3/contract.py:768
+    // if remaining == UInt64(0):
+    bnz release_platform_allocation_else_body@4
+    // launchpad_v3/contract.py:769
+    // del self.platform_allocations[launch_asset_id]
+    uncover 2
+    box_del
+    pop
+
+release_platform_allocation_after_if_else@5:
+    // launchpad_v3/contract.py:774
+    // arc4.UInt64(holding_asset_id), arc4.Address(receiver), arc4.UInt64(amount), arc4.UInt64(remaining),
+    itob
+    // launchpad_v3/contract.py:773-775
+    // arc4.emit(PlatformAllocationReleased(
+    //     arc4.UInt64(holding_asset_id), arc4.Address(receiver), arc4.UInt64(amount), arc4.UInt64(remaining),
+    // ))
+    swap
+    uncover 3
+    concat
+    uncover 2
+    concat
+    dig 1
+    concat
+    pushbytes 0x25ac3a1d // method "PlatformAllocationReleased(uint64,address,uint64,uint64)"
+    swap
+    concat
+    log
+    // launchpad_v3/contract.py:742
+    // @arc4.abimethod
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+release_platform_allocation_else_body@4:
+    // launchpad_v3/contract.py:771
+    // allocation.remaining = arc4.UInt64(remaining)
+    dup
+    itob
+    // launchpad_v3/contract.py:771-772
+    // allocation.remaining = arc4.UInt64(remaining)
+    // self.platform_allocations[launch_asset_id] = allocation.copy()
+    uncover 3
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    b release_platform_allocation_after_if_else@5
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.get_pending[routing]() -> void:
+get_pending:
+    // launchpad_v3/contract.py:778
+    // @arc4.abimethod(readonly=True)
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // launchpad_v3/contract.py:780
+    // assert launcher in self.pending, "Unknown pending launch"
+    bytec_2 // 0x70
+    swap
+    concat
+    dup
+    box_len
+    bury 1
+    assert // Unknown pending launch
+    // launchpad_v3/contract.py:781
+    // return self.pending[launcher].copy()
+    box_get
+    pop
+    // launchpad_v3/contract.py:778
+    // @arc4.abimethod(readonly=True)
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.get_launch[routing]() -> void:
+get_launch:
+    // launchpad_v3/contract.py:783
+    // @arc4.abimethod(readonly=True)
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // launchpad_v3/contract.py:785
+    // assert asset_id in self.launches, "Unknown launch"
+    itob
+    bytec 8 // 0x6c
+    swap
+    concat
+    dup
+    box_len
+    bury 1
+    assert // Unknown launch
+    // launchpad_v3/contract.py:786
+    // return self.launches[asset_id].copy()
+    box_get
+    pop
+    // launchpad_v3/contract.py:783
+    // @arc4.abimethod(readonly=True)
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.get_asset_at[routing]() -> void:
+get_asset_at:
+    // launchpad_v3/contract.py:788
+    // @arc4.abimethod(readonly=True)
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // launchpad_v3/contract.py:790
+    // assert index < self.total_records.value, "Index out of range"
+    intc_0 // 0
+    bytec 6 // 0x746f74616c
+    app_global_get_ex
+    assert // check self.total_records exists
+    dig 1
+    >
+    assert // Index out of range
+    // launchpad_v3/contract.py:791
+    // return self.launch_index[index]
+    itob
+    bytec 20 // 0x69
+    swap
+    concat
+    box_get
+    assert // check self.launch_index entry exists
+    btoi
+    // launchpad_v3/contract.py:788
+    // @arc4.abimethod(readonly=True)
+    itob
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.get_platform_allocation[routing]() -> void:
+get_platform_allocation:
+    // launchpad_v3/contract.py:793
+    // @arc4.abimethod(readonly=True)
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // launchpad_v3/contract.py:795
+    // assert launch_asset_id in self.platform_allocations, "Unknown platform allocation"
+    itob
+    bytec 14 // 0x61
+    swap
+    concat
+    dup
+    box_len
+    bury 1
+    assert // Unknown platform allocation
+    // launchpad_v3/contract.py:796
+    // return self.platform_allocations[launch_asset_id].copy()
+    box_get
+    pop
+    // launchpad_v3/contract.py:793
+    // @arc4.abimethod(readonly=True)
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// launchpad_v3.contract.PNETInstantLaunchpad.get_config[routing]() -> void:
+get_config:
+    // launchpad_v3/contract.py:804
+    // arc4.Address(algopy.Account(PLATFORM_WALLET_ADDRESS)), arc4.Address(self.burn_account.value),
+    intc_0 // 0
+    bytec 9 // 0x6275726e
+    app_global_get_ex
+    assert // check self.burn_account exists
+    // launchpad_v3/contract.py:805
+    // arc4.Address(self.source_pool.value), arc4.UInt64(self.pnet_asset_id.value),
+    intc_0 // 0
+    bytec 11 // 0x736f75726365
+    app_global_get_ex
+    assert // check self.source_pool exists
+    intc_0 // 0
+    bytec_0 // 0x706e6574
+    app_global_get_ex
+    assert // check self.pnet_asset_id exists
+    itob
+    // launchpad_v3/contract.py:806
+    // arc4.UInt64(self.tinyman_app_id.value), arc4.UInt64(self.vestige_app_id.value),
+    intc_0 // 0
+    bytec 12 // 0x74696e796d616e
+    app_global_get_ex
+    assert // check self.tinyman_app_id exists
+    itob
+    intc_0 // 0
+    bytec 13 // 0x76657374696765
+    app_global_get_ex
+    assert // check self.vestige_app_id exists
+    itob
+    // launchpad_v3/contract.py:807
+    // arc4.UInt64(self.arc54_app_id.value), arc4.UInt64(self.total_records.value),
+    intc_0 // 0
+    bytec 17 // 0x6172633534
+    app_global_get_ex
+    assert // check self.arc54_app_id exists
+    itob
+    intc_0 // 0
+    bytec 6 // 0x746f74616c
+    app_global_get_ex
+    assert // check self.total_records exists
+    itob
+    // launchpad_v3/contract.py:808
+    // arc4.UInt64(self.initialized.value), arc4.UInt64(self.reserved_pnet.value),
+    intc_0 // 0
+    bytec 10 // 0x696e6974
+    app_global_get_ex
+    assert // check self.initialized exists
+    itob
+    intc_0 // 0
+    bytec_1 // 0x7265736572766564
+    app_global_get_ex
+    assert // check self.reserved_pnet exists
+    itob
+    // launchpad_v3/contract.py:809
+    // arc4.UInt64(self.cancel_delay.value),
+    intc_0 // 0
+    bytec 18 // 0x64656c6179
+    app_global_get_ex
+    assert // check self.cancel_delay exists
+    itob
+    // launchpad_v3/contract.py:804
+    // arc4.Address(algopy.Account(PLATFORM_WALLET_ADDRESS)), arc4.Address(self.burn_account.value),
+    bytec_3 // addr CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E
+    // launchpad_v3/contract.py:803-810
+    // return arc4.Tuple((
+    //     arc4.Address(algopy.Account(PLATFORM_WALLET_ADDRESS)), arc4.Address(self.burn_account.value),
+    //     arc4.Address(self.source_pool.value), arc4.UInt64(self.pnet_asset_id.value),
+    //     arc4.UInt64(self.tinyman_app_id.value), arc4.UInt64(self.vestige_app_id.value),
+    //     arc4.UInt64(self.arc54_app_id.value), arc4.UInt64(self.total_records.value),
+    //     arc4.UInt64(self.initialized.value), arc4.UInt64(self.reserved_pnet.value),
+    //     arc4.UInt64(self.cancel_delay.value),
+    // ))
+    uncover 10
+    concat
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    // launchpad_v3/contract.py:798
+    // @arc4.abimethod(readonly=True)
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
