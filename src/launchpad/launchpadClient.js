@@ -20,11 +20,6 @@ export function encodeUint64(value) {
   return algosdk.bigIntToBytes(BigInt(value), 8);
 }
 
-function transactionRef(index) {
-  if (!Number.isInteger(index) || index < 0 || index > 255) throw new Error("Invalid transaction reference");
-  return Uint8Array.of(index);
-}
-
 function pinnedParams(params, fee) {
   return { ...params, fee: BigInt(fee), flatFee: true };
 }
@@ -97,7 +92,6 @@ export async function buildCreateAssetGroup({ algodClient, appId, wallet, form }
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     appArgs: [
       selector("create_asset(pay,string,string,uint64,string)uint64"),
-      transactionRef(0),
       STRING_TYPE.encode(form.name),
       STRING_TYPE.encode(form.unitName),
       encodeUint64(form.totalRaw),
@@ -126,7 +120,6 @@ export async function buildSwapPnetGroup({ algodClient, config, wallet, assetId,
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     appArgs: [
       selector("swap_pnet(pay,uint64,uint64,uint64)uint64"),
-      transactionRef(0),
       encodeUint64(assetId),
       encodeUint64(quote.createdRound),
       encodeUint64(quote.minimumPnet),
@@ -214,8 +207,6 @@ export async function buildFinalizeGroup({
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     appArgs: [
       selector("finalize_launch(axfer,pay,uint64,address,uint64)void"),
-      transactionRef(0),
-      transactionRef(1),
       encodeUint64(assetId),
       algosdk.decodeAddress(poolAddress).publicKey,
       encodeUint64(lpAssetId),
@@ -252,7 +243,6 @@ export async function buildVestigeGroup({ algodClient, config, wallet, assetId }
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     appArgs: [
       selector("grant_vestige_access(pay,uint64)void"),
-      transactionRef(0),
       encodeUint64(assetId),
     ],
     foreignApps: [Number(config.vestigeAppId)],
