@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { PeraWalletConnect } from "@perawallet/connect";
 
 const IS_MAINNET = import.meta.env.VITE_NETWORK === "mainnet";
@@ -8,100 +8,108 @@ const peraWallet = new PeraWalletConnect({
   chainId: IS_MAINNET ? 416001 : 416002,
 });
 
-export function usePeraWallet() {
-  const [account, setAccount] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState("");
+// One shared wallet state for the whole app (the header and the page read the same connection), outside React so every hook instance agrees.
+let state = { account: null, isConnecting: false, connectionError: "" };
+const listeners = new Set();
+const setState = (patch) => {
+  state = { ...state, ...patch };
+  listeners.forEach((listener) => listener());
+};
+const subscribe = (listener) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+const getSnapshot = () => state;
 
-  // Reconnect on page reload if session exists
-  useEffect(() => {
-    peraWallet.reconnectSession().then((accounts) => {
-      if (accounts.length) {
-        setAccount(accounts[0]);
-        peraWallet.connector?.on("disconnect", disconnect);
-      }
-    });
-  }, []);
-
-  const connect = useCallback(async () => {
-    setIsConnecting(true);
-    setConnectionError("");
-    try {
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Connection timed out — open Pera Wallet and try again")), 20000)
-      );
-      const accounts = await Promise.race([peraWallet.connect(), timeout]);
-      setAccount(accounts[0]);
+let reconnectStarted = false;
+function reconnectOnce() {
+  if (reconnectStarted) return;
+  reconnectStarted = true;
+  // A session that already exists comes back after a reload, so the wallet stays connected until it is disconnected.
+  peraWallet.reconnectSession().then((accounts) => {
+    if (accounts.length) {
+      setState({ account: accounts[0] });
       peraWallet.connector?.on("disconnect", disconnect);
-      return accounts[0];
-    } catch (err) {
-      if (err?.data?.type !== "CONNECT_MODAL_CLOSED") {
-        console.error("Pera connect error:", err);
-      }
-      setConnectionError(
-        err?.data?.type === "CONNECT_MODAL_CLOSED"
-          ? "Pera connection was canceled."
-          : err?.message || "Pera Wallet could not connect. Try again."
-      );
-      return null;
-    } finally {
-      setIsConnecting(false);
     }
-  }, []);
+  }).catch(() => {});
+}
 
-  const disconnect = useCallback(() => {
-    peraWallet.disconnect();
-    setAccount(null);
-    setConnectionError("");
-  }, []);
+async function connect() {
+  setState({ isConnecting: true, connectionError: "" });
+  try {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Connection timed out — open Pera Wallet and try again")), 20000)
+    );
+    const accounts = await Promise.race([peraWallet.connect(), timeout]);
+    setState({ account: accounts[0] });
+    peraWallet.connector?.on("disconnect", disconnect);
+    return accounts[0];
+  } catch (err) {
+    if (err?.data?.type !== "CONNECT_MODAL_CLOSED") {
+      console.error("Pera connect error:", err);
+    }
+    setState({
+      connectionError: err?.data?.type === "CONNECT_MODAL_CLOSED"
+        ? "Pera connection was canceled."
+        : err?.message || "Pera Wallet could not connect. Try again.",
+    });
+    return null;
+  } finally {
+    setState({ isConnecting: false });
+  }
+}
 
-  const signAndSend = useCallback(
-    async (algodClient, txns) => {
-      if (!account) throw new Error("Wallet not connected");
+function disconnect() {
+  peraWallet.disconnect();
+  setState({ account: null, connectionError: "" });
+}
 
-      // Each txn wrapped for Pera: { txn, signers }
-      const txnsToSign = txns.map((txn) => ({ txn, signers: [account] }));
+async function signAndSend(algodClient, txns) {
+  const { account } = state;
+  if (!account) throw new Error("Wallet not connected");
 
-      const signedTxns = await peraWallet.signTransaction([txnsToSign]);
-      const { txId } = await algodClient.sendRawTransaction(signedTxns).do();
+  // Each txn wrapped for Pera: { txn, signers }
+  const txnsToSign = txns.map((txn) => ({ txn, signers: [account] }));
 
-      // Wait for confirmation
-      await waitForConfirmation(algodClient, txId, 12);
-      return txId;
-    },
-    [account]
-  );
+  const signedTxns = await peraWallet.signTransaction([txnsToSign]);
+  const { txId } = await algodClient.sendRawTransaction(signedTxns).do();
 
-  const signAndSubmit = useCallback(
-    async (algodClient, signerTxns, maxRounds = 12) => {
-      if (!account) throw new Error("Wallet not connected");
-      const signed = await peraWallet.signTransaction([signerTxns], account);
-      if (!signed?.length) throw new Error("Wallet returned no signed transactions");
-      const response = await algodClient.sendRawTransaction(signed).do();
-      const txId = response.txId ?? response.txid ?? signerTxns[0].txn.txID().toString();
-      const confirmation = await waitForConfirmation(algodClient, txId, maxRounds);
-      return { txId, confirmation, signed };
-    },
-    [account]
-  );
+  // Wait for confirmation
+  await waitForConfirmation(algodClient, txId, 12);
+  return txId;
+}
 
-  // Tinyman supplies LogicSig/pre-signed transactions alongside wallet-owned
-  // transactions. Pera honors each SignerTransaction.signers list, so it signs
-  // only the connected account's entries and leaves protocol signatures alone.
-  const tinymanSigner = useCallback(
-    async (txGroups) => {
-      if (!account) throw new Error("Wallet not connected");
-      return peraWallet.signTransaction(txGroups, account);
-    },
-    [account]
-  );
+async function signAndSubmit(algodClient, signerTxns, maxRounds = 12) {
+  const { account } = state;
+  if (!account) throw new Error("Wallet not connected");
+  const signed = await peraWallet.signTransaction([signerTxns], account);
+  if (!signed?.length) throw new Error("Wallet returned no signed transactions");
+  const response = await algodClient.sendRawTransaction(signed).do();
+  const txId = response.txId ?? response.txid ?? signerTxns[0].txn.txID().toString();
+  const confirmation = await waitForConfirmation(algodClient, txId, maxRounds);
+  return { txId, confirmation, signed };
+}
 
+// Tinyman supplies LogicSig/pre-signed transactions alongside wallet-owned
+// transactions. Pera honors each SignerTransaction.signers list, so it signs
+// only the connected account's entries and leaves protocol signatures alone.
+async function tinymanSigner(txGroups) {
+  const { account } = state;
+  if (!account) throw new Error("Wallet not connected");
+  return peraWallet.signTransaction(txGroups, account);
+}
+
+export function usePeraWallet() {
+  const { account, isConnecting, connectionError } = useSyncExternalStore(subscribe, getSnapshot);
+  useEffect(reconnectOnce, []);
+  const stableConnect = useCallback(connect, []);
+  const stableDisconnect = useCallback(disconnect, []);
   return {
     account,
     isConnecting,
     connectionError,
-    connect,
-    disconnect,
+    connect: stableConnect,
+    disconnect: stableDisconnect,
     signAndSend,
     signAndSubmit,
     tinymanSigner,

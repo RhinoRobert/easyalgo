@@ -1,4 +1,5 @@
 import LaunchLabPage from "./pages/LaunchLabPage";
+import WalletButton from "./components/WalletButton";
 
 // The whole app is the LaunchLab page. There is no router, no backend and no stored secret: the wallet (Pera) signs every transaction group.
 export default function App() {
@@ -12,7 +13,7 @@ export default function App() {
             <span>Algorand asset + Tinyman liquidity launcher</span>
           </div>
         </div>
-        <span className="shell-note">Standalone · wallet-signed</span>
+        <WalletButton />
       </header>
       <main className="shell-main">
         <LaunchLabPage />
