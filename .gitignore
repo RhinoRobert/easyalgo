@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env.local
+.env.*.local
+*.local.json
+*.unsigned.local.json
+.testnet-account.json
+__pycache__/
+.venv*/
+.pytest_cache/

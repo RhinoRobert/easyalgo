@@ -1,0 +1,75 @@
+/* The Profitnet / AlgoFlow dark palette, as LaunchLab.css expects it (--app-bg, --panel, --border, --text, --muted). */
+:root {
+  color-scheme: dark;
+  --app-bg: #08071a;
+  --panel: #0d1024;
+  --surface-raised: #12162d;
+  --border: #222d4d;
+  --border-strong: #33476e;
+  --text: #f8fafc;
+  --text-secondary: #cbd6e7;
+  --muted: #98a7c2;
+  --accent: #20d6ae;
+  --accent-gradient: linear-gradient(105deg, #16d6a5 0%, #4389ff 100%);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { min-height: 100%; }
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 520px at 50% -120px, rgba(67, 137, 255, 0.14), transparent 70%),
+    linear-gradient(rgba(34, 45, 77, 0.22) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, rgba(34, 45, 77, 0.22) 1px, transparent 1px) 0 0 / 44px 44px,
+    var(--app-bg);
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: #5eead4; }
+
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+.shell-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem clamp(1rem, 3vw, 2rem);
+  background: rgba(8, 7, 26, 0.86);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.shell-brand { display: flex; align-items: center; gap: 0.75rem; }
+.shell-brand div { display: grid; line-height: 1.15; }
+.shell-brand strong { font-size: 1.05rem; letter-spacing: -0.01em; }
+.shell-brand span:not(.shell-mark) { color: var(--muted); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.shell-mark {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.7rem;
+  color: #041411;
+  font-weight: 900;
+  font-size: 1.15rem;
+  background: var(--accent-gradient);
+  box-shadow: 0 0 22px rgba(32, 214, 174, 0.28);
+}
+
+.shell-note { color: var(--muted); font-size: 0.78rem; border: 1px solid var(--border); border-radius: 999px; padding: 0.32rem 0.7rem; }
+
+.shell-main { flex: 1; padding-top: 1rem; }
+
+@media (max-width: 600px) {
+  .shell-note { display: none; }
+}

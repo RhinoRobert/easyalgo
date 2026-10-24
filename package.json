@@ -1,0 +1,31 @@
+{
+  "name": "pnetlauncher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PNET LaunchLab as a standalone app: wallet-signed Algorand asset and Tinyman liquidity launches (TestNet by default, read-only until configured).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "npm run test:unit && npm run test:ui",
+    "test:unit": "node --test test/*.test.js",
+    "test:ui": "vitest run"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "@perawallet/connect": "^1.3.4",
+    "@tinymanorg/tinyman-js-sdk": "5.1.4",
+    "algosdk": "^3.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "jsdom": "^26.1.0",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  }
+}

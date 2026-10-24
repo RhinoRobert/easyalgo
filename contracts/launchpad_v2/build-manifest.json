@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "compiler": "puyapy 5.10.1",
+  "clientGenerator": "5.10.1",
+  "sha256": {
+    "contract": "88cc44621616a22bd0f20dfd08791a33c717db9f4c32895194e8f113b439ad87",
+    "arc56": "c50a7fdf717e321e4730d58d6732bbfb8fdf91d67e957dcbfb383a5fd9baf38a",
+    "approvalTeal": "65d5f73783566db71c0f70449782831577ade3d2cb98d5535f924664e62957c0",
+    "clearTeal": "222e44e93be7975248497db460ad9ef101ec379acbc14ad409b79b3a9334f2f1",
+    "typedClient": "eb39bb64893b07d22c8d80cf382576d1614e56a3f9995063be41f437a73941e9"
+  }
+}
