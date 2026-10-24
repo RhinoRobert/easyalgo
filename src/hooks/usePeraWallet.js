@@ -92,13 +92,18 @@ async function signAndSubmit(algodClient, signerTxns, maxRounds = 12) {
   return { txId, confirmation, signed };
 }
 
-// Tinyman supplies LogicSig/pre-signed transactions alongside wallet-owned
-// transactions. Pera honors each SignerTransaction.signers list, so it signs
-// only the connected account's entries and leaves protocol signatures alone.
+// Tinyman lists the pool LogicSig address as the signer of its own transactions
+// (the SDK signs those itself afterwards). Pera Connect expects a wallet
+// signature for every transaction with a non-empty signers list, so those
+// entries are sent with an empty list: the wallet is asked only for the
+// connected account's transactions, and the SDK reads those signatures back.
 async function tinymanSigner(txGroups) {
   const { account } = state;
   if (!account) throw new Error("Wallet not connected");
-  return peraWallet.signTransaction(txGroups, account);
+  const walletOnly = txGroups.map((group) => group.map((entry) => (
+    entry.signers?.includes(account) ? entry : { ...entry, signers: [] }
+  )));
+  return peraWallet.signTransaction(walletOnly, account);
 }
 
 export function usePeraWallet() {
