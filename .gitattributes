@@ -1,0 +1,23 @@
+# Reproducible contract/artifact hashes across Windows and CI checkouts.
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.teal text eol=lf
+*.map text eol=lf
+*.md text eol=lf
+*.sha256 text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Never apply text conversion to binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
