@@ -6,11 +6,14 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
+    alias: [
       // Tinyman only needs synchronous SHA-256; use the audited noble implementation
       // instead of a general Node compatibility bundle.
-      crypto: fileURLToPath(new URL("./src/shims/nodeCrypto.js", import.meta.url)),
-    },
+      { find: "crypto", replacement: fileURLToPath(new URL("./src/shims/nodeCrypto.js", import.meta.url)) },
+      // One algosdk for the app, Pera Connect and the Tinyman SDK. The Tinyman SDK is CommonJS and would
+      // otherwise bundle a second copy whose Address class fails `instanceof` in the app's copy ("Not an address").
+      { find: /^algosdk$/, replacement: fileURLToPath(new URL("./node_modules/algosdk/dist/esm/index.js", import.meta.url)) },
+    ],
   },
   server: { host: "127.0.0.1", port: 5180, strictPort: true },
   preview: { host: "127.0.0.1", port: 5180, strictPort: true },
