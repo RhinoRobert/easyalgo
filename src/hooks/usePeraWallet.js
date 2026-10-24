@@ -2,6 +2,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { PeraWalletConnect } from "@perawallet/connect";
 
 const IS_MAINNET = import.meta.env.VITE_NETWORK === "mainnet";
+const CONNECT_TIMEOUT_MS = 120_000;
 
 const peraWallet = new PeraWalletConnect({
   shouldShowSignTxnToast: true,
@@ -37,8 +38,9 @@ function reconnectOnce() {
 async function connect() {
   setState({ isConnecting: true, connectionError: "" });
   try {
+    // Long enough to pick up a phone, open Pera and approve: a 20 s limit expired before anyone could scan the code.
     const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Connection timed out — open Pera Wallet and try again")), 20000)
+      setTimeout(() => reject(new Error("Connection timed out — open Pera Wallet and try again")), CONNECT_TIMEOUT_MS)
     );
     const accounts = await Promise.race([peraWallet.connect(), timeout]);
     setState({ account: accounts[0] });

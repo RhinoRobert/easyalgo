@@ -48,7 +48,7 @@ export const NETWORKS = {
     tinymanNetwork: "testnet",
   },
   mainnet: {
-    label: "MainNet (deployment locked)",
+    label: "MainNet",
     algod: { server: "https://mainnet-api.algonode.cloud", port: 443, token: "" },
     indexer: { server: "https://mainnet-idx.algonode.cloud", port: 443, token: "" },
     launchpadAppId: envBigInt("VITE_LAUNCHPAD_V2_APP_ID"),

@@ -16,6 +16,8 @@ export default defineConfig({
   preview: { host: "127.0.0.1", port: 5180, strictPort: true },
   test: {
     environment: "jsdom",
+    // Tests assert the unconfigured state, so they must not pick up the real MainNet values in .env.local.
+    env: { VITE_NETWORK: "", VITE_LAUNCHPAD_V2_APP_ID: "", VITE_ENABLE_MAINNET_LAUNCHPAD: "", VITE_SHOW_DEPLOYMENT_CONSOLE: "" },
     setupFiles: ["./src/test-setup.js"],
     include: ["src/**/*.test.{js,jsx}"],
   },
