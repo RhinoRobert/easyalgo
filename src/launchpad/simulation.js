@@ -1,15 +1,17 @@
 import algosdk from "algosdk";
 
 function requestFor(signedTransactions) {
+  const unsignedGroup = signedTransactions.every((txn) => !txn.sig && !txn.lsig && !txn.msig);
   return new algosdk.modelsv2.SimulateRequest({
     txnGroups: [new algosdk.modelsv2.SimulateRequestTransactionGroup({
       txns: signedTransactions,
     })],
-    allowEmptySignatures: signedTransactions.every((txn) => !txn.sig && !txn.lsig && !txn.msig),
+    allowEmptySignatures: unsignedGroup,
     allowMoreLogging: true,
     allowUnnamedResources: false,
     extraOpcodeBudget: 0,
-    fixSigners: true,
+    // Algod rejects fixSigners unless empty signatures are allowed, so a group that is already signed must not ask for it.
+    fixSigners: unsignedGroup,
     execTraceConfig: new algosdk.modelsv2.SimulateTraceConfig({
       enable: true,
       scratchChange: false,
