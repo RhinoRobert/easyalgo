@@ -1,16 +1,15 @@
-// Read-only MainNet readiness check for deploying PNET Instant Launchpad v2. It signs nothing and sends nothing: it reads public chain state and
+// Read-only MainNet readiness check for deploying PNET Instant Launchpad v3. It signs nothing and sends nothing: it reads public chain state and
 // tells you the next action. Re-run it after each step.
 //
 //   npm run preflight:mainnet
 import { createHash } from "node:crypto";
 import algosdk from "algosdk";
-import { poolUtils, tinymanJSSDKConfig } from "@tinymanorg/tinyman-js-sdk";
+import { readPool } from "../src/launchpad/tinymanAdapter.js";
 import { NETWORKS, PLATFORM_WALLET, INITIALIZE_FUNDING } from "../src/launchpad/config.js";
 import { TRUSTED_LAUNCHPAD_BUILD as BUILD } from "../src/launchpad/deploymentTrust.js";
 
 const main = NETWORKS.mainnet;
 const client = new algosdk.Algodv2("", "https://mainnet-api.algonode.cloud", 443);
-tinymanJSSDKConfig.setClientName("pnetlauncher-preflight");
 const algo = (micro) => `${(Number(micro) / 1e6).toFixed(6)} ALGO`;
 const mark = (ok) => (ok ? "✔" : "✖");
 const sha256hex = (b64) => createHash("sha256").update(Buffer.from(b64, "base64")).digest("hex");
@@ -34,29 +33,28 @@ for (const app of acct.createdApps ?? []) {
   if (sha256hex(approval) === BUILD.approvalBytecodeSha256) existing.push(Number(app.id));
 }
 
-console.log("PNET Instant Launchpad v2: MainNet readiness (read-only)\n");
+console.log("PNET Instant Launchpad v3: MainNet readiness (read-only)\n");
 console.log(`platform authority   ${PLATFORM_WALLET}`);
 console.log(`  balance            ${algo(balance)}   minimum ${algo(minBalance)}   spendable ${algo(spendable)}`);
 console.log(`  opted in to PNET   ${mark(holdsPnet)} (asset ${main.pnetAssetId})`);
 console.log(`  reviewed contract already created by it: ${existing.length ? "YES, app " + existing.join(", ") : "no"}\n`);
 
 let protocolOk = true;
-for (const [label, id] of [["Tinyman v2 validator", main.tinymanAppId], ["Vestige", main.vestigeAppId], ["ARC-54", main.arc54AppId], ["legacy launchpad (must stay untouched)", BigInt(3_609_729_732)]]) {
+for (const [label, id] of [["Tinyman v2 validator", main.tinymanAppId], ["Vestige", main.vestigeAppId], ["ARC-54", main.arc54AppId], ["legacy launchpad (must stay untouched)", BigInt(3_609_729_732)], ["unfinishable v2 launchpad (never use)", BigInt(3_753_482_671)]]) {
   try { await client.getApplicationByID(Number(id)).do(); console.log(`  ${mark(true)} ${label} ${id}`); }
   catch { protocolOk = false; console.log(`  ${mark(false)} ${label} ${id} NOT FOUND`); }
 }
 try { await client.getAssetByID(Number(main.pnetAssetId)).do(); console.log(`  ${mark(true)} PNET asset ${main.pnetAssetId}`); } catch { protocolOk = false; console.log(`  ${mark(false)} PNET asset not found`); }
-const pool = await poolUtils.v2.getPoolInfo({ client, network: "mainnet", asset1ID: Number(main.pnetAssetId), asset2ID: 0 });
-const poolAddress = pool.account.address().toString();
-const poolOk = poolAddress === main.sourcePool && String(pool.status).toLowerCase() === "ready";
-console.log(`  ${mark(poolOk)} pinned PNET/ALGO source pool ${poolAddress} (${pool.status})\n`);
+const pool = await readPool({ algodClient: client, validatorAppId: main.tinymanAppId, assetA: main.pnetAssetId, assetB: 0n });
+const poolOk = pool.address === main.sourcePool && pool.exists;
+console.log(`  ${mark(poolOk)} pinned PNET/ALGO source pool ${pool.address} (${pool.exists ? "ready" : "not created"})\n`);
 
 // What is still to be paid, by step.
 const steps = [];
 if (!holdsPnet) steps.push(["1. opt the authority in to PNET", OPT_IN_MBR + FEES.optIn, "0.1 ALGO stays as the PNET holding minimum balance"]);
 if (!existing.length) {
   steps.push(["2. create the application", APP_CREATE_MBR + FEES.create, `minimum balance for ${BUILD.globalInts} uints, ${BUILD.globalBytes} byte slices and ${BUILD.extraPages} extra pages, locked for good (no delete route)`]);
-  steps.push(["3. initialize it (pay the app)", INITIALIZE_FUNDING + FEES.initialize, "1.2 ALGO goes INTO the contract: its minimum balance and a 1 ALGO safety cushion (no withdrawal route)"]);
+  steps.push(["3. initialize it (pay the app)", INITIALIZE_FUNDING + FEES.initialize, "0.5 ALGO goes INTO the contract: its PNET holding minimum balance and a 0.3 ALGO safety cushion (no withdrawal route)"]);
 }
 const needed = steps.reduce((sum, s) => sum + s[1], 0n);
 console.log("still to pay from the authority's spendable ALGO:");
@@ -67,8 +65,8 @@ console.log(`  spendable now ${algo(spendable)} -> ${shortfall ? "SEND AT LEAST 
 
 let next;
 if (!protocolOk || !poolOk) next = "A pinned MainNet dependency is missing or the source pool is not ready: do NOT deploy. Re-check before anything else.";
-else if (existing.length) next = `The reviewed contract already exists (app ${existing[0]}). Do not deploy another: run prepare-initialize / verify-record for it, or set VITE_LAUNCHPAD_V2_APP_ID=${existing[0]}.`;
+else if (existing.length) next = `The reviewed contract already exists (app ${existing[0]}). Do not deploy another: run prepare-initialize / verify-record for it, or set VITE_LAUNCHPAD_APP_ID=${existing[0]}.`;
 else if (shortfall) next = `Step A: send at least ${algo(shortfall)} to ${PLATFORM_WALLET}.`;
 else if (!holdsPnet) next = "Step B: in Pera, with the authority account, add asset 3169177585 (PNET).";
-else next = "Ready. Run: python -m launchpad_v2.deploy prepare-create mainnet <authority> (with the two MainNet confirmation variables set), then sign it in the app's deployment console.";
+else next = "Ready. Run: python -m launchpad_v3.deploy prepare-create mainnet <authority> (with the two MainNet confirmation variables set), then sign it in the app's deployment console.";
 console.log(`NEXT: ${next}`);

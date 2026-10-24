@@ -23,8 +23,8 @@ The original readiness documents are retained in this directory for provenance. 
 LaunchLab defaults to TestNet and remains read-only when required contract values are missing. Configure a reviewed deployment with:
 
 - `VITE_NETWORK=localnet|testnet|mainnet`
-- `VITE_LAUNCHPAD_V2_APP_ID`
-- `VITE_LAUNCHPAD_V2_PNET_ID`
+- `VITE_LAUNCHPAD_APP_ID`
+- `VITE_LAUNCHPAD_PNET_ID`
 - `VITE_TINYMAN_SOURCE_POOL`
 - LocalNet-only node overrides when applicable: `VITE_LOCALNET_ALGOD`, `VITE_LOCALNET_ALGOD_PORT`, `VITE_LOCALNET_ALGOD_TOKEN`, `VITE_LOCALNET_INDEXER`, `VITE_LOCALNET_INDEXER_PORT`, and `VITE_LOCALNET_INDEXER_TOKEN`
 

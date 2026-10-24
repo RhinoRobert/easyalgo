@@ -34,8 +34,8 @@ export const NETWORKS = {
     label: "LocalNet",
     algod: { server: env.VITE_LOCALNET_ALGOD || "http://localhost", port: Number(env.VITE_LOCALNET_ALGOD_PORT || 4001), token: env.VITE_LOCALNET_ALGOD_TOKEN || "a".repeat(64) },
     indexer: { server: env.VITE_LOCALNET_INDEXER || "http://localhost", port: Number(env.VITE_LOCALNET_INDEXER_PORT || 8980), token: env.VITE_LOCALNET_INDEXER_TOKEN || "a".repeat(64) },
-    launchpadAppId: envBigInt("VITE_LAUNCHPAD_V2_APP_ID"),
-    pnetAssetId: envBigInt("VITE_LAUNCHPAD_V2_PNET_ID"),
+    launchpadAppId: envBigInt("VITE_LAUNCHPAD_APP_ID"),
+    pnetAssetId: envBigInt("VITE_LAUNCHPAD_PNET_ID"),
     tinymanAppId: envBigInt("VITE_TINYMAN_V2_APP_ID"),
     vestigeAppId: envBigInt("VITE_VESTIGE_APP_ID"),
     arc54AppId: envBigInt("VITE_ARC54_APP_ID"),
@@ -47,8 +47,8 @@ export const NETWORKS = {
     label: "TestNet",
     algod: { server: "https://testnet-api.algonode.cloud", port: 443, token: "" },
     indexer: { server: "https://testnet-idx.algonode.cloud", port: 443, token: "" },
-    launchpadAppId: envBigInt("VITE_LAUNCHPAD_V2_APP_ID"),
-    pnetAssetId: envBigInt("VITE_LAUNCHPAD_V2_PNET_ID"),
+    launchpadAppId: envBigInt("VITE_LAUNCHPAD_APP_ID"),
+    pnetAssetId: envBigInt("VITE_LAUNCHPAD_PNET_ID"),
     tinymanAppId: 148_607_000n,
     vestigeAppId: 743_122_411n,
     arc54AppId: 497_806_551n,
@@ -60,7 +60,7 @@ export const NETWORKS = {
     label: "MainNet",
     algod: { server: "https://mainnet-api.algonode.cloud", port: 443, token: "" },
     indexer: { server: "https://mainnet-idx.algonode.cloud", port: 443, token: "" },
-    launchpadAppId: envBigInt("VITE_LAUNCHPAD_V2_APP_ID"),
+    launchpadAppId: envBigInt("VITE_LAUNCHPAD_APP_ID"),
     pnetAssetId: 3_169_177_585n,
     tinymanAppId: 1_002_541_853n,
     vestigeAppId: 3_129_810_607n,
@@ -85,8 +85,8 @@ if (launchNetworkName === "mainnet"
 
 export function configurationIssues(config = launchNetwork) {
   const issues = [];
-  if (config.launchpadAppId === 0n) issues.push("VITE_LAUNCHPAD_V2_APP_ID is not configured");
-  if (config.pnetAssetId === 0n) issues.push("VITE_LAUNCHPAD_V2_PNET_ID is not configured");
+  if (config.launchpadAppId === 0n) issues.push("VITE_LAUNCHPAD_APP_ID is not configured");
+  if (config.pnetAssetId === 0n) issues.push("VITE_LAUNCHPAD_PNET_ID is not configured");
   if (config.tinymanAppId === 0n) issues.push("Tinyman v2 app is not configured");
   if (config.vestigeAppId === 0n) issues.push("Vestige app is not configured");
   if (config.arc54AppId === 0n) issues.push("ARC-54 app is not configured");

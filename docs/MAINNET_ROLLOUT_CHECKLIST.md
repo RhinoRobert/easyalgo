@@ -38,7 +38,7 @@ approval gate, and legacy App ID `3609729732` must remain untouched.
 - [ ] Re-run read-only preflight immediately before package generation.
 - [ ] Confirm the hardcoded platform wallet controls the connected Pera/Ledger
       account and is opted into MainNet PNET.
-- [ ] Set `ALLOW_LAUNCHPAD_V2_DEPLOY=MAINNET` and
+- [ ] Set `ALLOW_LAUNCHPAD_V3_DEPLOY=MAINNET` and
       `CONFIRM_NEW_MAINNET_APP=3609729732-REMAINS-UNTOUCHED` only for package
       generation.
 - [ ] Compare displayed transaction IDs and artifact hashes on an independent

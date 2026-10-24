@@ -3,7 +3,7 @@
 //   node scripts/find-pool.mjs testnet 764815173
 //   node scripts/find-pool.mjs mainnet 3169177585
 //
-// The printed pool address is what VITE_TINYMAN_SOURCE_POOL / LAUNCHPAD_V2_SOURCE_POOL expect, and the asset is VITE_LAUNCHPAD_V2_PNET_ID.
+// The printed pool address is what VITE_TINYMAN_SOURCE_POOL / LAUNCHPAD_V3_SOURCE_POOL expect, and the asset is VITE_LAUNCHPAD_PNET_ID.
 import algosdk from "algosdk";
 import { poolUtils, tinymanJSSDKConfig } from "@tinymanorg/tinyman-js-sdk";
 

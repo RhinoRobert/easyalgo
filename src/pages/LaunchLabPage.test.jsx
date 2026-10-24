@@ -28,7 +28,7 @@ describe("LaunchLabPage", () => {
     render(<LaunchLabPage />);
 
     expect(screen.getByRole("heading", { name: /one asset\. one tinyman pool/i })).toBeInTheDocument();
-    expect(screen.getByText(/signing disabled/i)).toHaveTextContent("VITE_LAUNCHPAD_V2_APP_ID");
+    expect(screen.getByText(/signing disabled/i)).toHaveTextContent("VITE_LAUNCHPAD_APP_ID");
     const connectButton = screen.getByRole("button", { name: /connect pera/i });
     expect(connectButton).toBeEnabled();
 
