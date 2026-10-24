@@ -19,7 +19,7 @@ import algosdk
 from algosdk import abi, transaction
 from algosdk.v2client import algod
 
-from launchpad_v2.contract import INITIALIZE_FUNDING, PLATFORM_WALLET_ADDRESS
+from launchpad_v2._constants import INITIALIZE_FUNDING, PLATFORM_WALLET_ADDRESS  # read from contract.py's source: importing it needs the Puya-only `algopy`
 from launchpad_v2.network import NETWORKS, PRODUCTION_LAUNCHPAD_APP_ID, NetworkConfig
 
 
