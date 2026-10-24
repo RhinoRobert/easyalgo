@@ -219,7 +219,6 @@ def prepare_create(network: str, deployer: str) -> Path:
             "clearSha256": hashlib.sha256(clear).hexdigest(),
             "sourceSha256": build["sha256"]["contract"],
             "compiler": build["compiler"],
-            "clientGenerator": build["clientGenerator"],
         },
         "legacyProductionAppUntouched": PRODUCTION_LAUNCHPAD_APP_ID,
     }
@@ -288,7 +287,6 @@ def prepare_initialize(network: str, deployer: str, app_id: int) -> Path:
             "clearSha256": hashlib.sha256(clear).hexdigest(),
             "sourceSha256": build["sha256"]["contract"],
             "compiler": build["compiler"],
-            "clientGenerator": build["clientGenerator"],
         },
         "legacyProductionAppUntouched": PRODUCTION_LAUNCHPAD_APP_ID,
     }
