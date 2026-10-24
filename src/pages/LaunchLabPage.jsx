@@ -21,9 +21,7 @@ import { buildLaunchQuote, quoteIsExpired } from "../launchpad/quote";
 import { attestLaunchpadApplication } from "../launchpad/attestation";
 import { simulateSignerGroup } from "../launchpad/simulation";
 import {
-  bootstrapTinymanV2Pool,
-  discoverTinymanV2Pool,
-  poolSnapshot,
+  readPool,
   readTinymanPoolState,
   readTinymanSourcePool,
   tinymanBootstrapCost,
@@ -31,10 +29,9 @@ import {
 import {
   assetIdFromCreateConfirmation,
   buildCancelGroup,
-  buildCreateAssetGroup,
-  buildFinalizeGroup,
-  buildRecoveryOptIns,
-  buildSwapPnetGroup,
+  buildClaimLpGroup,
+  buildLaunchFinishGroup,
+  buildLaunchStartGroup,
   buildVestigeGroup,
   readLaunchSnapshot,
   verifyCompletedLaunch,
@@ -55,17 +52,10 @@ const encoder = new TextEncoder();
 const SHOW_DEPLOYMENT_CONSOLE = import.meta.env.DEV
   && import.meta.env.VITE_SHOW_DEPLOYMENT_CONSOLE === "LOCAL_ONLY";
 const STEP_LABELS = {
-  quote: "Quote exact launch costs",
-  asset_create: "Create immutable six-decimal ASA",
-  pnet_swap: "Swap exactly 1 ALGO into PNET",
-  pool_bootstrap: "Bootstrap deterministic Tinyman v2 pool",
-  finalize: "Pool 100% supply and split LP 80 / 10 / 10",
-  vestige: "Grant retryable Vestige metadata access",
+  quote: "Review the exact costs",
+  start: "Approval 1 of 2: create your token and buy PNET",
+  finish: "Approval 2 of 2: create the pool, add liquidity, split the LP",
 };
-
-function roundOf(value) {
-  return Number(value?.confirmedRound ?? value?.["confirmed-round"] ?? 0);
-}
 
 function currentRound(status) {
   return Number(status?.lastRound ?? status?.["last-round"] ?? 0);
@@ -81,19 +71,25 @@ function validateForm(form) {
   return { ...form, name, unitName, url, totalRaw: parseDisplaySupply(form.displaySupply) };
 }
 
-function actionLabel(step, busy) {
-  if (busy) return "Waiting for wallet or chain confirmation…";
-  return {
-    quote: "Build exact launch quote",
-    asset_create: "Sign asset creation",
-    pnet_swap: "Sign exact 1 ALGO Tinyman swap",
-    pool_bootstrap: "Sign Tinyman pool bootstrap",
-    finalize: "Sign atomic liquidity + LP split",
-    vestige: "Sign Vestige access grant",
-  }[step] || "Launch complete";
+/** Plain-language text for the errors a person can actually meet. */
+function friendlyError(cause) {
+  const text = cause?.message || String(cause);
+  if (/reject|declin|cancel|denied|closed/i.test(text)) {
+    return "The approval was cancelled in Pera Wallet. Nothing was sent. Press Continue launch when you are ready.";
+  }
+  if (/overspend|below min/i.test(text)) return "The wallet does not hold enough spendable ALGO for this step.";
+  return text;
 }
 
-function TinymanAutoPool({ account, connect, connectionError, isConnecting, tinymanSigner, signAndSubmit }) {
+function buttonLabel({ account, isConnecting, busy, session, step }) {
+  if (!account) return isConnecting ? "Opening Pera…" : "Connect Pera";
+  if (busy) return "Working… approve in Pera when it asks";
+  if (!session) return "Launch token";
+  if (!step) return "Launch complete";
+  return "Continue launch";
+}
+
+function TinymanAutoPool({ account, connect, connectionError, isConnecting, signAndSubmit }) {
   const { algodClient } = useAlgorand();
   const [form, setForm] = useState({ name: "", unitName: "", displaySupply: "1000000", url: "" });
   const [session, setSession] = useState(null);
@@ -103,6 +99,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [attestation, setAttestation] = useState({ status: "pending", error: "" });
+  const [round, setRound] = useState(0);
   const issues = useMemo(() => configurationIssues(), []);
   const step = session ? nextPendingStep(session) : "quote";
 
@@ -124,13 +121,10 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
     return saved;
   };
 
-  const simulateAndSubmit = async (group, maxRounds = 12) => {
-    const simulation = await simulateSignerGroup(algodClient, group);
-    setNotice(
-      `Simulation passed: ${simulation.transactionCount} outer transactions, `
-      + `${simulation.appBudgetConsumed} app budget consumed. Open Pera to sign the exact group.`,
-    );
-    return signAndSubmit(algodClient, group, maxRounds);
+  const simulateAndSubmit = async (entries, presigned = {}, maxRounds = 16) => {
+    const simulation = await simulateSignerGroup(algodClient, entries, presigned);
+    setNotice(`Checked on chain: ${simulation.transactionCount} transactions will run exactly as shown. Open Pera Wallet to approve.`);
+    return signAndSubmit(algodClient, entries, maxRounds, presigned);
   };
 
   const refreshFromChain = async (baseSession) => {
@@ -142,27 +136,22 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
       wallet: account,
       assetId: pendingReconciled.assetId,
     });
-    let pool = { ready: false };
     const assetId = snapshot.pending?.assetId ?? snapshot.launch?.assetId ?? pendingReconciled.assetId;
+    let pool = { exists: false };
     if (assetId) {
-      try {
-        const found = await discoverTinymanV2Pool({
-          algodClient,
-          network: launchNetwork.tinymanNetwork,
-          pnetAssetId: launchNetwork.pnetAssetId,
-          launchedAssetId: assetId,
-        });
-        pool = poolSnapshot(found);
-      } catch {
-        pool = { ready: false };
-      }
+      pool = await readPool({
+        algodClient,
+        validatorAppId: launchNetwork.tinymanAppId,
+        assetA: assetId,
+        assetB: launchNetwork.pnetAssetId,
+      });
     }
     const reconciled = reconcileSessionFromChain(pendingReconciled, { ...snapshot, pool });
     setChain({ ...snapshot, pool });
     if (snapshot.asset) {
       const expectedCreator = algosdk.getApplicationAddress(Number(launchNetwork.launchpadAppId)).toString();
       if (!snapshot.asset.immutable || snapshot.asset.creator !== expectedCreator) {
-        throw new Error("Chain recovery found an ASA that is not immutable or was not created by launchpad v2");
+        throw new Error("Chain recovery found an ASA that is not immutable or was not created by the launchpad");
       }
     }
     if (snapshot.launch?.status === 2n && snapshot.launch.poolAddress) {
@@ -179,6 +168,8 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
         poolState,
       }));
     }
+    const status = await algodClient.status().do();
+    setRound(currentRound(status));
     return persist(reconciled);
   };
 
@@ -194,13 +185,8 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
           await refreshFromChain(local);
           return;
         }
-        // localStorage is only a convenience.  Recover a pending launch or the
-        // wallet's newest terminal directory record directly from app boxes.
-        const snapshot = await readLaunchSnapshot({
-          algodClient,
-          config: launchNetwork,
-          wallet: account,
-        });
+        // localStorage is only a convenience. Recover a pending launch or the wallet's newest record from the app's boxes.
+        const snapshot = await readLaunchSnapshot({ algodClient, config: launchNetwork, wallet: account });
         const recoveredAssetId = snapshot.pending?.assetId ?? snapshot.launch?.assetId ?? null;
         if (!recoveredAssetId || !snapshot.asset) return;
         const recoveredForm = {
@@ -211,17 +197,12 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
           totalRaw: snapshot.asset.total,
         };
         const recovered = {
-          ...createLaunchSession({
-            network: launchNetworkName,
-            wallet: account,
-            form: recoveredForm,
-            quote: null,
-          }),
+          ...createLaunchSession({ network: launchNetworkName, wallet: account, form: recoveredForm, quote: null }),
           assetId: recoveredAssetId,
         };
         setForm(recoveredForm);
         await refreshFromChain(recovered);
-        setNotice("Recovered launch progress from on-chain boxes; local browser state was not required.");
+        setNotice("Recovered your launch from the chain; local browser state was not needed.");
       } catch (cause) {
         if (!cancelled) setError(`Recovery check: ${cause?.message || cause}`);
       }
@@ -229,7 +210,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
     return () => { cancelled = true; };
   }, [account]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const computeQuote = async (validatedForm = validateForm(form), assetAlreadyCreated = false) => {
+  const computeQuote = async (validatedForm) => {
     const [status, source, walletInfo] = await Promise.all([
       algodClient.status().do(),
       readTinymanSourcePool({
@@ -244,179 +225,130 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
       currentRound: currentRound(status),
       totalRaw: validatedForm.totalRaw,
       sourcePoolState: source,
-      tinymanBootstrapCost: tinymanBootstrapCost(1_000n),
+      tinymanBootstrapCost: tinymanBootstrapCost(false),
     });
     const amount = BigInt(walletInfo.amount);
     const minimum = BigInt(walletInfo.minBalance ?? walletInfo["min-balance"] ?? 0);
-    const alreadyPaid = assetAlreadyCreated
-      ? quote.itemizedAlgo.assetAndDirectoryMbr + quote.itemizedAlgo.createGroupFees
-      : 0n;
-    const remainingRequired = quote.requiredWalletBalance - alreadyPaid;
-    if (amount - minimum < remainingRequired) {
-      throw new Error(`Spendable wallet balance is below the remaining quoted ${formatUnits(remainingRequired)} ALGO requirement`);
+    if (amount - minimum < quote.requiredWalletBalance) {
+      throw new Error(`Spendable wallet balance is below the ${formatUnits(quote.requiredWalletBalance)} ALGO this launch needs`);
     }
-    return { quote, validatedForm };
+    return quote;
   };
 
-  const quoteLaunch = async () => {
-    const { quote, validatedForm } = await computeQuote();
-    const next = createLaunchSession({
-      network: launchNetworkName,
-      wallet: account,
-      form: validatedForm,
-      quote,
+  /** Approval 1: create the token and buy PNET. */
+  const runStart = async (current) => {
+    const status = await algodClient.status().do();
+    let working = current;
+    if (quoteIsExpired(working.quote, currentRound(status))) {
+      working = persist({ ...working, quote: await computeQuote(working.form) });
+      setNotice("The quote was refreshed so the price is current.");
+    }
+    working = persist(updateStep(working, "start", { status: "signing" }));
+    const group = await buildLaunchStartGroup({
+      algodClient, config: launchNetwork, wallet: account, form: working.form, quote: working.quote,
     });
-    setForm(validatedForm);
-    persist(next);
-    setNotice("Quote locked for ten rounds or two minutes. Review it before creating the ASA.");
+    const appTxId = group.at(-1).txn.txID().toString();
+    working = persist(updateStep(working, "start", { status: "submitting", txId: appTxId }));
+    const result = await simulateAndSubmit(group);
+    const assetId = assetIdFromCreateConfirmation(result.confirmation);
+    return persist({
+      ...confirmStep(working, "start", { txId: appTxId, confirmedRound: Number(result.confirmation.confirmedRound ?? 0) }),
+      assetId,
+    });
   };
 
-  const runNext = async () => {
+  /** Approval 2: pool, liquidity, LP split and Vestige access, in one atomic group. */
+  const runFinish = async (current) => {
+    const pool = await readPool({
+      algodClient, validatorAppId: launchNetwork.tinymanAppId, assetA: current.assetId, assetB: launchNetwork.pnetAssetId,
+    });
+    let working = persist(updateStep(current, "finish", { status: "signing" }));
+    let built = await buildLaunchFinishGroup({
+      algodClient, config: launchNetwork, wallet: account, assetId: current.assetId, pool, grantVestige: true,
+    });
+    try {
+      await simulateSignerGroup(algodClient, built.entries, built.presigned);
+    } catch (firstError) {
+      // Vestige is an outside dependency: if only that part is the problem the launch still goes ahead, and a separate retry follows.
+      built = await buildLaunchFinishGroup({
+        algodClient, config: launchNetwork, wallet: account, assetId: current.assetId, pool, grantVestige: false,
+      });
+      try {
+        await simulateSignerGroup(algodClient, built.entries, built.presigned);
+      } catch {
+        throw firstError;
+      }
+      setNotice("Vestige access is not available right now, so the launch goes ahead without it. You can add it afterwards.");
+    }
+    const appTxId = built.entries.at(-1).txn.txID().toString();
+    working = persist(updateStep(working, "finish", { status: "submitting", txId: appTxId }));
+    const result = await simulateAndSubmit(built.entries, built.presigned, 20);
+    return persist(confirmStep(working, "finish", {
+      txId: appTxId, confirmedRound: Number(result.confirmation.confirmedRound ?? 0),
+    }));
+  };
+
+  const launch = async () => {
     setError("");
     setNotice("");
     if (!account) { await connect(); return; }
     if (issues.length) { setError(issues.join("; ")); return; }
-      if (attestation.status !== "verified") {
-        setError(attestation.error || "The configured launchpad App ID has not passed bytecode attestation");
-        return;
-      }
+    if (attestation.status !== "verified") {
+      setError(attestation.error || "The configured launchpad App ID has not passed bytecode attestation");
+      return;
+    }
     setBusy(true);
     try {
-      if (!session || step === "quote") {
-        await quoteLaunch();
-        return;
+      let current = session;
+      if (!current) {
+        const validated = validateForm(form);
+        const quote = await computeQuote(validated);
+        setForm(validated);
+        current = persist(createLaunchSession({ network: launchNetworkName, wallet: account, form: validated, quote }));
       }
-      let current = await refreshFromChain(session);
-      const next = nextPendingStep(current);
-      if (!next) return;
-
-      if (["asset_create", "pnet_swap"].includes(next)) {
-        const status = await algodClient.status().do();
-        if (quoteIsExpired(current.quote, currentRound(status))) {
-          const refreshed = await computeQuote(current.form, next === "pnet_swap");
-          current = persist({ ...current, quote: refreshed.quote });
-          setNotice("The quote expired and was refreshed. Review the new output, then click again to sign.");
-          return;
-        }
+      current = await refreshFromChain(current);
+      // Both approvals run back to back; the only interruptions are Pera's own prompts.
+      for (let guard = 0; guard < 3; guard += 1) {
+        const next = nextPendingStep(current);
+        if (!next || next === "quote") break;
+        current = next === "start" ? await runStart(current) : await runFinish(current);
+        current = await refreshFromChain(current);
       }
-
-      current = persist(updateStep(current, next, { status: "signing" }));
-      if (next === "asset_create") {
-        const group = await buildCreateAssetGroup({
-          algodClient,
-          appId: launchNetwork.launchpadAppId,
-          wallet: account,
-          form: current.form,
-        });
-        const appTxId = group.at(-1).txn.txID().toString();
-        current = persist(updateStep(current, next, { status: "submitting", txId: appTxId }));
-        await simulateAndSubmit(group);
-        const confirmation = await algodClient.pendingTransactionInformation(appTxId).do();
-        const assetId = assetIdFromCreateConfirmation(confirmation);
-        current = persist({
-          ...confirmStep(current, next, { txId: appTxId, confirmedRound: roundOf(confirmation) }),
-          assetId,
-        });
-      } else if (next === "pnet_swap") {
-        const group = await buildSwapPnetGroup({
-          algodClient,
-          config: launchNetwork,
-          wallet: account,
-          assetId: current.assetId,
-          quote: current.quote,
-        });
-        const appTxId = group.at(-1).txn.txID().toString();
-        current = persist(updateStep(current, next, { status: "submitting", txId: appTxId }));
-        const result = await simulateAndSubmit(group);
-        current = persist(confirmStep(current, next, {
-          txId: appTxId,
-          confirmedRound: roundOf(result.confirmation),
-        }));
-      } else if (next === "pool_bootstrap") {
-        const result = await bootstrapTinymanV2Pool({
-          algodClient,
-          network: launchNetwork.tinymanNetwork,
-          walletAddress: account,
-          pnetAssetId: launchNetwork.pnetAssetId,
-          launchedAssetId: current.assetId,
-          launchedUnitName: current.form.unitName,
-          initiatorSigner: tinymanSigner,
-          onProgress: (event) => {
-            setSession((old) => old ? updateStep(old, next, { status: event.status }) : old);
-          },
-        });
-        const snapshot = poolSnapshot(result.pool);
-        current = persist({
-          ...confirmStep(current, next, { transactionIds: result.transactionIds }),
-          poolAddress: snapshot.address,
-          lpAssetId: snapshot.lpAssetId,
-        });
-      } else if (next === "finalize") {
-        const group = await buildFinalizeGroup({
-          algodClient,
-          config: launchNetwork,
-          wallet: account,
-          assetId: current.assetId,
-          poolAddress: current.poolAddress,
-          lpAssetId: current.lpAssetId,
-        });
-        const appTxId = group.at(-1).txn.txID().toString();
-        current = persist(updateStep(current, next, { status: "submitting", txId: appTxId }));
-        const result = await simulateAndSubmit(group, 16);
-        current = persist(confirmStep(current, next, {
-          txId: appTxId,
-          confirmedRound: roundOf(result.confirmation),
-        }));
-      } else if (next === "vestige") {
-        const group = await buildVestigeGroup({
-          algodClient,
-          config: launchNetwork,
-          wallet: account,
-          assetId: current.assetId,
-        });
-        const appTxId = group.at(-1).txn.txID().toString();
-        current = persist(updateStep(current, next, { status: "submitting", txId: appTxId }));
-        const result = await simulateAndSubmit(group);
-        current = persist(confirmStep(current, next, {
-          txId: appTxId,
-          confirmedRound: roundOf(result.confirmation),
-        }));
-      }
-      await refreshFromChain(current);
+      if (nextPendingStep(current) === null) setNotice("Launch complete. Everything below was read back from the chain.");
     } catch (cause) {
       console.error(cause);
-      setError(cause?.message || String(cause));
-      // Do not mark an uncertain submission as pending.  A timeout can occur
-      // after the network accepted the group; the next click first rebuilds
-      // status from boxes/pool state and only retries when chain state proves
-      // the step did not complete.
+      setError(friendlyError(cause));
+      // An uncertain submission is never marked pending: the next click rebuilds from chain state first.
+      try { await refreshFromChain(loadSession(launchNetworkName, account) ?? session); } catch { /* keep the message above */ }
     } finally {
       setBusy(false);
     }
   };
 
-  const cancelLaunch = async () => {
-    if (!session?.assetId) return;
+  const runSingle = async (label, buildGroup) => {
     setBusy(true);
     setError("");
+    setNotice("");
     try {
-      const optIns = await buildRecoveryOptIns({
-        algodClient, config: launchNetwork, wallet: account, assetId: session.assetId,
-        status: chain?.pending?.status,
-      });
-      if (optIns.length) await simulateAndSubmit(optIns);
-      const group = await buildCancelGroup({
-        algodClient, config: launchNetwork, wallet: account, assetId: session.assetId,
-        status: chain?.pending?.status,
-      });
-      await simulateAndSubmit(group);
+      await simulateAndSubmit(await buildGroup());
       await refreshFromChain(session);
+      setNotice(`${label} confirmed.`);
     } catch (cause) {
-      setError(cause?.message || String(cause));
+      setError(friendlyError(cause));
     } finally {
       setBusy(false);
     }
   };
+
+  const claimLp = () => runSingle("Claiming your LP", () => buildClaimLpGroup({
+    algodClient, config: launchNetwork, wallet: account, assetId: session.assetId, lpAssetId: chain.launch.lpAssetId,
+  }));
+  const retryVestige = () => runSingle("Vestige access", () => buildVestigeGroup({
+    algodClient, config: launchNetwork, wallet: account, assetId: session.assetId,
+  }));
+  const cancelLaunch = () => runSingle("Cancellation", () => buildCancelGroup({
+    algodClient, config: launchNetwork, wallet: account, assetId: session.assetId,
+  }));
 
   const startAnother = () => {
     setSession(null);
@@ -428,20 +360,19 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
 
   const quote = session?.quote;
   const terminal = session?.terminalStatus;
-  const cancelRound = chain?.pending
-    ? Number(chain.pending.status === 0n ? chain.pending.createdRound : chain.pending.swapRound)
-      + CANCEL_DELAY_ROUNDS
-    : null;
+  const cancelRound = chain?.pending ? Number(chain.pending.swapRound) + CANCEL_DELAY_ROUNDS : null;
+  const cancelOpen = cancelRound !== null && round >= cancelRound;
+  const launchRecord = chain?.launch?.status === 2n ? chain.launch : null;
 
   return (
     <section className="launchlab-page instant-launch">
       <div className="instant-hero">
-        <div className="af-section-eyebrow">PNET Instant Launchpad v2</div>
-        <h1>One asset. One Tinyman pool. Verifiable liquidity.</h1>
+        <div className="af-section-eyebrow">PNET Instant Launchpad v3</div>
+        <h1>One asset. One Tinyman pool. Two approvals.</h1>
         <p>
-          Your wallet funds an immutable ASA and exactly one ALGO of PNET. The contract pools
-          the complete supply and measured PNET output, sends 80% of LP to ARC-54, gives you
-          10%, and retains 10% in tracked platform escrow.
+          Your wallet funds an immutable ASA and exactly one ALGO of PNET. The contract pools the complete
+          supply and measured PNET output, sends 80% of LP to ARC-54, keeps 10% for you to claim, and retains 10% in
+          tracked platform escrow.
         </p>
         <div className="instant-badges">
           <span className="instant-network">{launchNetwork.label}</span>
@@ -467,15 +398,15 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
             disabled={
               !account
                 ? busy || isConnecting
-                : busy || issues.length > 0 || attestation.status !== "verified" || terminal === "cancelled"
+                : busy || issues.length > 0 || attestation.status !== "verified" || terminal === "cancelled" || (session && !step)
             }
-            onClick={runNext}
+            onClick={launch}
           >
-            {!account ? (isConnecting ? "Opening Pera…" : "Connect Pera") : actionLabel(step, busy)}
+            {buttonLabel({ account, isConnecting, busy, session, step })}
           </button>
           {connectionError && <div className="instant-error">{connectionError}</div>}
           {terminal && <button className="af-btn-ghost" onClick={startAnother}>Prepare another launch</button>}
-          <p className="field-hint">Every signing request is a bounded, inspectable group. Confirmed chain state is checked before the next group is built.</p>
+          <p className="field-hint">Two Pera approvals in total. Each is simulated on chain first, so a launch that could not complete is refused before you sign.</p>
         </div>
 
         <div className="instant-card">
@@ -499,7 +430,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
         <section className="instant-lifecycle" aria-label="Exact launch quote">
           <div className="instant-lifecycle-heading">
             <div><div className="af-section-eyebrow">Wallet quote</div><h2>Exact inputs and conservative reserves</h2></div>
-            <p>Expires at round {quote.expiresRound} or {new Date(quote.expiresAt).toLocaleTimeString()}.</p>
+            <p>Valid until round {quote.expiresRound}; the app refreshes it by itself if it ages.</p>
           </div>
           <div className="instant-grid">
             <div className="instant-card">
@@ -524,7 +455,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
         <section className="instant-lifecycle" aria-label="Launch receipt">
           <div className="instant-lifecycle-heading">
             <div><div className="af-section-eyebrow">Permanent receipt</div><h2>ASA #{session.assetId.toString()}</h2></div>
-            <p>{terminal === "complete" ? "Liquidity launch complete." : terminal === "cancelled" ? "Launch permanently canceled." : "Launch in progress; safe to close and resume."}</p>
+            <p>{terminal === "complete" ? "Liquidity launch complete." : terminal === "cancelled" ? "Launch cancelled." : "Launch in progress; safe to close and resume."}</p>
           </div>
           <div className="instant-receipt">
             <a href={explorerAppUrl(launchNetwork.launchpadAppId)} target="_blank" rel="noreferrer">Launchpad app ↗</a>
@@ -535,14 +466,33 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, tiny
               <a key={txId} href={explorerTxUrl(txId)} target="_blank" rel="noreferrer">Transaction {txId.slice(0, 8)}… ↗</a>
             ))}
           </div>
-          {verification && <div className="instant-trust-note"><strong>All {Object.keys(verification).length} acceptance checks passed on chain.</strong><span>Immutable ASA, exact reserves, LP conservation, ARC-54 balance, creator balance, and platform escrow were independently read back.</span></div>}
-          {cancelRound && !terminal && <div className="instant-warning">If the launch remains impossible, recovery becomes available at round {cancelRound}. Before the swap, cancellation returns the full ASA; after the swap, it returns half of the ASA and PNET. Cancellation permanently prevents completion.<button className="af-btn-ghost" disabled={busy} onClick={cancelLaunch}>Attempt timed cancellation</button></div>}
+          {verification && <div className="instant-trust-note"><strong>All {Object.keys(verification).length} acceptance checks passed on chain.</strong><span>Immutable ASA, exact reserves, LP conservation, ARC-54 balance and platform escrow were independently read back.</span></div>}
+          {launchRecord && launchRecord.creatorLpClaimed === 0n && (
+            <div className="instant-warning">
+              Your 10% of the liquidity tokens is held safely by the contract. Claim them only if you want to withdraw liquidity.
+              <button className="af-btn-ghost" disabled={busy} onClick={claimLp}>Claim my LP</button>
+            </div>
+          )}
+          {launchRecord && launchRecord.vestigeGranted === 0n && (
+            <div className="instant-warning">
+              Vestige metadata access has not been granted yet.
+              <button className="af-btn-ghost" disabled={busy} onClick={retryVestige}>Grant Vestige access</button>
+            </div>
+          )}
+          {cancelRound && !terminal && (
+            <div className="instant-warning">
+              {cancelOpen
+                ? "If the launch cannot finish, you can cancel now and get half of the token and half of the PNET back."
+                : `If the launch cannot finish, cancellation opens at round ${cancelRound} (about ${Math.max(1, Math.ceil((cancelRound - round) * 2.8 / 60))} minutes from now).`}
+              <button className="af-btn-ghost" disabled={busy || !cancelOpen} onClick={cancelLaunch}>Cancel this launch</button>
+            </div>
+          )}
         </section>
       )}
 
       <div className="instant-trust-note">
         <strong>Liquidity and initial price are not promises of value, profit, or permanent TVL.</strong>
-        <span>Vestige authorization runs only after liquidity completion and can be retried without risking pooled funds.</span>
+        <span>Cancelling returns half of the escrowed token and PNET to you and the other half to the platform wallet, and prevents the launch from finishing.</span>
       </div>
       {SHOW_DEPLOYMENT_CONSOLE && (
         <LaunchpadDeploymentConsole
@@ -563,7 +513,6 @@ export default function LaunchLabPage() {
       connect={wallet.connect}
       connectionError={wallet.connectionError}
       isConnecting={wallet.isConnecting}
-      tinymanSigner={wallet.tinymanSigner}
       signAndSubmit={wallet.signAndSubmit}
     />
   );

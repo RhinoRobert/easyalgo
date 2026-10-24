@@ -19,8 +19,7 @@ def started(lp, user, proto, dev):
 
 def test_cancel_before_delay_is_refused(lp, user, proto, dev):
     sk, addr, asset_id, *_ = started(lp, user, proto, dev)
-    with pytest.raises(TxFailed):
-        lp._run(lp.cancel_group(addr, sk, asset_id))
+    lp.refused(lambda: lp._run(lp.cancel_group(addr, sk, asset_id)), "Cancellation delay active")
 
 
 def test_cancel_after_delay_with_platform_opted_in(lp, user, proto, dev):
@@ -45,8 +44,7 @@ def test_cancel_after_delay_with_platform_opted_in(lp, user, proto, dev):
     lp._run(lp.release_platform_group(asset_id, asset_id, paddr, TOTAL - TOTAL // 2))
     assert dev.balance(paddr, asset_id) == TOTAL - TOTAL // 2
     # a cancelled launch cannot be cancelled or finished again
-    with pytest.raises(TxFailed):
-        lp._run(lp.cancel_group(addr, sk, asset_id))
+    lp.refused(lambda: lp._run(lp.cancel_group(addr, sk, asset_id)), "Unknown launch")
 
 
 def test_cancel_with_platform_not_opted_in_defers_pnet(lp, user, proto, dev):
@@ -57,22 +55,19 @@ def test_cancel_with_platform_not_opted_in_defers_pnet(lp, user, proto, dev):
     deferred = pnet_seed - pnet_seed // 2
     assert dev.balance(lp.address, proto.pnet) == deferred
     # not releasable until the platform opts in; then it receives exactly the deferred amount
-    with pytest.raises(TxFailed):
-        lp._run(lp.release_pnet_group(asset_id))
+    lp.refused(lambda: lp._run(lp.release_pnet_group(asset_id)), "Platform must opt into PNET")
     dev.opt_in(psk, paddr, proto.pnet)
     lp._run(lp.release_pnet_group(asset_id))
     assert dev.balance(paddr, proto.pnet) == deferred
     assert dev.balance(lp.address, proto.pnet) == 0
-    with pytest.raises(TxFailed):  # nothing left to release
-        lp._run(lp.release_pnet_group(asset_id))
+    lp.refused(lambda: lp._run(lp.release_pnet_group(asset_id)), "No deferred platform PNET")  # nothing left to release
 
 
 def test_cancel_needs_recovery_opt_ins(lp, user, proto, dev):
     sk, addr = user
     asset_id = lp.start(addr, sk, total_raw=TOTAL)  # launcher has NOT opted into the new asset
     dev.advance(lp.cancel_delay + 1)
-    with pytest.raises(TxFailed):
-        lp._run(lp.cancel_group(addr, sk, asset_id))
+    lp.refused(lambda: lp._run(lp.cancel_group(addr, sk, asset_id)), "Creator recovery opt-ins missing")
 
 
 def test_cancel_with_recovery_opt_ins_in_the_same_group(lp, user, proto, dev):

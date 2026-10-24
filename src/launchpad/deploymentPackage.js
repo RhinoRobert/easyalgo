@@ -1,6 +1,8 @@
 import algosdk from "algosdk";
 import { sha256 } from "@noble/hashes/sha2.js";
 import {
+  BROKEN_V2_MAINNET_APP_ID,
+  CANCEL_DELAY_ROUNDS,
   INITIALIZE_FUNDING,
   LEGACY_MAINNET_APP_ID,
   PLATFORM_WALLET,
@@ -98,13 +100,14 @@ function assertCreate(txn, payload, config) {
     throw new Error("Create bytecode differs from the frontend-bundled reviewed artifact");
   }
   const expectedArgs = [
-    algosdk.ABIMethod.fromSignature("create(address,address,uint64,uint64,uint64,uint64)void").getSelector(),
+    algosdk.ABIMethod.fromSignature("create(address,address,uint64,uint64,uint64,uint64,uint64)void").getSelector(),
     algosdk.decodeAddress(config.arc54Address).publicKey,
     algosdk.decodeAddress(config.sourcePool).publicKey,
     algosdk.bigIntToBytes(BigInt(config.pnetAssetId), 8),
     algosdk.bigIntToBytes(BigInt(config.tinymanAppId), 8),
     algosdk.bigIntToBytes(BigInt(config.vestigeAppId), 8),
     algosdk.bigIntToBytes(BigInt(config.arc54AppId), 8),
+    algosdk.bigIntToBytes(BigInt(config.cancelDelayRounds ?? CANCEL_DELAY_ROUNDS), 8),
   ];
   if (app.appArgs.length !== expectedArgs.length
       || !app.appArgs.every((arg, index) => equalBytes(arg, expectedArgs[index]))) {
@@ -115,7 +118,7 @@ function assertCreate(txn, payload, config) {
       || !equalBigInts(app.foreignAssets, [config.pnetAssetId])) {
     throw new Error("Create foreign resources differ from trusted network configuration");
   }
-  assertNote(txn, "PNET Instant Launchpad v2 create");
+  assertNote(txn, "PNET Instant Launchpad v3 create");
   if (payload.appId != null) throw new Error("Create package must not predeclare an App ID");
 }
 
@@ -124,7 +127,7 @@ function assertInitialize(transactions, payload, config) {
   const app = callTxn.applicationCall;
   const appId = BigInt(payload.appId ?? 0);
   if (!payment.payment || !app || appId <= 0n || appId === BigInt(LEGACY_MAINNET_APP_ID)
-      || app.appIndex !== appId) {
+      || appId === BigInt(BROKEN_V2_MAINNET_APP_ID) || app.appIndex !== appId) {
     throw new Error("Initialize package targets an invalid or legacy App ID");
   }
   const appAddress = algosdk.getApplicationAddress(Number(appId)).toString();
@@ -143,8 +146,8 @@ function assertInitialize(transactions, payload, config) {
   if (!payment.group || !callTxn.group || !equalBytes(payment.group, callTxn.group)) {
     throw new Error("Initialize transactions are not in one atomic group");
   }
-  assertNote(payment, "PNET Launchpad v2 MBR and safety cushion");
-  assertNote(callTxn, "PNET Launchpad v2 initialize");
+  assertNote(payment, "PNET Launchpad v3 MBR and safety cushion");
+  assertNote(callTxn, "PNET Launchpad v3 initialize");
 }
 
 export function decodeAndValidateDeploymentPackage(payload, { network, account, config }) {

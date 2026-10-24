@@ -61,6 +61,11 @@ ALLOCATION_PLATFORM_LP = 2
 
 PLATFORM_WALLET_ADDRESS = "CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E"
 
+# Tinyman v2 pool LogicSig (tinyman-js-sdk 5.1.4 `pool_logicsig`): prefix + validator app id + asset 1 + asset 2 + suffix. The
+# pool account is the hash of that program, so the contract can prove a pool address is the canonical pool for a pair.
+POOL_LOGICSIG_PREFIX = b"\x06\x80\x18"
+POOL_LOGICSIG_SUFFIX = b"\x81\x00\x5b\x35\x00\x34\x00\x31\x18\x12\x44\x31\x19\x81\x01\x12\x44\x81\x01\x43"
+
 # These values are enforced by bytecode whenever the app runs on MainNet.
 # Non-MainNet deployments remain configurable so the private devnet and TestNet
 # lifecycles can exercise the exact same program.
@@ -422,6 +427,12 @@ class PNETInstantLaunchpad(ARC4Contract):
         assert asset_id > self.pnet_asset_id.value, "Launch ASA must be newer than PNET"
         assert asset_1 == asset_id and asset_2 == self.pnet_asset_id.value, "Wrong Tinyman pair/order"
         assert issued_before == UInt64(0), "Pool already has liquidity"
+        # Only the canonical pool for this pair may receive the launch: its account is the hash of the pool LogicSig program.
+        canonical_pool = op.sha512_256(
+            b"Program" + POOL_LOGICSIG_PREFIX + op.itob(self.tinyman_app_id.value) + op.itob(asset_id)
+            + op.itob(self.pnet_asset_id.value) + POOL_LOGICSIG_SUFFIX
+        )
+        assert canonical_pool == pool_address.bytes, "Pool is not the canonical Tinyman pool"
 
         app_token_balance, app_holds_token = op.AssetHoldingGet.asset_balance(
             Global.current_application_address, asset_id

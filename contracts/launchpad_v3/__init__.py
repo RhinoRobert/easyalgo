@@ -1,1 +1,1 @@
-"""PNET Instant Launchpad v2 contract package."""
+"""PNET Instant Launchpad v3 contract package."""

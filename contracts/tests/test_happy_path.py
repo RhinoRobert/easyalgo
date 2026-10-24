@@ -59,14 +59,12 @@ def test_full_launch_two_groups_exact_accounting(lp, user, proto, dev):
 
     lp._run(lp.claim_group(addr, sk, asset_id, lp_id))
     assert dev.balance(addr, lp_id) == creator
-    with pytest.raises(TxFailed):
-        lp._run(lp.claim_group(addr, sk, asset_id, lp_id))
+    lp.refused(lambda: lp._run(lp.claim_group(addr, sk, asset_id, lp_id)), "Creator LP already claimed")
 
     # the platform's share is released only by the platform authority
     psk, paddr = lp.admin_sk, lp.admin
     dev.opt_in(psk, paddr, lp_id)
-    with pytest.raises(TxFailed):
-        lp._run(lp.release_platform_group(asset_id, lp_id, addr, platform_share, sender=(sk, addr)))
+    lp.refused(lambda: lp._run(lp.release_platform_group(asset_id, lp_id, addr, platform_share, sender=(sk, addr))), "Platform authority required")
     lp._run(lp.release_platform_group(asset_id, lp_id, paddr, platform_share))
     assert dev.balance(paddr, lp_id) == platform_share
     assert dev.balance(lp.address, lp_id) == 0
@@ -77,8 +75,7 @@ def test_finish_without_vestige_then_grant_later(lp, user, proto, dev):
     asset_id = lp.start(addr, sk, total_raw=TOTAL)
     lp.finish(addr, sk, asset_id, grant_vestige=0)
     lp._run(lp.vestige_group(addr, sk, asset_id))
-    with pytest.raises(TxFailed):  # already granted
-        lp._run(lp.vestige_group(addr, sk, asset_id))
+    lp.refused(lambda: lp._run(lp.vestige_group(addr, sk, asset_id)), "Vestige already granted")  # already granted
 
 
 def test_finish_when_pool_already_bootstrapped(lp, user, proto, dev):

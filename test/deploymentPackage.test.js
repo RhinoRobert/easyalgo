@@ -11,7 +11,7 @@ import { decodeAndValidateDeploymentPackage } from "../src/launchpad/deploymentP
 import { TRUSTED_LAUNCHPAD_BUILD } from "../src/launchpad/deploymentTrust.js";
 
 const artifact = JSON.parse(readFileSync(new URL(
-  "../contracts/launchpad_v2/artifacts/launchpad_v2/PNETInstantLaunchpad.arc56.json",
+  "../contracts/launchpad_v3/artifacts/launchpad_v3/PNETInstantLaunchpad.arc56.json",
   import.meta.url,
 )));
 const approval = Uint8Array.from(Buffer.from(artifact.byteCode.approval, "base64"));
@@ -43,7 +43,7 @@ const artifacts = {
 
 function payload(stage, txns, additions = {}) {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     stage,
     network: "testnet",
     deployer: PLATFORM_WALLET,
@@ -77,24 +77,25 @@ test("deployment console pins bytecode, schema, constructor, resources, and netw
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     approvalProgram: approval,
     clearProgram: clear,
-    numGlobalInts: 8,
+    numGlobalInts: 9,
     numGlobalByteSlices: 2,
     numLocalInts: 0,
     numLocalByteSlices: 0,
     extraPages: 2,
     appArgs: [
-      algosdk.ABIMethod.fromSignature("create(address,address,uint64,uint64,uint64,uint64)void").getSelector(),
+      algosdk.ABIMethod.fromSignature("create(address,address,uint64,uint64,uint64,uint64,uint64)void").getSelector(),
       algosdk.decodeAddress(config.arc54Address).publicKey,
       algosdk.decodeAddress(config.sourcePool).publicKey,
       algosdk.bigIntToBytes(config.pnetAssetId, 8),
       algosdk.bigIntToBytes(config.tinymanAppId, 8),
       algosdk.bigIntToBytes(config.vestigeAppId, 8),
       algosdk.bigIntToBytes(config.arc54AppId, 8),
+      algosdk.bigIntToBytes(3_000n, 8),
     ],
     accounts: [config.sourcePool],
     foreignApps: [Number(config.tinymanAppId), Number(config.vestigeAppId), Number(config.arc54AppId)],
     foreignAssets: [Number(config.pnetAssetId)],
-    note: new TextEncoder().encode("PNET Instant Launchpad v2 create"),
+    note: new TextEncoder().encode("PNET Instant Launchpad v3 create"),
   });
   assert.equal(validate(payload("create", [txn])).length, 1);
 
@@ -104,7 +105,7 @@ test("deployment console pins bytecode, schema, constructor, resources, and netw
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     approvalProgram: Uint8Array.of(1),
     clearProgram: clear,
-    numGlobalInts: 8,
+    numGlobalInts: 9,
     numGlobalByteSlices: 2,
     numLocalInts: 0,
     numLocalByteSlices: 0,
@@ -122,7 +123,7 @@ test("initialize pins App ID, receiver, amount, selector, PNET, fees, and group"
       receiver: appAddress,
       amount: INITIALIZE_FUNDING,
       suggestedParams: params,
-      note: new TextEncoder().encode("PNET Launchpad v2 MBR and safety cushion"),
+      note: new TextEncoder().encode("PNET Launchpad v3 MBR and safety cushion"),
     }),
     algosdk.makeApplicationCallTxnFromObject({
       sender: PLATFORM_WALLET,
@@ -131,7 +132,7 @@ test("initialize pins App ID, receiver, amount, selector, PNET, fees, and group"
       appArgs: [algosdk.ABIMethod.fromSignature("initialize(pay)void").getSelector(), Uint8Array.of(0)],
       foreignAssets: [Number(config.pnetAssetId)],
       suggestedParams: { ...params, fee: 2_000n },
-      note: new TextEncoder().encode("PNET Launchpad v2 initialize"),
+      note: new TextEncoder().encode("PNET Launchpad v3 initialize"),
     }),
   ]);
   assert.equal(validate(payload("initialize", txns, { appId, appAddress })).length, 2);

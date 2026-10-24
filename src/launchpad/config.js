@@ -7,6 +7,8 @@ const env = import.meta.env ?? {};
 
 export const PLATFORM_WALLET = "CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E";
 export const LEGACY_MAINNET_APP_ID = 3_609_729_732;
+// v2 (2026-10-24) can never finalize a launch (contract defect); it must never be configured again.
+export const BROKEN_V2_MAINNET_APP_ID = 3_753_482_671;
 export const EXACT_ALGO_INPUT = 1_000_000n;
 // Mirrors contracts/launchpad_v3/contract.py (a test reads both and compares them).
 export const INITIALIZE_FUNDING = 500_000n;
@@ -76,8 +78,9 @@ export const launchNetworkName = ["localnet", "testnet", "mainnet"].includes(env
 export const launchNetwork = NETWORKS[launchNetworkName];
 
 if (!algosdk.isValidAddress(PLATFORM_WALLET)) throw new Error("Invalid platform wallet configuration");
-if (launchNetworkName === "mainnet" && launchNetwork.launchpadAppId === BigInt(LEGACY_MAINNET_APP_ID)) {
-  throw new Error("Launchpad v2 must never target legacy MainNet App 3609729732");
+if (launchNetworkName === "mainnet"
+    && [BigInt(LEGACY_MAINNET_APP_ID), BigInt(BROKEN_V2_MAINNET_APP_ID)].includes(launchNetwork.launchpadAppId)) {
+  throw new Error("The launchpad must never target the legacy MainNet App 3609729732 or the unfinishable v2 App 3753482671");
 }
 
 export function configurationIssues(config = launchNetwork) {

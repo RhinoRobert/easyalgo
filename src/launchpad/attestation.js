@@ -1,6 +1,6 @@
 import algosdk from "algosdk";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { PLATFORM_WALLET } from "./config.js";
+import { CANCEL_DELAY_ROUNDS, PLATFORM_WALLET, launchNetworkName } from "./config.js";
 import { TRUSTED_LAUNCHPAD_BUILD } from "./deploymentTrust.js";
 
 function bytes(value) {
@@ -58,6 +58,7 @@ export async function attestLaunchpadApplication(algodClient, config) {
       || uint("tinyman") !== BigInt(config.tinymanAppId)
       || uint("vestige") !== BigInt(config.vestigeAppId)
       || uint("arc54") !== BigInt(config.arc54AppId)
+      || (launchNetworkName === "mainnet" && uint("delay") !== BigInt(CANCEL_DELAY_ROUNDS))
       || !equalBytes(state.source, algosdk.decodeAddress(config.sourcePool).publicKey)
       || !equalBytes(state.burn, algosdk.decodeAddress(config.arc54Address).publicKey)) {
     throw new Error("Launchpad App ID is uninitialized or has untrusted protocol configuration");

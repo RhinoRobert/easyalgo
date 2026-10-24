@@ -20,6 +20,7 @@ from algosdk.atomic_transaction_composer import (
     TransactionWithSigner,
 )
 from algosdk.encoding import decode_address
+from algosdk.source_map import SourceMap
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from launchpad_v3._constants import CONSTANTS  # noqa: E402
@@ -127,7 +128,8 @@ class Launchpad:
     admin_sk: str
     admin: str
     cancel_delay: int
-    notes: dict[str, Any] = field(default_factory=dict)
+    teal_lines: list[str] = field(default_factory=list)
+    source_map: Any = None
 
     @property
     def dev(self) -> Dev:
@@ -148,6 +150,8 @@ class Launchpad:
         clear_teal = (ARTIFACTS / "PNETInstantLaunchpad.clear.teal").read_text("utf-8")
         approval_teal = patch_platform(approval_teal, addr)
         approval, clear = dev.compile(approval_teal), dev.compile(clear_teal)
+        compiled = dev.algod.compile(approval_teal, source_map=True)
+        source_map = SourceMap(compiled["sourcemap"])
         method = Method.from_signature(M_CREATE)
         args = [
             proto.burn, proto.source_pool, proto.pnet, proto.tm.app_id, proto.vestige, proto.arc54, cancel_delay,
@@ -168,7 +172,7 @@ class Launchpad:
         )
         del atc, args
         app_id = int(dev.send([create], [sk])["application-index"])
-        lp = cls(proto, app_id, sk, addr, cancel_delay)
+        lp = cls(proto, app_id, sk, addr, cancel_delay, approval_teal.splitlines(), source_map)
         lp.initialize()
         return lp
 
@@ -180,6 +184,25 @@ class Launchpad:
             foreign_assets=[self.proto.pnet],
         )
         dev.send([pay, call], [self.admin_sk, self.admin_sk])
+
+    def reason(self, err: Exception) -> str:
+        """The contract's own assertion text for a failed call: the TEAL comment on the failing instruction."""
+        match = re.search(r"pc=(\d+)", str(err))
+        if not match or self.source_map is None:
+            return str(err)
+        line = self.source_map.get_line_for_pc(int(match.group(1)))
+        text = self.teal_lines[line] if line is not None else ""
+        return text.split("//", 1)[1].strip() if "//" in text else text.strip()
+
+    def refused(self, call: Any, expected: str) -> None:
+        """Run ``call`` and require the contract to refuse it for exactly the assertion named by ``expected``."""
+        try:
+            call()
+        except TxFailed as err:
+            got = self.reason(err)
+            assert expected in got, f"refused for the wrong reason: {got!r} (wanted {expected!r})"
+            return
+        raise AssertionError(f"call was not refused (wanted {expected!r})")
 
     # -- helpers ------------------------------------------------------------------------------------------------------
     def free_balance(self) -> int:
@@ -236,6 +259,7 @@ class Launchpad:
     def finish_group(
         self, user: str, user_sk: str, asset_id: int, with_bootstrap: bool = True, grant_vestige: int = 1,
         fee: int = 14 * MIN_FEE, funding: int | None = None, budget_calls: int = 1, pool_override: str | None = None,
+        lp_override: int | None = None,
     ) -> AtomicTransactionComposer:
         dev = self.dev
         proto = self.proto
@@ -249,7 +273,7 @@ class Launchpad:
         # One app call may carry at most 8 references; the group shares them. The budget call carries the accounts, apps and
         # assets plus the Vestige box (8 references), so the finish call keeps its four own boxes.
         pool_lp = proto.tm.pool_state(asset_id, proto.pnet).get("pool_token_asset_id")
-        known_lp = [int(pool_lp)] if (pool_lp and not with_bootstrap) else []
+        known_lp = [int(pool_lp)] if (pool_lp and not with_bootstrap) else ([lp_override] if lp_override else [])
         for i in range(max(budget_calls, 1)):
             carried = (
                 dict(accounts=[pool_override or pool], apps=[proto.tm.app_id, proto.arc54, proto.vestige],
