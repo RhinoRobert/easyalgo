@@ -17,7 +17,7 @@ function linkFor(link) {
 }
 
 /** The token page, drawn from data the loader read. `account` is the connected wallet (only used to show the creator their Vestige link). */
-export default function TokenView({ detail, account, pageUrl }) {
+export default function TokenView({ detail, account, pageUrl, market = null, children = null }) {
   const { launch, asset, stats, holders, checks, round } = detail;
   const finished = launch.status === 2n;
   const burned = finished ? burnedPercent(launch) : null;
@@ -28,7 +28,7 @@ export default function TokenView({ detail, account, pageUrl }) {
     <div className="token-page">
       <a className="token-back" href="#recent">← All launches</a>
       <header className="token-head">
-        <TokenBadge assetId={id} unit={asset.unit} name={asset.name} size="lg" />
+        <TokenBadge assetId={id} unit={asset.unit} name={asset.name} size="lg" image={market?.image ?? ""} />
         <div className="token-head-text">
           <h1>{asset.name} {asset.unit ? <span className="launch-unit">{asset.unit}</span> : null}</h1>
           <p className="token-sub">
@@ -53,8 +53,14 @@ export default function TokenView({ detail, account, pageUrl }) {
           <div><span>Price</span><strong>{formatPrice(stats.priceAlgo)} ALGO</strong></div>
           <div><span>Market cap</span><strong>{formatCompact(stats.marketCapAlgo)} ALGO</strong></div>
           <div><span>Liquidity burned</span><strong>{burned !== null ? `${burned.toFixed(1)}%` : "n/a"}</strong></div>
+          {market?.volume1d != null ? <div><span>24h volume</span><strong>{algo(BigInt(Math.round(market.volume1d * 1e6)))} ALGO</strong></div> : null}
+          {market?.change1d != null ? <div><span>24h change</span><strong className={market.change1d >= 0 ? "price-up" : "price-down"}>{market.change1d >= 0 ? "+" : ""}{market.change1d.toFixed(2)}%</strong></div> : null}
         </div>
       ) : null}
+      {isCreator && finished && IS_MAINNET && market && !market.image ? (
+        <p className="field-hint token-logo-hint">This token has no logo yet. Add one, a description and your links on Vestige (the Edit on Vestige button above) and they will show here.</p>
+      ) : null}
+      {children}
 
       <section className="instant-card token-checks" aria-label="Safety checklist">
         <h2>Safety checklist</h2>

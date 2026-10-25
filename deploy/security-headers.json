@@ -1,6 +1,6 @@
 {
   "_comment": "Single source of truth for the response headers easyalgo.org must send. GitHub Pages cannot set headers, so Cloudflare adds them (docs/CLOUDFLARE_SETUP.md). scripts/check-headers.mjs checks the live site against this file; test/securityHeaders.test.js keeps the docs in step with it.",
-  "contentSecurityPolicy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' data: https://mainnet-api.algonode.cloud https://mainnet-idx.algonode.cloud https://wc.perawallet.app https://*.perawallet.app wss://*.perawallet.app; frame-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'self'; frame-ancestors 'none'",
+  "contentSecurityPolicy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://ipfs.vestigelabs.org https://algorand-wallet-mainnet.b-cdn.net; font-src 'self'; connect-src 'self' data: https://api.vestigelabs.org https://mainnet-api.algonode.cloud https://mainnet-idx.algonode.cloud https://wc.perawallet.app https://*.perawallet.app wss://*.perawallet.app; frame-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'self'; frame-ancestors 'none'",
   "headers": {
     "X-Frame-Options": "DENY",
     "X-Content-Type-Options": "nosniff",

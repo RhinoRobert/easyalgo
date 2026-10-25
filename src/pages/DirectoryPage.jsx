@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import LaunchCard from "../components/LaunchCard";
 import "../LaunchLab.css";
-import { useAlgorand } from "../hooks/useAlgorand";
+import { IS_MAINNET, useAlgorand } from "../hooks/useAlgorand";
+import { fetchVestigeAssets } from "../launchpad/vestigeApi";
 import { launchNetwork } from "../launchpad/config";
 import { clearDirectoryCache, loadPopularLaunches, loadRecentLaunches } from "../launchpad/directory";
 import { filterLaunches, sortLaunches } from "../launchpad/tokenView";
@@ -28,6 +29,7 @@ export default function DirectoryPage({ mode, active }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("newest");
   const [showCancelled, setShowCancelled] = useState(false);
+  const [market, setMarket] = useState(() => new Map());
   const copy = COPY[mode];
   const configured = launchNetwork.launchpadAppId !== 0n;
 
@@ -40,6 +42,8 @@ export default function DirectoryPage({ mode, active }) {
         ? await loadPopularLaunches({ algodClient, config: launchNetwork })
         : await loadRecentLaunches({ algodClient, config: launchNetwork, limit: 100 });
       setState({ status: "ready", items: result.items, round: result.round, total: result.total, scanned: result.scanned ?? result.items.length, error: "" });
+      // Logos come from Vestige after the list is already on screen; without them the cards keep their coloured marks.
+      if (IS_MAINNET) fetchVestigeAssets(result.items.filter((item) => item.status === 2n).map((item) => item.assetId)).then(setMarket);
     } catch (cause) {
       setState((old) => ({ ...old, status: "error", error: cause?.message || String(cause) }));
     }
@@ -85,7 +89,7 @@ export default function DirectoryPage({ mode, active }) {
       {state.status === "ready" && visible.length === 0 ? <p className="field-hint">{query ? "Nothing matches that search." : copy.empty}</p> : null}
       <ul className="launch-grid">
         {visible.map((item, index) => (
-          <LaunchCard key={item.assetId.toString()} item={item} round={state.round} rank={mode === "popular" ? index + 1 : null} />
+          <LaunchCard key={item.assetId.toString()} item={item} round={state.round} rank={mode === "popular" ? index + 1 : null} image={market.get(item.assetId.toString())?.image ?? ""} />
         ))}
       </ul>
     </section>

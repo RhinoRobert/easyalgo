@@ -8,7 +8,7 @@ import TokenBadge from "./TokenBadge";
 const algo = (micro) => Number(formatUnits(micro, 6)).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 
 /** One launch as a card for the Recent and Popular grids. The whole card opens the token page; Trade now goes to Vestige. */
-export default function LaunchCard({ item, round, rank }) {
+export default function LaunchCard({ item, round, rank, image = "" }) {
   const finished = item.status === 2n;
   const burned = finished ? burnedPercent(item) : null;
   const href = tokenHash(item.assetId);
@@ -16,7 +16,7 @@ export default function LaunchCard({ item, round, rank }) {
     <li className={`launch-card${finished ? "" : " launch-card--cancelled"}`}>
       {rank ? <span className="launch-card-rank">{rank}</span> : null}
       <a className="launch-card-main" href={href} aria-label={`${item.name}: open token page`}>
-        <TokenBadge assetId={item.assetId} unit={item.unit} name={item.name} />
+        <TokenBadge assetId={item.assetId} unit={item.unit} name={item.name} image={image} />
         <span className="launch-card-title">
           <strong>{item.name}</strong>
           {item.unit ? <span className="launch-unit">{item.unit}</span> : null}

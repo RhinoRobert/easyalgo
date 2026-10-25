@@ -18,7 +18,7 @@ export default function TermsFooter() {
           <li><strong>Third parties.</strong> The service depends on the Algorand network, Tinyman, ARC-54, Vestige, Pera Wallet, public Algorand nodes and the hosting and network providers of this site. Any of them can fail or change, and the operator is not responsible for them.</li>
           <li><strong>Your responsibility.</strong> You alone are responsible for the security of your wallet and recovery phrase, and for following the laws and rules that apply to you, including any that cover creating, offering or trading tokens. Do not use this service where it is not allowed for you.</li>
           <li><strong>No warranty or liability.</strong> The service is provided as is and as available, without warranties of any kind. To the fullest extent the law allows, the operator is not liable for any loss or damage arising from its use.</li>
-          <li><strong>Privacy.</strong> This site has no accounts, cookies or analytics of its own. Your browser connects to public Algorand nodes, to Pera Wallet and to the providers that host this site, and these see ordinary connection data such as your IP address.</li>
+          <li><strong>Privacy.</strong> This site has no accounts, cookies or analytics of its own. Your browser connects to public Algorand nodes, to Pera Wallet, to Vestige (prices, charts and token logos) and to the providers that host this site, and these see ordinary connection data such as your IP address.</li>
           <li><strong>Changes.</strong> These terms may change. The version shown on this page applies.</li>
         </ol>
       </details>

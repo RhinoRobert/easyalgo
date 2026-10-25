@@ -23,9 +23,9 @@ unit test keeps this page in step with it. If you change a header, change the JS
 default-src 'none'
 script-src 'self'
 style-src 'self' 'unsafe-inline'
-img-src 'self' data:
+img-src 'self' data: https://ipfs.vestigelabs.org https://algorand-wallet-mainnet.b-cdn.net
 font-src 'self'
-connect-src 'self' data: https://mainnet-api.algonode.cloud https://mainnet-idx.algonode.cloud https://wc.perawallet.app https://*.perawallet.app wss://*.perawallet.app
+connect-src 'self' data: https://api.vestigelabs.org https://mainnet-api.algonode.cloud https://mainnet-idx.algonode.cloud https://wc.perawallet.app https://*.perawallet.app wss://*.perawallet.app
 frame-src 'none'
 base-uri 'none'
 form-action 'none'
@@ -39,6 +39,7 @@ frame-ancestors 'none'
 * `connect-src` is the allow-list of everything the page may talk to: the Algonode API and indexer, Pera's configuration (`wc.perawallet.app`) and its wallet bridge servers
   (`wallet-connect-a` to `-h.perawallet.app`, over HTTPS and WebSocket). Testnet endpoints are deliberately absent: this site is MainNet only.
   `data:` is there because the dialog builds its QR code from a data URL.
+* Vestige supplies the price chart and token logos (optional: the pages work without them). `connect-src` allows `https://api.vestigelabs.org` for prices and candles, and `img-src` allows only the two hosts that serve token logos, `https://ipfs.vestigelabs.org` and `https://algorand-wallet-mainnet.b-cdn.net`. The site also refuses any logo link on another host before it reaches the page. If the Cloudflare policy is already set, update its `connect-src` and `img-src` to match before enforcing it. These three hosts were added after the 2026-10-25 test below, so re-test before enforcing.
 * The site's own Inter font is served from this site (@fontsource/inter, ont-src 'self'), so enforcing the policy does not change how the site looks. Only Pera's dialog falls back to a plain font.
 * Google Fonts is deliberately **not** allowed. Pera's dialog asks for the Inter font from Google; blocked, it uses a plain fallback font and nothing is sent to Google.
 * The policy was tested on 2026-10-25: the production build served locally with exactly these headers loaded with **zero** violations, and Pera's connect dialog opened and
