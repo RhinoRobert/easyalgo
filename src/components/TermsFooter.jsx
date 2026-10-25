@@ -1,4 +1,5 @@
 // Fine print only: nothing here asks for a click, a tick box or typing before the app works.
+import { GUIDE_LINKS } from "../seoContent";
 import MainSiteLink from "./MainSiteLink";
 import { AlertsToggle } from "./TradeToasts";
 
@@ -9,6 +10,9 @@ export default function TermsFooter() {
       <p className="terms-line">
         Beta. Tokens launched here are permanent and nothing on this site is financial, legal or tax advice. Use only amounts you can afford to lose.
       </p>
+      <nav className="terms-line terms-guides" aria-label="Guides">
+        <strong>Guides:</strong> {GUIDE_LINKS.map((link, index) => (<span key={link.href}>{index ? " · " : ""}<a href={link.href}>{link.label}</a></span>))}
+      </nav>
       <p className="terms-line"><AlertsToggle /></p>
       <details>
         <summary>Terms and risks</summary>

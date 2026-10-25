@@ -1,4 +1,4 @@
-"""Attack-style tests: someone hostile tries to move funds or state the way real launchpad exploits do (rug.ninja, March 2026: fake look-alike
+"""Attack-style tests: someone hostile tries to move funds or state the way real launchpad exploits do (a 2026 exploit of another launchpad: fake look-alike
 assets sold back to a shared treasury). Every attempt must be refused for exactly the assertion that is supposed to stop it, and an honest
 user's launch must still be intact and finishable afterwards."""
 
@@ -83,7 +83,7 @@ def test_platform_release_is_capped_and_never_reaches_the_creators_liquidity_tok
 
 # -- spoofed assets and other people's launches ---------------------------------------------------------------------------------------
 def test_a_look_alike_or_borrowed_asset_cannot_stand_in_for_your_launch(lp, user, dev, proto):
-    """The rug.ninja pattern: present a different asset (a fake with the same name, or someone else's real one) as if it were yours."""
+    """The look-alike-asset exploit pattern: present a different asset (a fake with the same name, or someone else's real one) as if it were yours."""
     sk, addr = user
     victim_asset = lp.start(addr, sk, name="Canary", unit="CNRY", total_raw=TOTAL)
     osk, other = stranger(dev, proto)

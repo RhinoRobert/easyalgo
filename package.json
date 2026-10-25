@@ -6,7 +6,7 @@
   "description": "PNET LaunchLab as a standalone app: wallet-signed Algorand asset and Tinyman liquidity launches (TestNet by default, read-only until configured).",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-seo.mjs",
     "preview": "vite preview",
     "preflight:mainnet": "node scripts/mainnet-preflight.mjs",
     "check:headers": "node scripts/check-headers.mjs",

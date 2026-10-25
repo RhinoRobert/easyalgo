@@ -3,7 +3,9 @@ import algosdk from "algosdk";
 import LaunchpadDeploymentConsole from "../components/LaunchpadDeploymentConsole";
 import KingOfTheHill from "../components/KingOfTheHill";
 import TokenBadge from "../components/TokenBadge";
+import Faq from "../components/Faq";
 import HowItWorks from "../components/HowItWorks";
+import { HOME } from "../seoContent";
 import LaunchSuccess from "../components/LaunchSuccess";
 import { burnedPercent, shareOnXUrl, tokenHash } from "../launchpad/tokenView";
 import { usePeraWallet } from "../hooks/usePeraWallet";
@@ -403,12 +405,9 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
       <KingOfTheHill onChallenge={() => document.getElementById("launch-details")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
 
       <div className="instant-hero">
-        <div className="af-section-eyebrow">PNET Instant Launchpad v3</div>
-        <h1>One asset. One Tinyman pool. Two approvals.</h1>
-        <p>
-          Name your token, approve twice in Pera, and it goes live on Tinyman with its whole supply in the pool.
-          80% of the liquidity is burned, so it can never be pulled out.
-        </p>
+        <div className="af-section-eyebrow">Algorand launchpad</div>
+        <h1>{HOME.h1}</h1>
+        <p>{HOME.intro}</p>
         <div className="instant-badges">
           <span className="instant-network">{launchNetwork.label}</span>
           <span className="instant-prototype">Beta</span>
@@ -572,6 +571,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
         <strong>Liquidity and initial price are not promises of value, profit, or permanent TVL.</strong>
         <span>Cancelling returns half of the escrowed token and PNET to you and the other half to the platform wallet, and prevents the launch from finishing.</span>
       </div>
+      <Faq />
       {SHOW_DEPLOYMENT_CONSOLE && (
         <LaunchpadDeploymentConsole
           account={account}

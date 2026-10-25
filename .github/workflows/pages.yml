@@ -42,6 +42,16 @@ jobs:
           ! grep -q "/src/main.jsx" dist/index.html
           test -f dist/CNAME
           ! grep -rq "LOCAL-ONLY DEPLOYMENT GATE" dist/assets
+      - name: Refuse to publish without the search files
+        run: |
+          test -f dist/sitemap.xml
+          test -f dist/robots.txt
+          test -f dist/og-image.png
+          test -f dist/algorand-launchpad/index.html
+          test -f dist/faq/index.html
+          grep -q '<div id="root"><div class="shell">' dist/index.html
+          grep -q 'application/ld+json' dist/index.html
+          ! grep -rqiE 'rug[[:space:]]?\.?[[:space:]]?ninja' dist
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

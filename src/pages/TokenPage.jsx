@@ -37,6 +37,13 @@ export default function TokenPage({ assetId }) {
     return () => { cancelled = true; };
   }, [assetId]);
 
+  // The browser tab and any shared link name the token.
+  useEffect(() => {
+    const name = state.status === "ready" ? state.detail.asset.name : "";
+    const unit = state.status === "ready" ? state.detail.asset.unit : "";
+    document.title = name ? `${name}${unit ? ` (${unit})` : ""} on Algorand: price, liquidity, safety checklist | PNET LaunchLab` : "Algorand token | PNET LaunchLab";
+  }, [state.status, state.detail]);
+
   // When the launch happened, in seconds, for the chart's "ALL" range. Worked out once per loaded token from the launch round (rounds are about 2.8 s).
   const launchTime = useMemo(() => {
     const detail = state.detail;

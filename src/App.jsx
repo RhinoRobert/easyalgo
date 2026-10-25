@@ -1,4 +1,5 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { HOME } from "./seoContent";
 import LaunchLabPage from "./pages/LaunchLabPage";
 import MyLaunchesPage from "./pages/MyLaunchesPage";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -16,6 +17,14 @@ import { PLATFORM_WALLET } from "./launchpad/config";
 const OperationsPage = lazy(() => import("./pages/OperationsPage"));
 const TokenPage = lazy(() => import("./pages/TokenPage"));
 
+const PAGE_TITLES = {
+  launch: HOME.title,
+  mine: "My Algorand token launches | PNET LaunchLab",
+  recent: "Recent Algorand token launches | PNET LaunchLab",
+  popular: "Popular Algorand launches by liquidity | PNET LaunchLab",
+  ops: "Operations | PNET LaunchLab",
+};
+
 // There is no router and no backend: the address fragment picks the view and every view stays mounted (hidden when not shown), so switching tabs
 // never interrupts a launch that is waiting for the wallet. The wallet (Pera) signs every transaction group.
 export default function App() {
@@ -23,6 +32,10 @@ export default function App() {
   const isAuthority = account === PLATFORM_WALLET;
   const { tab: requested, assetId: tokenAssetId } = useRoute();
   const active = requested === "ops" && !isAuthority ? "launch" : requested;
+  // The browser tab (and a shared link) says where you are; a token page sets its own title once the token has loaded.
+  useEffect(() => {
+    if (active !== "token") document.title = PAGE_TITLES[active] ?? HOME.title;
+  }, [active]);
   // A view loads its data the first time it is opened, not at page load.
   const [opened, setOpened] = useState(() => new Set([active]));
   if (!opened.has(active)) setOpened(new Set([...opened, active]));
