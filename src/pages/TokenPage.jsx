@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import TokenThread from "../components/TokenThread";
 import TokenView from "../components/TokenView";
 import "../LaunchLab.css";
 import { useAlgorand } from "../hooks/useAlgorand";
@@ -37,6 +38,7 @@ export default function TokenPage({ assetId }) {
         </div>
       )}
       {state.status === "ready" && <TokenView detail={state.detail} account={account} pageUrl={pageUrl} />}
+      {state.status === "ready" && state.detail.launch.status === 2n && <TokenThread assetId={assetId} launcher={state.detail.launch.launcher} />}
     </section>
   );
 }

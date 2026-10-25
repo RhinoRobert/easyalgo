@@ -369,3 +369,28 @@ button, a, summary, input { touch-action: manipulation; }
   .token-actions .af-btn-ghost, .token-actions .trade-button { flex: 1 1 100%; justify-content: center; text-align: center; }
 }
 @media (pointer: coarse) { .token-actions .af-btn-ghost { min-height: 44px; } }
+
+/* reply threads */
+.token-thread { display: grid; gap: .8rem; margin-top: 1rem; }
+.thread-compose { display: grid; gap: .5rem; }
+.thread-compose textarea { width: 100%; box-sizing: border-box; padding: .7rem .85rem; border-radius: .7rem; border: 1px solid var(--border-strong); background: var(--panel); color: var(--text); font: inherit; resize: vertical; }
+.thread-compose-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; justify-content: flex-end; }
+.thread-compose-bar .af-cta-btn { margin-top: 0; }
+.thread-count { color: var(--muted); font-size: .8rem; margin-right: auto; }
+.thread-count--over { color: #f87171; font-weight: 700; }
+.thread-replying { display: flex; align-items: center; gap: .5rem; color: #5eead4; font-size: .85rem; }
+.thread-cancel { background: none; border: 0; color: var(--muted); cursor: pointer; font: inherit; padding: .2rem .4rem; }
+.thread-list, .thread ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.thread { padding: .2rem 0 .8rem; border-bottom: 1px solid var(--border); }
+.thread:last-child { border-bottom: 0; }
+.thread-post { display: grid; gap: .3rem; padding: .6rem .8rem; border-radius: .8rem; background: var(--surface-raised); }
+.thread-post--reply { margin-left: 1.4rem; border-left: 2px solid rgba(45, 212, 191, .35); }
+.thread-post-head { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; font-size: .82rem; }
+.thread-post-head a { color: #5eead4; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.thread-time, .thread-replyto { color: var(--muted); }
+.thread-time { margin-left: auto; }
+.thread-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.thread-reply { justify-self: start; background: none; border: 0; padding: .1rem 0; color: var(--muted); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.thread-reply:hover, .thread-reply:focus-visible { color: #5eead4; }
+@media (pointer: coarse) { .thread-reply, .thread-cancel { min-height: 44px; min-width: 44px; } }
+@media (max-width: 640px) { .thread-post--reply { margin-left: .8rem; } .thread-compose-bar .af-cta-btn { flex: 1 1 100%; } }

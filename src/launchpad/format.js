@@ -11,6 +11,19 @@ export function safeText(value, max = 48) {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
+/** Multi-line plain text safe to show (a post): every line cleaned like safeText, at most one blank line in a row, length capped. */
+export function safeParagraphs(value, max = 900) {
+  const lines = String(value ?? "").split(/\r\n|\r|\n/).map((line) => safeText(line, max));
+  const kept = [];
+  for (const line of lines) {
+    if (line === "" && (kept.length === 0 || kept.at(-1) === "")) continue;
+    kept.push(line);
+  }
+  while (kept.at(-1) === "") kept.pop();
+  const text = kept.join("\n");
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
 export function shortAddress(address) {
   const text = String(address ?? "");
   return text.length > 12 ? `${text.slice(0, 5)}…${text.slice(-5)}` : text;
