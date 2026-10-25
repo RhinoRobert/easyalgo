@@ -776,3 +776,21 @@ small, .hint, .muted { letter-spacing: 0; }
   .seo-nav { flex: 1 1 100%; gap: .1rem 1.1rem; }
   .seo-nav a { font-size: .84rem; }
 }
+
+/* Header theme button: a small round icon button next to the wallet. The sun shows while dark, the moon while light (decided here, so it needs no script). */
+.theme-btn { flex: none; display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: var(--wash-1); color: var(--text-secondary); cursor: pointer; transition: color .15s, border-color .15s, background .15s, transform .15s; }
+.theme-btn:hover, .theme-btn:focus-visible { color: var(--text); border-color: var(--border-strong); background: var(--wash-2); }
+.theme-btn .i-moon { display: none; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .theme-btn .i-sun { display: none; }
+  :root:not([data-theme="dark"]) .theme-btn .i-moon { display: block; }
+}
+:root[data-theme="light"] .theme-btn .i-sun { display: none; }
+:root[data-theme="light"] .theme-btn .i-moon { display: block; }
+@media (hover: hover) { .theme-btn:hover { transform: rotate(18deg); } }
+@media (pointer: coarse) { .theme-btn { width: 44px; height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .theme-btn:hover { transform: none; } }
+.shell-header .seo-nav { margin-left: auto; }
+.seo-nav + .theme-btn { margin-left: .4rem; }
+@media (max-width: 640px) { .seo-nav + .theme-btn { position: absolute; top: .6rem; right: clamp(1rem, 3vw, 2rem); } .shell-header .seo-nav { margin-left: 0; } }
+@media (max-width: 640px) { .shell-header .theme-btn { width: 36px; height: 36px; } .shell-header { gap: .5rem; } .shell-brand strong { font-size: .98rem; } }

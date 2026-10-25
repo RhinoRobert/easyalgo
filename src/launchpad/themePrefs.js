@@ -36,3 +36,15 @@ export function subscribeTheme(listener) {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+/** The theme being shown right now, whether it was pinned or follows the system. */
+export function effectiveTheme() {
+  const pinned = document.documentElement.getAttribute("data-theme");
+  if (pinned === "dark" || pinned === "light") return pinned;
+  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+/** The header button: pin the opposite of what is shown. The footer still offers "auto" to follow the system again. */
+export function toggleTheme() {
+  setTheme(effectiveTheme() === "light" ? "dark" : "light");
+}

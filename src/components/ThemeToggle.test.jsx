@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./TradeToasts", () => ({ AlertsToggle: () => null }));
 import { ThemeToggle } from "./TermsFooter";
+import ThemeButton from "./ThemeButton";
 import { setTheme } from "../launchpad/themePrefs";
 
 afterEach(() => {
@@ -36,5 +37,18 @@ describe("ThemeToggle", () => {
     expect(document.documentElement).not.toHaveAttribute("data-theme");
     expect(window.localStorage.getItem("pnet-launchlab:theme")).toBeNull();
     expect(group).toBeInTheDocument();
+  });
+});
+
+describe("ThemeButton (header)", () => {
+  it("switches to the opposite of the shown theme on each tap and remembers it", () => {
+    render(<ThemeButton />);
+    const button = screen.getByRole("button", { name: /switch between dark and light/i });
+    setTheme("dark");
+    fireEvent.click(button);
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+    fireEvent.click(button);
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(window.localStorage.getItem("pnet-launchlab:theme")).toBe("dark");
   });
 });

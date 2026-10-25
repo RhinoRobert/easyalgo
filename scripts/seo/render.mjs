@@ -1,6 +1,7 @@
 // Turns src/seoContent.js into the crawlable files: the static guide pages, the pre-rendered home page, the sitemap, robots.txt and the 404 page.
 // Pure functions (strings in, strings out) so every rule can be tested; scripts/build-seo.mjs does the file work after `vite build`.
 import { ALL_PATHS, FAQ, FAQ_PAGE, GUIDE_LINKS, HOME, PAGES, SITE, plain } from "../../src/seoContent.js";
+import { THEME_ICONS } from "../../src/launchpad/themeIcons.js";
 
 export const SOCIAL_IMAGE = { path: "/og-image.png", width: 1200, height: 630, alt: "Algorand launchpad: launch a token with instant Tinyman liquidity" };
 
@@ -59,9 +60,12 @@ export function head({ title, description, path, type = "website", css, extra = 
     ${extra}`;
 }
 
+const themeButton = `<button type="button" class="theme-btn" data-theme-toggle title="Switch between dark and light theme" aria-label="Switch between dark and light theme">${THEME_ICONS}</button>`;
+
 export const header = () => `<header class="shell-header">
       <a class="shell-brand seo-brand" href="/"><span class="shell-mark" aria-hidden="true">P</span><div><strong>${SITE.name}</strong><span>Algorand asset + Tinyman liquidity launcher</span></div></a>
       <nav class="seo-nav" aria-label="Main"><a href="/#launch">Launch a token</a><a href="/#recent">Recent launches</a><a href="/faq/">FAQ</a></nav>
+      ${themeButton}
     </header>`;
 
 export const footer = () => `<footer class="terms">

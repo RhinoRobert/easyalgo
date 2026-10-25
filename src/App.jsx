@@ -8,6 +8,7 @@ import Tabs, { useRoute } from "./components/Tabs";
 import TermsFooter from "./components/TermsFooter";
 import TradeToasts from "./components/TradeToasts";
 import MainSiteLink from "./components/MainSiteLink";
+import ThemeButton from "./components/ThemeButton";
 import { usePeraWallet } from "./hooks/usePeraWallet";
 import { PLATFORM_WALLET } from "./launchpad/config";
 
@@ -52,6 +53,7 @@ export default function App() {
         </div>
         <div className="shell-actions">
           <MainSiteLink />
+          <ThemeButton />
           <WalletButton />
         </div>
       </header>
