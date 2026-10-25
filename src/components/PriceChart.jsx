@@ -40,7 +40,7 @@ export default function PriceChart({ assetId, launchTime }) {
   return (
     <section className="instant-card price-chart" aria-label="Price chart">
       <div className="price-chart-head">
-        <h2>Price</h2>
+        <h2>Price chart <small className="price-chart-source">from Vestige</small></h2>
         <div className="price-chart-ranges" role="group" aria-label="Chart range">
           {Object.keys(CHART_RANGES).map((name) => (
             <button key={name} type="button" className={name === range ? "is-active" : ""} aria-pressed={name === range} onClick={() => setRange(name)}>{name}</button>
@@ -64,6 +64,7 @@ export default function PriceChart({ assetId, launchTime }) {
             {hover ? <line className="price-chart-cross" x1={hover.x} x2={hover.x} y1="0" y2={H} vectorEffect="non-scaling-stroke" /> : null}
           </svg>
           <div className="price-chart-axis"><span>{formatPrice(chart.min)}</span><span>{formatPrice(chart.max)} ALGO</span></div>
+          <p className="field-hint">Chart prices are Vestige's and can differ by a percent or two from the price worked out from the pool above.</p>
         </>
       ) : state.status === "loading" ? <p className="field-hint">Loading price history…</p> : null}
     </section>

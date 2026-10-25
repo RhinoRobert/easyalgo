@@ -420,3 +420,4 @@ button, a, summary, input { touch-action: manipulation; }
 .price-chart-cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
 .price-chart-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: .72rem; }
 @media (pointer: coarse) { .price-chart-ranges button { min-height: 44px; min-width: 44px; } }
+.price-chart-source { color: var(--muted); font-size: .72rem; font-weight: 600; margin-left: .4rem; }
