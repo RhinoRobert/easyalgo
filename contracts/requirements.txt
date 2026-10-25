@@ -1,0 +1,4 @@
+# Pinned toolchain for compiling and testing contracts/launchpad_v3 (the compile is deterministic only with these exact versions).
+puyapy==5.10.1
+py-algorand-sdk==2.12.0
+pytest==9.1.1

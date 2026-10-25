@@ -23,18 +23,18 @@ cd contracts
 
 ## Tests (private devnet only)
 
-Start the isolated devnet (own data directory, never touches `/var/lib/algorand`):
-`wsl -e bash /mnt/c/Users/rober/OneDrive/Desktop/rebuild/apps/algopulse-v3/router/devnet/create.sh`, copy its token and address into
-`contracts/tests/devnet.local.json` (git-ignored), then:
+Needs the Algorand node tools (`goal`, `algod`) on Linux or WSL. The kit creates an isolated network (own data directory under `$HOME/launchpad-devnet`, random local ports, no real network, never touches
+another node) and writes the connection details to `contracts/tests/devnet.local.json` (git-ignored, throwaway keys):
 
-```powershell
-.\.venv-v2\Scripts\python.exe -m pytest tests                       # 24 tests: happy path, exact accounting, every refusal with its own assertion text, cancel
-.\.venv-v2\Scripts\python.exe tests\js_fixture.py ; cd .. ; node --test test/devnetFlow.test.js   # the UI's exact groups, simulated, signed and submitted
+```bash
+bash contracts/tests/devnet/start.sh
+cd contracts && python -m pytest tests                  # 24 tests: happy path, exact accounting, every refusal with its own assertion text, cancel, frontend parity
+python tests/js_fixture.py && cd .. && node --test test/devnetFlow.test.js     # the UI's exact groups, simulated, signed and submitted
+bash contracts/tests/devnet/stop.sh
 ```
 
 `tests/fetch_fixtures.py` copies the real MainNet Tinyman v2, ARC-54 and Vestige programs (read-only HTTP) into `tests/fixtures`; the suite deploys them unchanged.
-The devnet suite swaps the pinned platform wallet for a test wallet in the compiled TEAL; the real artifact is never modified.
-
+The devnet suite swaps the pinned platform wallet for a test wallet in the compiled TEAL; the real artifact is never modified. See `../../REVIEW.md` for the full review guide.
 ## Deployment
 
 `deploy.py` (unsigned packages only, never signs): `prepare-create`, `prepare-initialize`, `verify-record`. See `../../docs/MAINNET_DEPLOY_RUNBOOK.md`.

@@ -9,6 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "preflight:mainnet": "node scripts/mainnet-preflight.mjs",
+    "check:headers": "node scripts/check-headers.mjs",
+    "verify:deployed": "node scripts/verify-deployed.mjs",
     "test": "npm run test:unit && npm run test:ui",
     "test:unit": "node --test test/*.test.js",
     "test:ui": "vitest run"

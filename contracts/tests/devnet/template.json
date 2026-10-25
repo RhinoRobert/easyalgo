@@ -1,0 +1,21 @@
+{
+  "Genesis": {
+    "NetworkName": "launchpaddev",
+    "ConsensusProtocol": "future",
+    "LastPartKeyRound": 3000,
+    "DevMode": true,
+    "Wallets": [
+      { "Name": "Wallet1", "Stake": 100, "Online": true }
+    ]
+  },
+  "Nodes": [
+    {
+      "Name": "Primary",
+      "IsRelay": true,
+      "Wallets": [
+        { "Name": "Wallet1", "ParticipationOnly": false }
+      ],
+      "ConfigJSONOverride": "{\"DNSBootstrapID\":\"\",\"EnableDeveloperAPI\":true,\"EndpointAddress\":\"127.0.0.1:0\"}"
+    }
+  ]
+}
