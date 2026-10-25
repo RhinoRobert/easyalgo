@@ -74,7 +74,7 @@ export async function collectNewTrades({ previous, current, sinceSeconds, seen, 
       const trade = classifySwap(row, id);
       if (!trade || seen.has(trade.key) || trade.time < sinceSeconds - LOOKBACK_SECONDS) continue;
       seen.add(trade.key);
-      trades.push({ ...trade, name: current.get(id)?.name || "a token", ticker: current.get(id)?.ticker || "" });
+      trades.push({ ...trade, name: current.get(id)?.name || "a token", ticker: current.get(id)?.ticker || "", image: current.get(id)?.image || "" });
     }
   }
   return trades.sort((a, b) => a.time - b.time);

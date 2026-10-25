@@ -42,6 +42,7 @@ export default function App() {
         </div>
       </header>
       <Tabs active={active} showOperations={isAuthority} />
+      <TradeToasts />
       <main className="shell-main">
         <div hidden={active !== "launch"}><LaunchLabPage /></div>
         {opened.has("mine") && <MyLaunchesPage active={active === "mine"} />}
@@ -59,7 +60,6 @@ export default function App() {
         )}
       </main>
       <TermsFooter />
-      <TradeToasts />
     </div>
   );
 }
