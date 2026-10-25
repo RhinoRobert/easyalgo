@@ -115,7 +115,7 @@ export default function MyLaunchesPage({ active }) {
             })}
           </ol>
           {IS_MAINNET && state.items.some((item) => item.status === 2n) ? (
-            <p className="field-hint">After launch you can add a logo, description and links to your token on Vestige.</p>
+            <p className="field-hint">After launch you can add a logo (must be 50x50), description and links to your token on Vestige.</p>
           ) : null}
         </>
       )}
