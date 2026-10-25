@@ -29,7 +29,11 @@ export default function KingOfTheHill({ onChallenge }) {
     let cancelled = false;
     loadHillStats({ algodClient, config: launchNetwork })
       .then((data) => { if (!cancelled) setState({ status: "ready", data }); })
-      .catch(() => { if (!cancelled) setState({ status: "error", data: null }); });
+      .catch((error) => {
+        // The banner hides itself rather than show an error to visitors, but the reason is kept in the console for whoever looks.
+        console.warn("King of the hill unavailable:", error);
+        if (!cancelled) setState({ status: "error", data: null });
+      });
     return () => { cancelled = true; };
   }, [algodClient, configured]);
 

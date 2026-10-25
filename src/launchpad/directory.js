@@ -79,14 +79,26 @@ async function readSource(algodClient, config) {
   });
 }
 
+const DIRECTORY_PAGE = 100;
+
+/** The newest `limit` directory records, oldest first, read in pages (one chain read allows at most 100). Returns `{ total, records }`. */
+export async function readRecentRecords({ algodClient, config, limit }) {
+  const globals = await readGlobalState(algodClient, config.launchpadAppId);
+  const total = globals.total ?? 0n;
+  const start = total > BigInt(limit) ? total - BigInt(limit) : 0n;
+  const records = [];
+  for (let cursor = start; cursor < total; cursor += BigInt(DIRECTORY_PAGE)) {
+    const page = Math.min(DIRECTORY_PAGE, Number(total - cursor));
+    const result = await readLaunchDirectory({ algodClient, config, cursor, limit: page });
+    records.push(...result.records);
+  }
+  return { total, records };
+}
 /** The newest `limit` launches (finished and cancelled), newest first, each with its pool value. Cached for 45 s. */
 export async function loadRecentLaunches({ algodClient, config, limit = 20 }) {
   return cached(`recent:${limit}`, 45_000, async () => {
-    const globals = await readGlobalState(algodClient, config.launchpadAppId);
-    const total = globals.total ?? 0n;
-    const cursor = total > BigInt(limit) ? total - BigInt(limit) : 0n;
-    const [{ records }, source, status] = await Promise.all([
-      readLaunchDirectory({ algodClient, config, cursor, limit }),
+    const [{ total, records }, source, status] = await Promise.all([
+      readRecentRecords({ algodClient, config, limit }),
       readSource(algodClient, config),
       algodClient.status().do(),
     ]);
