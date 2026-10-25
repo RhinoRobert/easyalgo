@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifySwap, collectNewTrades, formatAlgo, increasedAssets, nextToast } from "../src/launchpad/tradeFeed.js";
+import { changedAssets, classifySwap, collectNewTrades, formatAlgo, nextToast } from "../src/launchpad/tradeFeed.js";
 
 const TOKEN = 3753533790;
 const PNET = 3169177585;
@@ -38,15 +38,17 @@ test("liquidity changes, dust, other tokens and malformed rows are not trades", 
   assert.equal(classifySwap(null, TOKEN), null);
 });
 
-test("only tokens whose swap count rose are looked at", () => {
-  const snap = (entries) => new Map(Object.entries(entries).map(([id, swaps1d]) => [id, { swaps1d }]));
-  assert.deepEqual(increasedAssets(snap({ 1: 5, 2: 5, 3: 5 }), snap({ 1: 6, 2: 5, 3: 4, 4: 9 })), ["1"], "a falling count (old swaps ageing out) and a token seen for the first time are ignored");
-  assert.deepEqual(increasedAssets(snap({ 1: null }), snap({ 1: 3 })), []);
+test("a token is looked at when its price moves or its swap count rises, biggest price move first", () => {
+  const snap = (entries) => new Map(Object.entries(entries).map(([id, [price, swaps1d]]) => [id, { price, swaps1d }]));
+  const before = snap({ 1: [1, 5], 2: [1, 5], 3: [1, 5], 4: [1, 5], 5: [1, 5] });
+  const after = snap({ 1: [1.2, 5], 2: [1, 5], 3: [1, 6], 4: [1 + 1e-12, 5], 5: [3, 5], 9: [7, 1] });
+  assert.deepEqual(changedAssets(before, after), ["5", "1", "3"], "an unchanged price, float noise and a token seen for the first time are ignored");
+  assert.deepEqual(changedAssets(snap({ 1: [null, null] }), snap({ 1: [2, 3] })), []);
 });
 
-test("new trades are collected once, in time order, and nothing from before the last look is replayed", async () => {
-  const previous = new Map([[String(TOKEN), { swaps1d: 1 }], ["77", { swaps1d: 1 }]]);
-  const current = new Map([[String(TOKEN), { swaps1d: 3, name: "Canary", ticker: "CNRY" }], ["77", { swaps1d: 1, name: "Quiet", ticker: "Q" }]]);
+test("new trades are collected once, in time order, and nothing from before watching began is replayed", async () => {
+  const previous = new Map([[String(TOKEN), { price: 1, swaps1d: 1 }], ["77", { price: 1, swaps1d: 1 }]]);
+  const current = new Map([[String(TOKEN), { price: 1.5, swaps1d: 1, name: "Canary", ticker: "CNRY" }], ["77", { price: 1, swaps1d: 1, name: "Quiet", ticker: "Q" }]]);
   const seen = new Set();
   const urls = [];
   const fetchImpl = async (url) => {
@@ -58,29 +60,56 @@ test("new trades are collected once, in time order, and nothing from before the 
       row({ offset: 4, timestamp: 1020, asset_1_delta: 1, asset_2_delta: 1, group: "LP" }),
     ] }) };
   };
-  const trades = await collectNewTrades({ previous, current, sinceSeconds: 1000, seen, fetchImpl });
+  const trades = await collectNewTrades({ previous, current, sinceSeconds: 1000, seen, hot: new Map(), fetchImpl });
   assert.deepEqual(trades.map((t) => [t.side, t.time, t.name, t.ticker]), [["buy", 1010, "Canary", "CNRY"], ["sell", 1030, "Canary", "CNRY"]]);
   assert.equal(urls.length, 1, "the quiet token was never fetched");
   assert.match(urls[0], /\/swaps\?asset_id=3753533790&start=985&/);
-  const again = await collectNewTrades({ previous, current, sinceSeconds: 1000, seen, fetchImpl });
+  const again = await collectNewTrades({ previous: current, current, sinceSeconds: 1000, seen, hot: new Map([[String(TOKEN), 2]]), fetchImpl });
   assert.equal(again.length, 0, "a trade already shown is not shown again");
 });
 
-test("one token failing does not stop the others, and at most five tokens are looked up per poll", async () => {
-  const ids = ["1", "2", "3", "4", "5", "6", "7"];
-  const previous = new Map(ids.map((id) => [id, { swaps1d: 1 }]));
-  const current = new Map(ids.map((id) => [id, { swaps1d: 2, name: `T${id}`, ticker: "" }]));
+test("a trade that reaches Vestige's swap list late is still shown (the bug that hid real buys)", async () => {
+  // watching began at t=1000; the buy happened at t=1010 but only appears in the list two polls later, when the price no longer moves
+  const state = (price) => new Map([[String(TOKEN), { price, swaps1d: 0, name: "Canary", ticker: "CNRY" }]]);
+  const hot = new Map();
+  const seen = new Set();
+  let listed = [];
+  const fetchImpl = async () => ({ ok: true, json: async () => ({ results: listed }) });
+  const poll = (previous, current) => collectNewTrades({ previous, current, sinceSeconds: 1000, seen, hot, fetchImpl });
+  assert.equal((await poll(state(1), state(1.9))).length, 0, "price moved, swap not listed yet");
+  assert.equal((await poll(state(1.9), state(1.9))).length, 0, "price steady, still not listed");
+  listed = [row({ timestamp: 1010, group: "LATE" })];
+  const late = await poll(state(1.9), state(1.9));
+  assert.deepEqual(late.map((t) => [t.side, t.time]), [["buy", 1010]]);
+  assert.equal((await poll(state(1.9), state(1.9))).length, 0, "and only once");
+});
+
+test("a token stops being rechecked after a few polls, and trades from before watching began never show", async () => {
+  const state = (price) => new Map([[String(TOKEN), { price, swaps1d: 0, name: "Canary", ticker: "CNRY" }]]);
+  const hot = new Map();
+  let calls = 0;
+  const fetchImpl = async () => { calls += 1; return { ok: true, json: async () => ({ results: [row({ timestamp: 900, group: "BEFORE" })] }) }; };
+  const poll = (previous, current) => collectNewTrades({ previous, current, sinceSeconds: 1000, seen: new Set(), hot, fetchImpl });
+  assert.equal((await poll(state(1), state(2))).length, 0, "a trade from before watching began is ignored");
+  for (let index = 0; index < 6; index += 1) await poll(state(2), state(2));
+  assert.equal(calls, 4, "looked at on the poll that saw the change and the three after it, then left alone");
+  assert.equal(hot.size, 0);
+});
+
+test("one token failing does not stop the others, and at most eight tokens are looked up per poll", async () => {
+  const ids = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+  const previous = new Map(ids.map((id) => [id, { price: 1, swaps1d: 1 }]));
+  const current = new Map(ids.map((id, index) => [id, { price: 2 + index, swaps1d: 1, name: `T${id}`, ticker: "" }]));
   let calls = 0;
   const fetchImpl = async (url) => {
     calls += 1;
-    if (url.includes("asset_id=1&")) throw new Error("boom");
+    if (url.includes("asset_id=10&")) throw new Error("boom"); // the biggest price move, looked at first
     return { ok: true, json: async () => ({ results: [row({ asset_1_id: Number(/asset_id=(\d+)/.exec(url)[1]), offset: calls, group: `g${calls}`, timestamp: 1010 })] }) };
   };
-  const trades = await collectNewTrades({ previous, current, sinceSeconds: 1000, seen: new Set(), fetchImpl });
-  assert.equal(calls, 5);
-  assert.equal(trades.length, 4);
+  const trades = await collectNewTrades({ previous, current, sinceSeconds: 1000, seen: new Set(), hot: new Map(), fetchImpl });
+  assert.equal(calls, 8);
+  assert.equal(trades.length, 7);
 });
-
 test("one trade shows alone; a busy moment becomes one summary", () => {
   const trade = (n, assetId = "1") => ({ key: `k${n}`, assetId, side: "buy", algo: 1, name: "Canary", ticker: "C", address: "A", time: n });
   assert.deepEqual(nextToast([]), { toast: null, rest: [] });

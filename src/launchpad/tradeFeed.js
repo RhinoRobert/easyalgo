@@ -1,13 +1,15 @@
 // Live trade alerts. Every swap is public, so each visitor's browser watches the launched tokens itself (there is no server): one cheap request now
-// and then for the swap counts of up to 50 tokens, and a closer look at a token's swaps only when its count goes up. Nothing is shown for trades that
-// happened before the page was opened. Swap rows come from Vestige and are untrusted: only plain numbers are used.
+// and then for the prices of up to 50 tokens, and a closer look at a token's swaps when its price moves (Vestige's own swap counters lag behind the
+// trades, so they are not used to notice them). Nothing is shown for trades from before the page was opened or the tab came back into view. Swap rows
+// come from Vestige and are untrusted: only plain numbers are used.
 import { fetchSwaps } from "./vestigeApi.js";
 
 export const MIN_TRADE_ALGO = 0.01;
 export const POLL_MS = 20_000;
 export const MAX_WATCHED = 50; // Vestige answers for up to 50 tokens in one request
 const LOOKBACK_SECONDS = 15;
-const MAX_LOOKUPS_PER_POLL = 5;
+const MAX_LOOKUPS_PER_POLL = 8;
+const HOT_POLLS = 4; // a token whose price moved is looked at again for this many polls, because its trade can reach the swap list a little later
 const TOAST_BATCH = 3;
 
 const num = (value) => (typeof value === "number" && Number.isFinite(value) ? value : null);
@@ -38,23 +40,34 @@ export function classifySwap(row, assetId) {
   };
 }
 
-/** Assets whose 24 h swap count went up since the last look. Tokens not seen before are ignored: that is just the first look at them. */
-export function increasedAssets(previous, current) {
-  const ids = [];
+/**
+ * Tokens that look like they traded since the last look: their price moved (largest move first), or their 24 h swap count rose. Tokens not seen before are
+ * ignored, since that is just the first look at them. A price can also move when PNET's own price moves, which only costs a look at that token's swaps.
+ */
+export function changedAssets(previous, current) {
+  const changed = [];
   for (const [id, row] of current) {
     const before = previous.get(id);
-    if (before && row.swaps1d !== null && before.swaps1d !== null && row.swaps1d > before.swaps1d) ids.push(id);
+    if (!before) continue;
+    const move = row.price !== null && before.price !== null && before.price > 0 ? Math.abs(row.price / before.price - 1) : 0;
+    const counted = row.swaps1d !== null && before.swaps1d !== null && row.swaps1d > before.swaps1d;
+    if (move > 1e-9 || counted) changed.push({ id, move });
   }
-  return ids;
+  return changed.sort((a, b) => b.move - a.move).map((entry) => entry.id);
 }
 
 /**
- * The new trades since the last look. `seen` holds the keys already shown so none repeats; `sinceSeconds` is when the previous look happened. Looks at
- * no more than a few tokens per poll, and one token failing does not stop the rest.
+ * The new trades since `sinceSeconds` (when watching began). `seen` holds the keys already shown so none repeats. `hot` remembers tokens that just changed
+ * so they are looked at again on the next polls: Vestige can list a trade a little after the price has moved, and by then it is no longer "new" by
+ * the clock, which is why only the start of watching (not the last poll) decides what is too old. At most a few tokens are looked up per poll, and one
+ * token failing does not stop the rest.
  */
-export async function collectNewTrades({ previous, current, sinceSeconds, seen, fetchImpl }) {
+export async function collectNewTrades({ previous, current, sinceSeconds, seen, hot = new Map(), fetchImpl }) {
+  for (const id of changedAssets(previous, current)) hot.set(id, HOT_POLLS);
   const trades = [];
-  for (const id of increasedAssets(previous, current).slice(0, MAX_LOOKUPS_PER_POLL)) {
+  for (const id of [...hot.keys()].slice(0, MAX_LOOKUPS_PER_POLL)) {
+    hot.set(id, hot.get(id) - 1);
+    if (hot.get(id) <= 0) hot.delete(id);
     let rows;
     try { rows = await fetchSwaps({ assetId: id, since: sinceSeconds - LOOKBACK_SECONDS, fetchImpl }); } catch { continue; }
     for (const row of rows) {

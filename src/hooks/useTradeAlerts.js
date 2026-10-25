@@ -20,14 +20,16 @@ export function useTradeAlerts({ enabled, algodClient, config }) {
     let watched = [];
     let watchedAt = 0;
     let previous = null;
-    let lastPoll = 0;
+    let watchingSince = 0; // trades from before this moment are never shown
     const seen = new Set();
+    const hot = new Map();
 
     const poll = async () => {
       if (stopped) return;
       try {
         if (document.visibilityState !== "visible") {
           previous = null; // after being away, start again from the present instead of replaying what was missed
+          hot.clear();
         } else {
           if (!watched.length || Date.now() - watchedAt > WATCH_REFRESH_MS) {
             const { records } = await readRecentRecords({ algodClient, config, limit: MAX_WATCHED });
@@ -35,12 +37,13 @@ export function useTradeAlerts({ enabled, algodClient, config }) {
             watchedAt = Date.now();
           }
           const current = watched.length ? await fetchVestigeAssets(watched) : new Map();
-          const now = Math.floor(Date.now() / 1000);
           if (previous && current.size) {
-            const trades = await collectNewTrades({ previous, current, sinceSeconds: lastPoll, seen });
+            const trades = await collectNewTrades({ previous, current, sinceSeconds: watchingSince, seen, hot });
             if (!stopped && trades.length) setQueue((old) => [...old, ...trades].slice(-MAX_QUEUE));
+          } else if (current.size) {
+            watchingSince = Math.floor(Date.now() / 1000);
           }
-          if (current.size) { previous = current; lastPoll = now; }
+          if (current.size) previous = current;
         }
       } catch { /* try again at the next poll */ }
       if (!stopped) timer = setTimeout(poll, POLL_MS);
