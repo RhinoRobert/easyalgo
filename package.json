@@ -11,6 +11,7 @@
     "preflight:mainnet": "node scripts/mainnet-preflight.mjs",
     "check:headers": "node scripts/check-headers.mjs",
     "verify:deployed": "node scripts/verify-deployed.mjs",
+    "verify:launch": "node scripts/verify-launch.mjs",
     "test": "npm run test:unit && npm run test:ui",
     "test:unit": "node --test test/*.test.js",
     "test:ui": "vitest run"
