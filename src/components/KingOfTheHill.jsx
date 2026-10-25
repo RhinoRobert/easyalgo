@@ -6,6 +6,7 @@ import { launchNetwork } from "../launchpad/config";
 import { loadHillStats } from "../launchpad/directory";
 import { shortAddress } from "../launchpad/format";
 import { vestigeAssetUrl } from "../launchpad/links";
+import { tokenHash } from "../launchpad/tokenView";
 
 function Crown() {
   return (
@@ -65,6 +66,7 @@ export default function KingOfTheHill({ onChallenge }) {
             </p>
             <div className="king-links">
               {IS_MAINNET ? <a className="trade-button" href={vestigeAssetUrl(king.assetId)} target="_blank" rel="noopener noreferrer" aria-label={`Trade ${king.name} on Vestige`}>Trade now <span aria-hidden="true">↗</span></a> : null}
+              <a href={tokenHash(king.assetId)}>Safety checklist</a>
               <a href={explorerAssetUrl(king.assetId)} target="_blank" rel="noreferrer noopener">Asset {king.assetId.toString()} ↗</a>
               <a href={explorerAddrUrl(king.poolAddress)} target="_blank" rel="noreferrer noopener">Pool ↗</a>
               {king.terminalTxId ? <a className="burn-link" href={explorerTxUrl(king.terminalTxId)} target="_blank" rel="noreferrer noopener">Burn LP ↗</a> : null}

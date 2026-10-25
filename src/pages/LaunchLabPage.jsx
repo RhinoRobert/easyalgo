@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import algosdk from "algosdk";
 import LaunchpadDeploymentConsole from "../components/LaunchpadDeploymentConsole";
 import KingOfTheHill from "../components/KingOfTheHill";
+import TokenBadge from "../components/TokenBadge";
+import { burnedPercent, shareOnXUrl, tokenHash } from "../launchpad/tokenView";
 import { usePeraWallet } from "../hooks/usePeraWallet";
 import { useWakeLock } from "../hooks/useWakeLock";
 import "../LaunchLab.css";
@@ -403,6 +405,11 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
           <label>Unit name<input disabled={!!session} value={form.unitName} onChange={(e) => setForm({ ...form, unitName: e.target.value.toUpperCase() })} maxLength={8} placeholder="TOKEN" /></label>
           <label>Display supply<input disabled={!!session} value={form.displaySupply} onChange={(e) => setForm({ ...form, displaySupply: e.target.value })} inputMode="decimal" /></label>
           <label>Optional asset URL<input disabled={!!session} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="ipfs://… or https://…" /></label>
+          <div className="token-preview" aria-label="Preview of your token">
+            <TokenBadge assetId={BigInt([...(form.unitName || form.name)].reduce((sum, char) => sum + char.charCodeAt(0), 0))} unit={form.unitName} name={form.name || "?"} />
+            <strong>{form.name.trim() || "Your token name"} <span className="launch-unit">{form.unitName.trim() || "TICKER"}</span></strong>
+            <small>{form.displaySupply || "0"} supply · 100% into the pool · 80% of liquidity burned · token cannot be changed after launch</small>
+          </div>
           <div className="instant-summary"><span>ALGO swapped</span><strong>Exactly 1 ALGO</strong></div>
           <div className="instant-summary"><span>ASA placed in pool</span><strong>100%</strong></div>
           <div className="instant-summary"><span>LP ownership</span><strong>80% burn · 10% creator · 10% platform</strong></div>
@@ -479,6 +486,10 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
             <a href={explorerAssetUrl(session.assetId)} target="_blank" rel="noreferrer">Immutable ASA ↗</a>
             {session.poolAddress && <a href={explorerAddrUrl(session.poolAddress)} target="_blank" rel="noreferrer">Tinyman pool ↗</a>}
             {session.lpAssetId && <a href={explorerAssetUrl(session.lpAssetId)} target="_blank" rel="noreferrer">LP asset ↗</a>}
+            {terminal === "complete" && <a href={tokenHash(session.assetId)}>Token page and safety checklist</a>}
+            {terminal === "complete" && (
+              <a href={shareOnXUrl({ name: session.form.name, unit: session.form.unitName, assetId: session.assetId, burnedPct: burnedPercent(launchRecord), pageUrl: `${window.location.origin}${window.location.pathname}` })} target="_blank" rel="noopener noreferrer">Share on X ↗</a>
+            )}
             {terminal === "complete" && session.steps.finish?.txId && <a href={explorerTxUrl(session.steps.finish.txId)} target="_blank" rel="noreferrer" title="The transaction that sent 80% of the liquidity tokens to the ARC-54 burn account">Burn LP (80%) ↗</a>}
             {Object.values(session.steps).flatMap((item) => [item.txId, ...(item.transactionIds || [])]).filter(Boolean).map((txId) => (
               <a key={txId} href={explorerTxUrl(txId)} target="_blank" rel="noreferrer">Transaction {txId.slice(0, 8)}… ↗</a>

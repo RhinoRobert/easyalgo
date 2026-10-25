@@ -2,6 +2,7 @@ import { IS_MAINNET, explorerAddrUrl, explorerAssetUrl, explorerTxUrl } from "..
 import { vestigeAssetUrl } from "../launchpad/links";
 import { formatUnits } from "../launchpad/amounts";
 import { roundsAgo, shortAddress } from "../launchpad/format";
+import { tokenHash } from "../launchpad/tokenView";
 
 const STATUS_LABEL = { 1n: "In progress", 2n: "Live", 3n: "Cancelled" };
 
@@ -21,6 +22,7 @@ export default function LaunchRow({ item, round, rank, children }) {
           <span className="launch-status">{STATUS_LABEL[item.status] ?? "Unknown"}</span>
         </div>
         <div className="launch-meta">
+          {finished ? <a href={tokenHash(item.assetId)}>Token page</a> : null}
           <a href={explorerAssetUrl(item.assetId)} target="_blank" rel="noreferrer noopener">Asset {item.assetId.toString()} ↗</a>
           {item.poolAddress ? <a href={explorerAddrUrl(item.poolAddress)} target="_blank" rel="noreferrer noopener">Pool ↗</a> : null}
           {finished && burnedShare ? <span className="launch-burned">{burnedShare}% of liquidity burned</span> : null}

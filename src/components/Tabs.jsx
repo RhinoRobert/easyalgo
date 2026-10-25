@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
+import { parseRoute } from "../launchpad/tokenView";
 import MainSiteLink from "./MainSiteLink";
 
 export const TABS = [
@@ -14,11 +15,16 @@ const subscribe = (listener) => {
   return () => window.removeEventListener("hashchange", listener);
 };
 
-/** The active tab from the address fragment (#mine, #recent, ...), so every view has its own shareable link. */
-export function useActiveTab() {
+/** The view from the address fragment (#mine, #recent, #token/<asset id>, ...), so every view has its own shareable link. `assetId` is set for "token". */
+export function useRoute() {
   const hash = useSyncExternalStore(subscribe, () => window.location.hash, () => "");
-  const id = hash.replace(/^#/, "");
-  return TABS.some((tab) => tab.id === id) ? id : "launch";
+  const { tab, assetId } = parseRoute(hash);
+  if (tab === "token") return { tab, assetId };
+  return { tab: TABS.some((item) => item.id === tab) ? tab : "launch", assetId: null };
+}
+
+export function useActiveTab() {
+  return useRoute().tab;
 }
 
 /** `showOperations` is true only for the platform authority wallet: nobody else is shown that the tab exists. */

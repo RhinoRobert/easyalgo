@@ -3,7 +3,7 @@ import LaunchLabPage from "./pages/LaunchLabPage";
 import MyLaunchesPage from "./pages/MyLaunchesPage";
 import DirectoryPage from "./pages/DirectoryPage";
 import WalletButton from "./components/WalletButton";
-import Tabs, { useActiveTab } from "./components/Tabs";
+import Tabs, { useRoute } from "./components/Tabs";
 import TermsFooter from "./components/TermsFooter";
 import MainSiteLink from "./components/MainSiteLink";
 import { usePeraWallet } from "./hooks/usePeraWallet";
@@ -13,13 +13,14 @@ import { PLATFORM_WALLET } from "./launchpad/config";
 // not listed, not loaded and #ops behaves like any unknown address (the Launch page). This is a convenience, not security: the figures on it are
 // public chain data and the contract itself refuses every authority action from any other wallet.
 const OperationsPage = lazy(() => import("./pages/OperationsPage"));
+const TokenPage = lazy(() => import("./pages/TokenPage"));
 
 // There is no router and no backend: the address fragment picks the view and every view stays mounted (hidden when not shown), so switching tabs
 // never interrupts a launch that is waiting for the wallet. The wallet (Pera) signs every transaction group.
 export default function App() {
   const { account } = usePeraWallet();
   const isAuthority = account === PLATFORM_WALLET;
-  const requested = useActiveTab();
+  const { tab: requested, assetId: tokenAssetId } = useRoute();
   const active = requested === "ops" && !isAuthority ? "launch" : requested;
   // A view loads its data the first time it is opened, not at page load.
   const [opened, setOpened] = useState(() => new Set([active]));
@@ -45,6 +46,11 @@ export default function App() {
         {opened.has("mine") && <MyLaunchesPage active={active === "mine"} />}
         {opened.has("recent") && <DirectoryPage mode="recent" active={active === "recent"} />}
         {opened.has("popular") && <DirectoryPage mode="popular" active={active === "popular"} />}
+        {active === "token" && (
+          <Suspense fallback={null}>
+            <TokenPage key={tokenAssetId.toString()} assetId={tokenAssetId} />
+          </Suspense>
+        )}
         {isAuthority && opened.has("ops") && (
           <Suspense fallback={null}>
             <OperationsPage active={active === "ops"} />
