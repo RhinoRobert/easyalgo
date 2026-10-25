@@ -279,3 +279,30 @@ button, a, summary, input { touch-action: manipulation; }
 
 .launch-burned { color: #fbbf24; font-weight: 700; }
 .cost-note { color: var(--muted); font-weight: 500; font-size: .78rem; margin-left: .25rem; }
+
+/* king of the hill */
+.king { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.25rem 1.75rem; align-items: center; margin: 0 0 1.5rem; padding: 1.25rem 1.5rem; border-radius: 1.1rem; border: 1px solid rgba(251, 191, 36, .55); background: radial-gradient(120% 140% at 0% 0%, rgba(251, 191, 36, .16), rgba(251, 191, 36, .04) 55%, transparent), var(--panel); box-shadow: 0 0 0 1px rgba(251, 191, 36, .1), 0 18px 48px rgba(251, 191, 36, .08); }
+.king-stats { display: grid; gap: .2rem; padding-right: 1.75rem; border-right: 1px solid rgba(251, 191, 36, .3); text-align: center; }
+.king-stats strong { font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1; letter-spacing: -.03em; color: var(--text); }
+.king-stats span { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.king-main { display: grid; gap: .55rem; min-width: 0; }
+.king-badge { display: inline-flex; align-items: center; gap: .6rem; color: #fbbf24; font-weight: 900; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; }
+.king-crown { color: #fbbf24; filter: drop-shadow(0 0 10px rgba(251, 191, 36, .55)); }
+.king-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem; }
+.king-title strong { font-size: clamp(1.5rem, 4vw, 2.1rem); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.king-unit { color: var(--muted); font-weight: 800; }
+.king-figures { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; }
+.king-tvl { font-size: 1.35rem; font-weight: 900; color: #fde68a; }
+.king-sub { color: var(--muted); margin: 0; font-size: .85rem; }
+.king-empty { margin: 0; font-size: 1.3rem; font-weight: 800; }
+.king-challenge { margin: .15rem 0 0; color: var(--text-secondary); line-height: 1.5; }
+.king-cta { font: inherit; font-weight: 800; color: #fbbf24; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+.king-links { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.1rem; }
+.king-links a:not(.trade-button) { color: #5eead4; font-size: .85rem; }
+.king-links .trade-button { margin-top: 0; }
+@media (max-width: 640px) {
+  .king { grid-template-columns: 1fr; padding: 1rem; }
+  .king-stats { border-right: 0; border-bottom: 1px solid rgba(251, 191, 36, .3); padding: 0 0 .8rem; grid-auto-flow: column; justify-content: start; align-items: baseline; gap: .6rem; text-align: left; }
+  .king-stats strong { font-size: 2rem; }
+  .king-cta { min-height: 44px; }
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import algosdk from "algosdk";
 import LaunchpadDeploymentConsole from "../components/LaunchpadDeploymentConsole";
+import KingOfTheHill from "../components/KingOfTheHill";
 import { usePeraWallet } from "../hooks/usePeraWallet";
 import { useWakeLock } from "../hooks/useWakeLock";
 import "../LaunchLab.css";
@@ -390,11 +391,13 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
         </div>
       </div>
 
+      <KingOfTheHill onChallenge={() => document.getElementById("launch-details")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+
       {issues.length > 0 && <div className="instant-warning">Signing disabled: {issues.join("; ")}</div>}
       {attestation.status === "failed" && <div className="instant-error">App attestation failed: {attestation.error}</div>}
 
       <div className="instant-grid">
-        <div className="instant-card">
+        <div className="instant-card" id="launch-details">
           <h2>Launch details</h2>
           <label>Asset name<input disabled={!!session} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={32} placeholder="Profit Network Asset" /></label>
           <label>Unit name<input disabled={!!session} value={form.unitName} onChange={(e) => setForm({ ...form, unitName: e.target.value.toUpperCase() })} maxLength={8} placeholder="TOKEN" /></label>

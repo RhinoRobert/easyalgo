@@ -139,6 +139,33 @@ export async function loadMyLaunches({ algodClient, indexerClient, config, walle
   return { round: Number(status.lastRound ?? status["last-round"] ?? 0), items, pending };
 }
 
+/** How many of an application's boxes are unfinished launches ("p" + a 32-byte address). Pure, so it can be tested without a node. */
+export function countPendingBoxNames(names) {
+  return names.filter((name) => name.length === 33 && String.fromCharCode(name[0]) === "p").length;
+}
+
+/**
+ * The headline numbers for the launch page. Tokens created = every launch that made a token: the ones recorded as finished or cancelled plus the ones
+ * still waiting for their second approval. The king is the finished launch whose Tinyman pool is worth the most right now (both sides, in ALGO) among the
+ * newest `scan` launches. Cached for 60 s. Reads grow with the number of launches, so past a few hundred this should move to a scheduled snapshot.
+ */
+export async function loadHillStats({ algodClient, config, scan = 200 }) {
+  return cached(`hill:${scan}`, 60_000, async () => {
+    const [globals, boxes, popular] = await Promise.all([
+      readGlobalState(algodClient, config.launchpadAppId),
+      algodClient.getApplicationBoxes(Number(config.launchpadAppId)).do(),
+      loadPopularLaunches({ algodClient, config, scan, top: 2 }),
+    ]);
+    const finished = popular.items;
+    return {
+      tokensCreated: (globals.total ?? 0n) + BigInt(countPendingBoxNames((boxes.boxes ?? []).map((box) => box.name))),
+      king: finished[0] ?? null,
+      runnerUp: finished[1] ?? null,
+      round: popular.round,
+    };
+  });
+}
+
 /** Everything the operations tab shows: contract balances and counters, the source pool's depth, stuck launches and what the platform is owed. */
 export async function loadOperations({ algodClient, config }) {
   const appAddress = algosdk.getApplicationAddress(Number(config.launchpadAppId)).toString();
