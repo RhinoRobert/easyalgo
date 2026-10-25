@@ -5,18 +5,21 @@ import { poolTvlMicroAlgo, safeText } from "./format.js";
 const UINT64_MAX = (1n << 64n) - 1n;
 const ROLES = ["manager", "reserve", "freeze", "clawback"];
 
-/** `#token/<asset id>` opens a token page; anything else is a tab id. An id that is not a valid uint64 is treated as no token. */
+/** `#token/<asset id>` opens a token page and `#creator/<wallet>` a creator page; anything else is a tab id. An id that is not valid is treated as neither. */
 export function parseRoute(hash) {
   const id = String(hash ?? "").replace(/^#/, "");
   const match = /^token\/(\d{1,20})$/.exec(id);
   if (match) {
     const assetId = BigInt(match[1]);
-    if (assetId > 0n && assetId <= UINT64_MAX) return { tab: "token", assetId };
+    if (assetId > 0n && assetId <= UINT64_MAX) return { tab: "token", assetId, address: null };
   }
-  return { tab: id.startsWith("token/") ? "" : id, assetId: null };
+  const creator = /^creator\/([A-Z2-7]{58})$/.exec(id);
+  if (creator) return { tab: "creator", assetId: null, address: creator[1] };
+  return { tab: /^(token|creator)\//.test(id) ? "" : id, assetId: null, address: null };
 }
 
 export const tokenHash = (assetId) => `#token/${BigInt(assetId)}`;
+export const creatorHash = (address) => `#creator/${address}`;
 
 /** Share of the pool's liquidity tokens that went to the burn account, in percent with one decimal, or null when there is no pool. */
 export function burnedPercent(launch) {

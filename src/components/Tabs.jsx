@@ -18,9 +18,9 @@ const subscribe = (listener) => {
 /** The view from the address fragment (#mine, #recent, #token/<asset id>, ...), so every view has its own shareable link. `assetId` is set for "token". */
 export function useRoute() {
   const hash = useSyncExternalStore(subscribe, () => window.location.hash, () => "");
-  const { tab, assetId } = parseRoute(hash);
-  if (tab === "token") return { tab, assetId };
-  return { tab: TABS.some((item) => item.id === tab) ? tab : "launch", assetId: null };
+  const { tab, assetId, address } = parseRoute(hash);
+  if (tab === "token" || tab === "creator") return { tab, assetId, address };
+  return { tab: TABS.some((item) => item.id === tab) ? tab : "launch", assetId: null, address: null };
 }
 
 export function useActiveTab() {

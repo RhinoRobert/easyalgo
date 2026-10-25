@@ -16,6 +16,7 @@ import { PLATFORM_WALLET } from "./launchpad/config";
 // public chain data and the contract itself refuses every authority action from any other wallet.
 const OperationsPage = lazy(() => import("./pages/OperationsPage"));
 const TokenPage = lazy(() => import("./pages/TokenPage"));
+const CreatorPage = lazy(() => import("./pages/CreatorPage"));
 
 const PAGE_TITLES = {
   launch: HOME.title,
@@ -30,11 +31,11 @@ const PAGE_TITLES = {
 export default function App() {
   const { account } = usePeraWallet();
   const isAuthority = account === PLATFORM_WALLET;
-  const { tab: requested, assetId: tokenAssetId } = useRoute();
+  const { tab: requested, assetId: tokenAssetId, address: creatorAddress } = useRoute();
   const active = requested === "ops" && !isAuthority ? "launch" : requested;
   // The browser tab (and a shared link) says where you are; a token page sets its own title once the token has loaded.
   useEffect(() => {
-    if (active !== "token") document.title = PAGE_TITLES[active] ?? HOME.title;
+    if (active !== "token" && active !== "creator") document.title = PAGE_TITLES[active] ?? HOME.title;
   }, [active]);
   // A view loads its data the first time it is opened, not at page load.
   const [opened, setOpened] = useState(() => new Set([active]));
@@ -61,6 +62,11 @@ export default function App() {
         {opened.has("mine") && <MyLaunchesPage active={active === "mine"} />}
         {opened.has("recent") && <DirectoryPage mode="recent" active={active === "recent"} />}
         {opened.has("popular") && <DirectoryPage mode="popular" active={active === "popular"} />}
+        {active === "creator" && (
+          <Suspense fallback={null}>
+            <CreatorPage key={creatorAddress} address={creatorAddress} />
+          </Suspense>
+        )}
         {active === "token" && (
           <Suspense fallback={null}>
             <TokenPage key={tokenAssetId.toString()} assetId={tokenAssetId} />

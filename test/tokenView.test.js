@@ -13,7 +13,7 @@ const good = { asset, launch, appAddress: APP, appTokenHolding: 0n, poolIsCanoni
 const byId = (checks) => Object.fromEntries(checks.map((check) => [check.id, check]));
 
 test("routes: #token/<id> opens a token, bad ids are not tokens", () => {
-  assert.deepEqual(parseRoute("#token/3753533790"), { tab: "token", assetId: 3753533790n });
+  assert.deepEqual(parseRoute("#token/3753533790"), { tab: "token", assetId: 3753533790n, address: null });
   assert.equal(parseRoute("#recent").tab, "recent");
   assert.equal(parseRoute("").tab, "");
   for (const bad of ["#token/", "#token/abc", "#token/0", "#token/18446744073709551616", "#token/1/../2", "#token/-5"]) {
@@ -21,6 +21,9 @@ test("routes: #token/<id> opens a token, bad ids are not tokens", () => {
     assert.notEqual(parseRoute(bad).tab, "token", bad);
   }
   assert.equal(tokenHash(5n), "#token/5");
+  const wallet = "CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E";
+  assert.deepEqual(parseRoute(`#creator/${wallet}`), { tab: "creator", assetId: null, address: wallet });
+  for (const bad of ["#creator/", "#creator/abc", `#creator/${wallet}x`, `#creator/${wallet.toLowerCase()}`, `#creator/${wallet.slice(1)}`]) assert.notEqual(parseRoute(bad).tab, "creator", bad);
 });
 
 test("safety checklist passes for a clean launch and splits the liquidity honestly", () => {

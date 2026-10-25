@@ -16,6 +16,7 @@ import {
 import { mapLimit, poolTvlMicroAlgo, safeText } from "./format.js";
 import { quoteFixedInput } from "./quote.js";
 import { reconcileBooks } from "./reconcile.js";
+import { summarizeFunnel } from "./funnel.js";
 import { readTinymanPoolState, readTinymanSourcePool } from "./tinymanAdapter.js";
 
 const CONCURRENCY = 8;
@@ -199,7 +200,7 @@ export async function loadOperations({ algodClient, config }) {
     const values = await readBox(algodClient, config.launchpadAppId, name, PENDING_TYPE);
     const record = decodePending(values);
     if (!record) return null;
-    return { launcher: algosdk.encodeAddress(name.slice(1)), assetId: record.assetId, totalRaw: record.totalRaw, swapRound: record.swapRound, pnetOutput: record.pnetOutput };
+    return { launcher: algosdk.encodeAddress(name.slice(1)), assetId: record.assetId, totalRaw: record.totalRaw, createdRound: record.createdRound, swapRound: record.swapRound, pnetOutput: record.pnetOutput };
   })).filter(Boolean);
 
   // every finished or cancelled launch record ("l" + asset id), for checking the books against what the account holds
@@ -232,8 +233,10 @@ export async function loadOperations({ algodClient, config }) {
     pending: pendingLaunches, launches: launchRecords, allocations, pnetAssetId: config.pnetAssetId,
   });
   for (const failure of books.failing) alerts.push(`The contract's books do not match the chain: ${failure.title}. ${failure.detail}`);
+  const funnel = summarizeFunnel({ launches: launchRecords, pending: pendingLaunches, round, cancelDelay: globals.delay ?? 3000n });
   return {
     books,
+    funnel,
     round,
     appAddress,
     appBalanceMicroAlgo: BigInt(account.amount),

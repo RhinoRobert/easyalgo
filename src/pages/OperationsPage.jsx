@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import BooksCheck from "../components/BooksCheck";
+import FunnelCard from "../components/FunnelCard";
 import "../LaunchLab.css";
 import { explorerAddrUrl, explorerAppUrl, explorerAssetUrl, useAlgorand } from "../hooks/useAlgorand";
 import { usePeraWallet } from "../hooks/usePeraWallet";
@@ -152,6 +153,7 @@ export default function OperationsPage({ active }) {
           </div>
 
           <BooksCheck books={data.books} />
+          <FunnelCard funnel={data.funnel} />
 
           <section className="instant-lifecycle">
             <h2>Launches in progress ({data.pendingLaunches.length})</h2>

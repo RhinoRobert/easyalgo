@@ -22,6 +22,7 @@ vi.mock("../launchpad/config", async (importActual) => {
   const actual = await importActual();
   return { ...actual, configurationIssues: () => [], launchNetwork: { ...actual.launchNetwork, launchpadAppId: 5n, label: "MainNet" } };
 });
+vi.mock("../launchpad/vestigeApi", () => ({ fetchVestigeAssets: async () => new Map() }));
 vi.mock("../launchpad/attestation", () => ({ attestLaunchpadApplication: async () => ({}) }));
 vi.mock("../launchpad/directory", () => ({ loadHillStats: async () => ({ tokensLaunched: 1n, king: null, runnerUp: null, round: 100 }) }));
 vi.mock("../launchpad/tinymanAdapter", async (importActual) => ({
@@ -66,6 +67,14 @@ describe("LaunchLabPage when the wallet's launch has finished", () => {
     expect(within(panel).getByRole("link", { name: "Open token page" })).toHaveAttribute("href", "#token/7");
     expect(within(panel).getByRole("link", { name: /trade on vestige/i })).toHaveAttribute("href", "https://vestige.fi/asset/7");
     expect(within(panel).getByRole("link", { name: /share on x/i }).getAttribute("href")).toContain("x.com/intent/post");
+    // the creator is told what to do next, with what the chain confirms ticked off
+    const next = screen.getByRole("region", { name: /next steps/i });
+    expect(next).toHaveTextContent("Your token is live (done)");
+    expect(next).toHaveTextContent("Add a logo and description");
+    expect(within(next).getByRole("link", { name: /edit on vestige/i })).toHaveAttribute("href", "https://vestige.fi/asset-manager/7");
+    expect(within(next).getByRole("link", { name: /share on x/i }).getAttribute("href")).toContain("x.com/intent/post");
+    expect(next).toHaveTextContent("Claim your 10% of the liquidity tokens (optional)");
+    expect(next).not.toHaveTextContent("(optional) (done)");
     // the progress card shows both approvals done and the main button reports the launch complete
     expect(container.querySelectorAll(".instant-step--confirmed").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Done").length).toBeGreaterThanOrEqual(2);

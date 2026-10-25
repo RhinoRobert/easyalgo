@@ -3,7 +3,8 @@ import { formatUnits } from "../launchpad/amounts";
 import { launchNetwork } from "../launchpad/config";
 import { roundsAgo, shortAddress } from "../launchpad/format";
 import { vestigeAssetUrl, vestigeManagerUrl } from "../launchpad/links";
-import { burnedPercent, formatCompact, formatPrice, shareOnXUrl } from "../launchpad/tokenView";
+import { burnedPercent, creatorHash, formatCompact, formatPrice, shareOnXUrl } from "../launchpad/tokenView";
+import NextSteps from "./NextSteps";
 import TokenBadge from "./TokenBadge";
 
 const MARK = { pass: "✓", fail: "✕", info: "i" };
@@ -32,7 +33,7 @@ export default function TokenView({ detail, account, pageUrl, market = null, chi
         <div className="token-head-text">
           <h1>{asset.name} {asset.unit ? <span className="launch-unit">{asset.unit}</span> : null}</h1>
           <p className="token-sub">
-            {finished ? "Live" : launch.status === 3n ? "Cancelled" : "In progress"} · launched {roundsAgo(round, launch.terminalRound || launch.createdRound)} · by <a href={explorerAddrUrl(launch.launcher)} target="_blank" rel="noreferrer noopener">{shortAddress(launch.launcher)}</a> · asset {id.toString()}
+            {finished ? "Live" : launch.status === 3n ? "Cancelled" : "In progress"} · launched {roundsAgo(round, launch.terminalRound || launch.createdRound)} · by <a href={creatorHash(launch.launcher)}>{shortAddress(launch.launcher)}</a> · asset {id.toString()}
           </p>
           {asset.url ? <p className="token-url" title="Written by the token's creator; shown as plain text only">{asset.url}</p> : null}
         </div>
@@ -57,8 +58,9 @@ export default function TokenView({ detail, account, pageUrl, market = null, chi
           {market?.change1d != null ? <div><span>24h change</span><strong className={market.change1d >= 0 ? "price-up" : "price-down"}>{market.change1d >= 0 ? "+" : ""}{market.change1d.toFixed(2)}%</strong></div> : null}
         </div>
       ) : null}
-      {isCreator && finished && IS_MAINNET && market && !market.image ? (
-        <p className="field-hint token-logo-hint">This token has no logo yet. Add one, a description and your links on Vestige (the Edit on Vestige button above) and they will show here.</p>
+      {isCreator && finished ? (
+        <NextSteps name={asset.name} unit={asset.unit} assetId={id} burnedPct={burned} pageUrl={pageUrl} vestigeGranted={launch.vestigeGranted === 1n}
+          hasLogo={market ? Boolean(market.image) : null} creatorLpClaimed={launch.creatorLpClaimed === 1n} onTokenPage />
       ) : null}
       {children}
 

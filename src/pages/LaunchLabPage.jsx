@@ -7,6 +7,8 @@ import Faq from "../components/Faq";
 import HowItWorks from "../components/HowItWorks";
 import { HOME } from "../seoContent";
 import LaunchSuccess from "../components/LaunchSuccess";
+import NextSteps from "../components/NextSteps";
+import { fetchVestigeAssets } from "../launchpad/vestigeApi";
 import { burnedPercent, shareOnXUrl, tokenHash } from "../launchpad/tokenView";
 import { usePeraWallet } from "../hooks/usePeraWallet";
 import { useWakeLock } from "../hooks/useWakeLock";
@@ -16,6 +18,7 @@ import {
   explorerAppUrl,
   explorerAssetUrl,
   explorerTxUrl,
+  IS_MAINNET,
   useAlgorand,
 } from "../hooks/useAlgorand";
 import { formatUnits, parseDisplaySupply } from "../launchpad/amounts";
@@ -399,6 +402,14 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
   const cancelRound = chain?.pending ? Number(chain.pending.swapRound) + CANCEL_DELAY_ROUNDS : null;
   const cancelOpen = cancelRound !== null && round >= cancelRound;
   const launchRecord = chain?.launch?.status === 2n ? chain.launch : null;
+  // Whether the finished token already has a logo on Vestige (null until known), so the next-steps list can tick it off.
+  const [logoState, setLogoState] = useState(null);
+  useEffect(() => {
+    if (!IS_MAINNET || terminal !== "complete" || !session?.assetId) return undefined;
+    let cancelled = false;
+    fetchVestigeAssets([session.assetId]).then((rows) => { if (!cancelled && rows.size) setLogoState(Boolean(rows.get(String(session.assetId))?.image)); });
+    return () => { cancelled = true; };
+  }, [terminal, session?.assetId]);
 
   return (
     <section className="launchlab-page instant-launch">
@@ -425,10 +436,17 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
       </div>
 
       {terminal === "complete" && session?.assetId && (
-        <LaunchSuccess
-          name={session.form.name} unit={session.form.unitName} assetId={session.assetId} burnedPct={burnedPercent(launchRecord)}
-          pageUrl={`${window.location.origin}${window.location.pathname}`}
-        />
+        <>
+          <LaunchSuccess
+            name={session.form.name} unit={session.form.unitName} assetId={session.assetId} burnedPct={burnedPercent(launchRecord)}
+            pageUrl={`${window.location.origin}${window.location.pathname}`}
+          />
+          <NextSteps
+            name={session.form.name} unit={session.form.unitName} assetId={session.assetId} burnedPct={burnedPercent(launchRecord)}
+            pageUrl={`${window.location.origin}${window.location.pathname}`} vestigeGranted={launchRecord?.vestigeGranted === 1n}
+            hasLogo={logoState} creatorLpClaimed={launchRecord?.creatorLpClaimed === 1n}
+          />
+        </>
       )}
 
       {issues.length > 0 && <div className="instant-warning">Signing disabled: {issues.join("; ")}</div>}
