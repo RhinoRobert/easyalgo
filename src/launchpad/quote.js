@@ -3,6 +3,7 @@ import {
   EXACT_ALGO_INPUT,
   LAUNCH_START_FUNDING,
   LP_HOLDING_MBR,
+  MIN_SUPPLY_RAW,
   QUOTE_MAX_AGE_MS,
   QUOTE_MAX_ROUNDS,
   SAFETY_RESERVE,
@@ -59,6 +60,7 @@ export function buildLaunchQuote({
   now = Date.now(),
   costs = FIXED_COSTS,
 }) {
+  if (BigInt(totalRaw) < MIN_SUPPLY_RAW) throw new Error("Supply must be at least 1 whole token: Tinyman cannot take a smaller first deposit");
   const swap = quoteFixedInput({
     inputAmount: EXACT_ALGO_INPUT,
     inputReserve: sourcePoolState.algoReserve,

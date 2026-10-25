@@ -3,6 +3,7 @@ import {
   ARC54_LP_HOLDING_MBR,
   LAUNCH_START_FUNDING,
   LP_HOLDING_MBR,
+  MIN_SUPPLY_RAW,
   PLATFORM_WALLET,
   VESTIGE_FUNDING,
 } from "./config.js";
@@ -139,6 +140,7 @@ export async function accountHasAsset(algodClient, address, assetId) {
 // -- approval 1: create the token and buy PNET ---------------------------------------------------------------------------------
 
 export async function buildLaunchStartGroup({ algodClient, config, wallet, form, quote }) {
+  if (BigInt(form.totalRaw) < MIN_SUPPLY_RAW) throw new Error("Supply must be at least 1 whole token: Tinyman cannot take a smaller first deposit");
   const params = await algodClient.getTransactionParams().do();
   const appId = Number(config.launchpadAppId);
   const funding = algosdk.makePaymentTxnWithSuggestedParamsFromObject({

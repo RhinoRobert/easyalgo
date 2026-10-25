@@ -19,8 +19,13 @@ import { simulateSignerGroup } from "../src/launchpad/simulation.js";
 import { readPool, readTinymanPoolState, readTinymanSourcePool } from "../src/launchpad/tinymanAdapter.js";
 
 const fixtureUrl = new URL("../contracts/tests/js-fixture.local.json", import.meta.url);
-const skip = !existsSync(fixtureUrl) && "devnet fixture missing (run contracts/tests/js_fixture.py)";
+let skip = !existsSync(fixtureUrl) && "devnet fixture missing (run contracts/tests/js_fixture.py)";
 const fx = skip ? null : JSON.parse(readFileSync(fixtureUrl, "utf8"));
+if (!skip) {
+  // A fixture from an earlier session points at a devnet that may no longer be running: skip, do not fail.
+  const alive = await fetch(`${fx.algod}/health`, { signal: AbortSignal.timeout(2000) }).then((r) => r.ok).catch(() => false);
+  if (!alive) skip = "devnet not running (start it with contracts/tests/devnet/start.sh, then run contracts/tests/js_fixture.py)";
+}
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

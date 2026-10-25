@@ -10,6 +10,9 @@ export const LEGACY_MAINNET_APP_ID = 3_609_729_732;
 // v2 (2026-10-24) can never finalize a launch (contract defect); it must never be configured again.
 export const BROKEN_V2_MAINNET_APP_ID = 3_753_482_671;
 export const EXACT_ALGO_INPUT = 1_000_000n;
+// Tinyman v2 refuses an initial deposit below 1,000,000 base units of either asset (found by the 2026-10-25 review: the contract itself accepts
+// 2,000, so a smaller supply would start and then be unable to finish). One whole token is the smallest supply the app will build.
+export const MIN_SUPPLY_RAW = 1_000_000n;
 // Mirrors contracts/launchpad_v3/contract.py (a test reads both and compares them).
 export const INITIALIZE_FUNDING = 500_000n;
 export const PENDING_BOX_MBR = 66_900n;

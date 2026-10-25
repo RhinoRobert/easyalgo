@@ -179,3 +179,9 @@ test("directory pagination and wallet recovery use chain boxes without local sto
   });
   assert.equal(latest.assetId, 11n);
 });
+
+test("the start builder refuses a supply Tinyman could not take", async () => {
+  await assert.rejects(buildLaunchStartGroup({
+    algodClient: baseClient, config, wallet, form: { name: "Tiny", unitName: "TNY", totalRaw: 999_999n, url: "" }, quote: { createdRound: 1, minimumPnet: 1n },
+  }), /at least 1 whole token/);
+});

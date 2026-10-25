@@ -45,3 +45,7 @@ test("quote blocks source pools above five percent impact", () => {
     tinymanBootstrapCost: 1n,
   }), /exceeds 5%/);
 });
+
+test("supplies below one whole token are refused before anything is built", () => {
+  assert.throws(() => buildLaunchQuote({ currentRound: 1, totalRaw: 999_999n, sourcePoolState, tinymanBootstrapCost: 1n }), /at least 1 whole token/);
+});

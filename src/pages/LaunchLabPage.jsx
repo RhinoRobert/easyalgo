@@ -16,6 +16,7 @@ import {
   configurationIssues,
   launchNetwork,
   launchNetworkName,
+  MIN_SUPPLY_RAW,
 } from "../launchpad/config";
 import { buildLaunchQuote, quoteIsExpired } from "../launchpad/quote";
 import { attestLaunchpadApplication } from "../launchpad/attestation";
@@ -68,7 +69,9 @@ function validateForm(form) {
   if (!name || encoder.encode(name).length > 32) throw new Error("Name must be 1–32 UTF-8 bytes");
   if (!/^[A-Z0-9]{1,8}$/.test(unitName)) throw new Error("Unit name must be 1–8 uppercase letters or digits");
   if (encoder.encode(url).length > 96) throw new Error("URL must be at most 96 UTF-8 bytes");
-  return { ...form, name, unitName, url, totalRaw: parseDisplaySupply(form.displaySupply) };
+  const totalRaw = parseDisplaySupply(form.displaySupply);
+  if (totalRaw < MIN_SUPPLY_RAW) throw new Error("Supply must be at least 1 token (Tinyman cannot take a smaller first deposit)");
+  return { ...form, name, unitName, url, totalRaw };
 }
 
 /** Plain-language text for the errors a person can actually meet. */

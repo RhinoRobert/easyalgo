@@ -127,3 +127,22 @@ def test_thin_source_pool_price_impact_is_refused(dev, platform):
     sk, addr = dev.new_account()
     thin.fund_user_pnet(addr, sk)
     lp2.refused(lambda: lp2.start(addr, sk, total_raw=TOTAL), "Price impact exceeds five percent")
+
+
+def test_supply_below_tinyman_minimum_starts_but_cannot_finish_and_cancel_recovers(lp, user, dev, proto):
+    """Review finding (2026-10-25): the contract accepts a supply of 2,000 base units, but Tinyman refuses an initial deposit below
+    1,000,000, so approval 2 can never succeed for it. The app refuses such supplies; this pins what happens to a caller who bypasses the app:
+    the launch stays pending and the launcher recovers half of everything after the delay."""
+    sk, addr = user
+    too_small = 999_999
+    asset_id = lp.start(addr, sk, total_raw=too_small)
+    try:
+        lp.finish(addr, sk, asset_id)
+    except Exception:  # noqa: BLE001 - refused by Tinyman's own check, not by the launchpad
+        pass
+    else:
+        raise AssertionError("finish unexpectedly succeeded below Tinyman's minimum deposit")
+    assert dev.box(lp.app_id, __import__("lp").pending_box(addr)) is not None, "the launch must still be pending"
+    dev.advance(lp.cancel_delay + 1)
+    lp._run(lp.cancel_group(addr, sk, asset_id, with_opt_ins=True))
+    assert dev.balance(addr, asset_id) == too_small // 2
