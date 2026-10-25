@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import LaunchCard from "../components/LaunchCard";
+import { CardSkeletons, EmptyState } from "../components/Placeholders";
 import "../LaunchLab.css";
 import { IS_MAINNET, useAlgorand } from "../hooks/useAlgorand";
 import { fetchVestigeAssets } from "../launchpad/vestigeApi";
@@ -86,7 +87,12 @@ export default function DirectoryPage({ mode, active }) {
         <span>{state.status === "loading" ? "Loading…" : state.status === "ready" ? `${state.total.toString()} launch${state.total === 1n ? "" : "es"} in total${query ? ` · ${visible.length} match${visible.length === 1 ? "" : "es"}` : ""}` : ""}</span>
         <button className="af-btn-ghost" disabled={state.status === "loading"} onClick={() => load(true)}>Refresh</button>
       </div>
-      {state.status === "ready" && visible.length === 0 ? <p className="field-hint">{query ? "Nothing matches that search." : copy.empty}</p> : null}
+      {state.status === "loading" && state.items.length === 0 ? <CardSkeletons /> : null}
+      {state.status === "ready" && visible.length === 0 ? (
+        query
+          ? <EmptyState title="Nothing matches that search" text="Try a different name, ticker or asset ID." />
+          : <EmptyState title={copy.empty} text="Launching takes two approvals in Pera and about a minute." href="#launch" cta="Launch a token" />
+      ) : null}
       <ul className="launch-grid">
         {visible.map((item, index) => (
           <LaunchCard key={item.assetId.toString()} item={item} round={state.round} rank={mode === "popular" ? index + 1 : null} image={market.get(item.assetId.toString())?.image ?? ""} />

@@ -3,6 +3,8 @@ import algosdk from "algosdk";
 import LaunchpadDeploymentConsole from "../components/LaunchpadDeploymentConsole";
 import KingOfTheHill from "../components/KingOfTheHill";
 import TokenBadge from "../components/TokenBadge";
+import HowItWorks from "../components/HowItWorks";
+import LaunchSuccess from "../components/LaunchSuccess";
 import { burnedPercent, shareOnXUrl, tokenHash } from "../launchpad/tokenView";
 import { usePeraWallet } from "../hooks/usePeraWallet";
 import { useWakeLock } from "../hooks/useWakeLock";
@@ -57,6 +59,20 @@ import {
 const encoder = new TextEncoder();
 const SHOW_DEPLOYMENT_CONSOLE = import.meta.env.DEV
   && import.meta.env.VITE_SHOW_DEPLOYMENT_CONSOLE === "LOCAL_ONLY";
+const SUPPLY_PRESETS = [
+  { label: "1 million", value: "1000000" },
+  { label: "100 million", value: "100000000" },
+  { label: "1 billion", value: "1000000000" },
+  { label: "1 trillion", value: "1000000000000" },
+];
+// What each step's internal status means to the person launching
+const STEP_STATUS = {
+  pending: "Not started",
+  building: "Getting ready",
+  signing: "Waiting for you in Pera",
+  submitting: "Sending to the network",
+  confirmed: "Done",
+};
 const STEP_LABELS = {
   quote: "Review the exact costs",
   start: "Approval 1 of 2: create your token and buy PNET",
@@ -384,16 +400,31 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
         <div className="af-section-eyebrow">PNET Instant Launchpad v3</div>
         <h1>One asset. One Tinyman pool. Two approvals.</h1>
         <p>
-          Your wallet funds an immutable ASA and exactly one ALGO of PNET. The contract pools the complete
-          supply and measured PNET output, sends 80% of LP to ARC-54, keeps 10% for you to claim, and retains 10% in
-          tracked platform escrow.
+          Name your token, approve twice in Pera, and it goes live on Tinyman with its whole supply in the pool.
+          80% of the liquidity is burned, so it can never be pulled out.
         </p>
         <div className="instant-badges">
           <span className="instant-network">{launchNetwork.label}</span>
           <span className="instant-prototype">Beta</span>
           <span className="instant-prototype">Contract-enforced · resumable · no loose creator ASA</span>
         </div>
+        <HowItWorks />
+        <details className="hero-tech">
+          <summary>What the contract does, exactly</summary>
+          <p>
+            Your wallet funds an immutable ASA and exactly one ALGO of PNET. The contract pools the complete
+            supply and measured PNET output, sends 80% of LP to ARC-54, keeps 10% for you to claim, and retains 10% in
+            tracked platform escrow.
+          </p>
+        </details>
       </div>
+
+      {terminal === "complete" && session?.assetId && (
+        <LaunchSuccess
+          name={session.form.name} unit={session.form.unitName} assetId={session.assetId} burnedPct={burnedPercent(launchRecord)}
+          pageUrl={`${window.location.origin}${window.location.pathname}`}
+        />
+      )}
 
       {issues.length > 0 && <div className="instant-warning">Signing disabled: {issues.join("; ")}</div>}
       {attestation.status === "failed" && <div className="instant-error">App attestation failed: {attestation.error}</div>}
@@ -401,10 +432,20 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
       <div className="instant-grid">
         <div className="instant-card" id="launch-details">
           <h2>Launch details</h2>
-          <label>Asset name<input disabled={!!session} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={32} placeholder="Profit Network Asset" /></label>
-          <label>Unit name<input disabled={!!session} value={form.unitName} onChange={(e) => setForm({ ...form, unitName: e.target.value.toUpperCase() })} maxLength={8} placeholder="TOKEN" /></label>
-          <label>Display supply<input disabled={!!session} value={form.displaySupply} onChange={(e) => setForm({ ...form, displaySupply: e.target.value })} inputMode="decimal" /></label>
-          <label>Optional asset URL<input disabled={!!session} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="ipfs://… or https://…" /></label>
+          <label>Asset name<input disabled={!!session} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={32} placeholder="Profit Network Asset" autoComplete="off" />
+            <small className="field-hint">What wallets and exchanges show. Up to 32 characters ({form.name.length}/32).</small></label>
+          <label>Unit name<input disabled={!!session} value={form.unitName} onChange={(e) => setForm({ ...form, unitName: e.target.value.toUpperCase() })} maxLength={8} placeholder="TOKEN" autoComplete="off" />
+            <small className="field-hint">The ticker, like a stock symbol: 1 to 8 letters or numbers.</small></label>
+          <label>Display supply<input disabled={!!session} value={form.displaySupply} onChange={(e) => setForm({ ...form, displaySupply: e.target.value })} inputMode="decimal" />
+            <span className="supply-chips" role="group" aria-label="Common supplies">
+              {SUPPLY_PRESETS.map((preset) => (
+                <button type="button" key={preset.value} className={`chip${form.displaySupply === preset.value ? " chip--active" : ""}`} disabled={!!session}
+                  onClick={() => setForm({ ...form, displaySupply: preset.value })}>{preset.label}</button>
+              ))}
+            </span>
+            <small className="field-hint">How many tokens exist in total. All of them go into the pool.</small></label>
+          <label>Optional asset URL<input disabled={!!session} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="ipfs://… or https://…" autoComplete="off" />
+            <small className="field-hint">A website for the token. It is fixed forever and shown only as plain text.</small></label>
           <div className="token-preview" aria-label="Preview of your token">
             <TokenBadge assetId={BigInt([...(form.unitName || form.name)].reduce((sum, char) => sum + char.charCodeAt(0), 0))} unit={form.unitName} name={form.name || "?"} />
             <strong>{form.name.trim() || "Your token name"} <span className="launch-unit">{form.unitName.trim() || "TICKER"}</span></strong>
@@ -434,14 +475,15 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
         </div>
 
         <div className="instant-card">
-          <h2>Chain-backed progress</h2>
+          <h2>Your launch</h2>
+          <p className="field-hint">Two approvals in Pera. It is safe to close the page between them: it picks up where it stopped.</p>
           {LAUNCH_STEPS.map((name) => {
             const state = session?.steps?.[name];
             const status = state?.status || "pending";
             return (
               <div className={`instant-step instant-step--${status}`} key={name}>
-                <span>{status === "confirmed" ? "✓" : status === "pending" ? "○" : "…"}</span>
-                <div><strong>{STEP_LABELS[name]}</strong><small>{status}</small></div>
+                <span>{status === "confirmed" ? "✓" : status !== "pending" ? "…" : name === "start" ? 1 : name === "finish" ? 2 : "○"}</span>
+                <div><strong>{STEP_LABELS[name]}</strong><small>{STEP_STATUS[status] ?? status}</small></div>
               </div>
             );
           })}

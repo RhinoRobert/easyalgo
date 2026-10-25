@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import LaunchRow from "../components/LaunchRow";
+import { CardSkeletons, EmptyState } from "../components/Placeholders";
 import "../LaunchLab.css";
 import { IS_MAINNET, useAlgorand } from "../hooks/useAlgorand";
 import { usePeraWallet } from "../hooks/usePeraWallet";
@@ -79,7 +80,10 @@ export default function MyLaunchesPage({ active }) {
           </div>
           {state.error && <div className="instant-error">Could not load your launches: {state.error}</div>}
           {notice && <div className="instant-warning">{notice}</div>}
-          {state.status === "ready" && state.items.length === 0 ? <p className="field-hint">You have not launched anything with this wallet yet.</p> : null}
+          {state.status === "loading" && state.items.length === 0 ? <CardSkeletons count={2} /> : null}
+          {state.status === "ready" && state.items.length === 0 ? (
+            <EmptyState title="You have not launched anything with this wallet yet" text="Your launches, and what you can still do with each, will appear here." href="#launch" cta="Launch your first token" />
+          ) : null}
           <ol className="launch-list">
             {state.items.map((item) => {
               const id = item.assetId.toString();

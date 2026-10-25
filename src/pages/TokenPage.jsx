@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PriceChart from "../components/PriceChart";
+import { TokenSkeleton } from "../components/Placeholders";
 import TokenThread from "../components/TokenThread";
 import TokenView from "../components/TokenView";
 import "../LaunchLab.css";
@@ -48,7 +49,7 @@ export default function TokenPage({ assetId }) {
   return (
     <section className="launchlab-page directory">
       {!configured && <div className="instant-warning">No launchpad application is configured for this build.</div>}
-      {state.status === "loading" && configured ? <p className="field-hint">Reading the token from the chain…</p> : null}
+      {state.status === "loading" && configured ? <TokenSkeleton /> : null}
       {state.status === "error" && <div className="instant-error">Could not load this token: {state.error}</div>}
       {state.status === "missing" && (
         <div className="instant-card">
