@@ -376,6 +376,8 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
 
   return (
     <section className="launchlab-page instant-launch">
+      <KingOfTheHill onChallenge={() => document.getElementById("launch-details")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+
       <div className="instant-hero">
         <div className="af-section-eyebrow">PNET Instant Launchpad v3</div>
         <h1>One asset. One Tinyman pool. Two approvals.</h1>
@@ -390,8 +392,6 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
           <span className="instant-prototype">Contract-enforced · resumable · no loose creator ASA</span>
         </div>
       </div>
-
-      <KingOfTheHill onChallenge={() => document.getElementById("launch-details")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
 
       {issues.length > 0 && <div className="instant-warning">Signing disabled: {issues.join("; ")}</div>}
       {attestation.status === "failed" && <div className="instant-error">App attestation failed: {attestation.error}</div>}
