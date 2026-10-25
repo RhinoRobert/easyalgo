@@ -8,6 +8,9 @@ const STATUS_LABEL = { 1n: "In progress", 2n: "Live", 3n: "Cancelled" };
 /** One launch. Everything from the chain is shown as plain text; the token's own URL is never turned into a link. */
 export default function LaunchRow({ item, round, rank, children }) {
   const finished = item.status === 2n;
+  // The share of the pool's liquidity tokens sitting in the burn account, read from the contract's own record (80.0% to rounding).
+  const lpTotal = (item.burnedLp ?? 0n) + (item.creatorLp ?? 0n) + (item.platformLp ?? 0n);
+  const burnedShare = lpTotal > 0n ? (Number((item.burnedLp * 1000n) / lpTotal) / 10).toFixed(1) : null;
   return (
     <li className={`launch-row launch-row--${finished ? "live" : item.status === 3n ? "cancelled" : "pending"}`}>
       {rank ? <span className="launch-rank">{rank}</span> : null}
@@ -20,6 +23,7 @@ export default function LaunchRow({ item, round, rank, children }) {
         <div className="launch-meta">
           <a href={explorerAssetUrl(item.assetId)} target="_blank" rel="noreferrer noopener">Asset {item.assetId.toString()} ↗</a>
           {item.poolAddress ? <a href={explorerAddrUrl(item.poolAddress)} target="_blank" rel="noreferrer noopener">Pool ↗</a> : null}
+          {finished && burnedShare ? <span className="launch-burned">{burnedShare}% of liquidity burned</span> : null}
           {finished && item.terminalTxId ? (
             <a
               className="burn-link"

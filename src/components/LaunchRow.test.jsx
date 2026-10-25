@@ -10,7 +10,7 @@ vi.mock("../hooks/useAlgorand", () => ({
 }));
 import LaunchRow from "./LaunchRow";
 
-const base = { assetId: 3753721447n, name: "Example", unit: "EXM", launcher: "ABCDEFGHIJKLMNOP", tvlMicroAlgo: 2_000_000n, url: "", burnedLp: 114_184_414_080n, terminalTxId: "FINISHTXID" };
+const base = { assetId: 3753721447n, name: "Example", unit: "EXM", launcher: "ABCDEFGHIJKLMNOP", tvlMicroAlgo: 2_000_000n, url: "", burnedLp: 114_184_414_080n, creatorLp: 14_273_051_760n, platformLp: 14_273_051_760n, terminalTxId: "FINISHTXID" };
 
 describe("LaunchRow trade button", () => {
   it("links live launches to the token's page on Vestige", () => {
@@ -42,5 +42,14 @@ describe("LaunchRow trade button", () => {
       <LaunchRow item={{ ...base, assetId: 1n, name: "Pending", status: 1n }} round={20} />
     </ul>);
     expect(screen.queryByRole("link", { name: /burn lp/i })).toBeNull();
+  });
+
+  it("states the burned share of the liquidity on live launches only", () => {
+    render(<ul>
+      <LaunchRow item={{ ...base, status: 2n, poolAddress: "POOL", terminalRound: 10n }} round={20} />
+      <LaunchRow item={{ ...base, assetId: 2n, name: "Cancelled", status: 3n, burnedLp: 0n, creatorLp: 0n, platformLp: 0n }} round={20} />
+    </ul>);
+    expect(screen.getAllByText(/of liquidity burned/)).toHaveLength(1);
+    expect(screen.getByText("80.0% of liquidity burned")).toBeInTheDocument();
   });
 });

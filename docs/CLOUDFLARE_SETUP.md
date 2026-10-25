@@ -39,6 +39,7 @@ frame-ancestors 'none'
 * `connect-src` is the allow-list of everything the page may talk to: the Algonode API and indexer, Pera's configuration (`wc.perawallet.app`) and its wallet bridge servers
   (`wallet-connect-a` to `-h.perawallet.app`, over HTTPS and WebSocket). Testnet endpoints are deliberately absent: this site is MainNet only.
   `data:` is there because the dialog builds its QR code from a data URL.
+* The site's own Inter font is served from this site (@fontsource/inter, ont-src 'self'), so enforcing the policy does not change how the site looks. Only Pera's dialog falls back to a plain font.
 * Google Fonts is deliberately **not** allowed. Pera's dialog asks for the Inter font from Google; blocked, it uses a plain fallback font and nothing is sent to Google.
 * The policy was tested on 2026-10-25: the production build served locally with exactly these headers loaded with **zero** violations, and Pera's connect dialog opened and
   drew its QR code. The only blocked request was the Google font above. What this test did **not** cover: a full connect-and-sign round trip with a wallet, and "Connect With Pera Web"

@@ -276,3 +276,6 @@ button, a, summary, input { touch-action: manipulation; }
 
 .launch-meta a.burn-link { color: #fbbf24; }
 
+
+.launch-burned { color: #fbbf24; font-weight: 700; }
+.cost-note { color: var(--muted); font-weight: 500; font-size: .78rem; margin-left: .25rem; }

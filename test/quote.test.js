@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildLaunchQuote, quoteFixedInput, quoteIsExpired } from "../src/launchpad/quote.js";
+import { buildLaunchQuote, estimatedLaunchCost, quoteFixedInput, quoteIsExpired } from "../src/launchpad/quote.js";
 
 const sourcePoolState = {
   algoReserve: 844_474_148n,
@@ -48,4 +48,14 @@ test("quote blocks source pools above five percent impact", () => {
 
 test("supplies below one whole token are refused before anything is built", () => {
   assert.throws(() => buildLaunchQuote({ currentRound: 1, totalRaw: 999_999n, sourcePoolState, tinymanBootstrapCost: 1n }), /at least 1 whole token/);
+});
+
+test("the cost shown next to the Launch button is the real quote's total minus its cushion", () => {
+  const quote = buildLaunchQuote({
+    currentRound: 100, totalRaw: 1_000_000_000_000n, sourcePoolState, tinymanBootstrapCost: 1_057_000n, now: 1_000,
+  });
+  const cost = estimatedLaunchCost();
+  assert.equal(cost.keepAvailable, quote.requiredWalletBalance);
+  assert.equal(cost.spent, quote.requiredWalletBalance - quote.itemizedAlgo.safetyReserve);
+  assert.ok(cost.spent > 2_500_000n && cost.spent < 3_000_000n, `about 2.7 ALGO, got ${cost.spent}`);
 });

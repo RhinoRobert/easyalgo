@@ -19,7 +19,7 @@ import {
   launchNetworkName,
   MIN_SUPPLY_RAW,
 } from "../launchpad/config";
-import { buildLaunchQuote, quoteIsExpired } from "../launchpad/quote";
+import { buildLaunchQuote, estimatedLaunchCost, quoteIsExpired } from "../launchpad/quote";
 import { attestLaunchpadApplication } from "../launchpad/attestation";
 import { simulateSignerGroup } from "../launchpad/simulation";
 import {
@@ -403,6 +403,10 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
           <div className="instant-summary"><span>ALGO swapped</span><strong>Exactly 1 ALGO</strong></div>
           <div className="instant-summary"><span>ASA placed in pool</span><strong>100%</strong></div>
           <div className="instant-summary"><span>LP ownership</span><strong>80% burn · 10% creator · 10% platform</strong></div>
+          <div className="instant-summary" title="Includes the 1 ALGO that becomes the pool's PNET, the Tinyman pool creation (about 1.06 ALGO), storage deposits and network fees. The wallet should also hold a small cushion.">
+            <span>Estimated cost</span>
+            <strong>about {Number(formatUnits(estimatedLaunchCost().spent, 6)).toFixed(2)} ALGO <small className="cost-note">(keep {Number(formatUnits(estimatedLaunchCost().keepAvailable, 6)).toFixed(0)} ALGO in the wallet)</small></strong>
+          </div>
           <button
             className="af-cta-btn"
             disabled={

@@ -11,6 +11,7 @@ import {
 } from "./config.js";
 import { integerSqrt, splitTokenSupply, splitUserLp } from "./amounts.js";
 import { FINISH_BASE_FEE, START_FEE } from "./launchpadClient.js";
+import { tinymanBootstrapCost } from "./tinymanAdapter.js";
 
 export const BPS = 10_000n;
 export const MAX_IMPACT_BPS = 500n;
@@ -105,4 +106,14 @@ export function buildLaunchQuote({
 
 export function quoteIsExpired(quote, currentRound, now = Date.now()) {
   return !quote || now >= quote.expiresAt || Number(currentRound) > quote.expiresRound;
+}
+
+/**
+ * What one launch costs, before any live quote: the 1 ALGO swapped into PNET, the Tinyman pool creation, the storage deposits and every fee.
+ * The safety reserve is only a cushion the wallet must hold (it is not spent), so it is reported separately. Uses the same constants as the real quote.
+ */
+export function estimatedLaunchCost() {
+  const spent = EXACT_ALGO_INPUT + tinymanBootstrapCost(false)
+    + Object.entries(FIXED_COSTS).filter(([name]) => name !== "safetyReserve").reduce((sum, [, amount]) => sum + BigInt(amount), 0n);
+  return { spent, keepAvailable: spent + FIXED_COSTS.safetyReserve };
 }
