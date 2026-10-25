@@ -89,6 +89,24 @@ Rules → Transform Rules → **Modify Response Header** → Create rule. Name i
 
 Use **Report-Only** first (it logs problems and blocks nothing).
 
+### 7b. Switch off the automatic Web Analytics script
+Cloudflare can add its own Web Analytics script to every page it proxies ("automatic setup"). If it is on you will see this line in the page source and in the console:
+`<script src="https://static.cloudflareinsights.com/beacon.min.js/...">`. It is Cloudflare's script, not part of this app, and the policy above blocks it on purpose: a page that asks people to approve wallet
+transactions should not run extra third-party code, and the terms page says the site has no analytics of its own.
+
+To remove it: Cloudflare dashboard → Analytics & Logs → Web Analytics → find `easyalgo.org` → turn off automatic setup (or delete the site entry), then Caching → Purge Everything.
+Cloudflare's normal traffic graphs (Analytics & Logs → Traffic) keep working without the script because they are measured at the edge.
+
+If you do want visitor analytics, the alternative is to allow it deliberately: add `https://static.cloudflareinsights.com` to `script-src` and `https://cloudflareinsights.com` to `connect-src` in
+`deploy/security-headers.json` **and** in the Cloudflare rule, and change the Privacy line in `src/components/TermsFooter.jsx`. That is a real loosening of `script-src`, so only do it on purpose.
+
+### What the console shows with the policy in report-only mode (expected, harmless)
+* `[Report Only] Refused to load the stylesheet 'https://fonts.googleapis.com/css2?family=Inter...'` and the many `fonts.gstatic.com` font lines: these come from **Pera Wallet's connect dialog**, which asks Google for the
+  Inter font. Report-only lets the request through (so the font files are also reported); once enforced, the stylesheet is refused, the font files are never requested, and the dialog uses a plain fallback font.
+  Nothing is sent to Google. This is intentional: do **not** add the Google font hosts to the policy.
+* A red `404` from `mainnet-api.algonode.cloud`: the app asked for a record that does not exist yet (for example "does this wallet have an unfinished launch?"). The app treats it as "no". It is not a policy issue.
+* No lines about `perawallet.app`, `algonode.cloud` hosts, or frames: if you ever see those, the policy needs that exact host.
+
 ### 8. Test, then enforce
 1. `npm run check:headers`. Everything should pass except "Content-Security-Policy is enforced" (it is Report-Only for now).
 2. Open https://easyalgo.org with the browser console open. Press **Connect Pera**, connect and approve a harmless action with a real wallet, and try **Connect With Pera Web**.
