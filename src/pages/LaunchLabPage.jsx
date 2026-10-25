@@ -29,7 +29,7 @@ import {
   tinymanBootstrapCost,
 } from "../launchpad/tinymanAdapter";
 import {
-  assetIdFromCreateConfirmation,
+  resolveStartedAsset,
   buildCancelGroup,
   buildClaimLpGroup,
   buildLaunchFinishGroup,
@@ -257,7 +257,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
     const appTxId = group.at(-1).txn.txID().toString();
     working = persist(updateStep(working, "start", { status: "submitting", txId: appTxId }));
     const result = await simulateAndSubmit(group);
-    const assetId = assetIdFromCreateConfirmation(result.confirmation);
+    const assetId = await resolveStartedAsset({ algodClient, config: launchNetwork, wallet: account, confirmation: result.confirmation });
     return persist({
       ...confirmStep(working, "start", { txId: appTxId, confirmedRound: Number(result.confirmation.confirmedRound ?? 0) }),
       assetId,

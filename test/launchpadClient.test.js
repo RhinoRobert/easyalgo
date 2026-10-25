@@ -18,6 +18,7 @@ import {
   pendingBoxName,
   readLaunchDirectory,
   readLaunchSnapshot,
+  resolveStartedAsset,
   vestigeManagerBoxName,
 } from "../src/launchpad/launchpadClient.js";
 import { LAUNCH_START_FUNDING } from "../src/launchpad/config.js";
@@ -197,4 +198,27 @@ test("a launch that has not started reads only the unfinished-launch box, never 
   assert.equal(snapshot.pending, null);
   assert.equal(snapshot.launch, null);
   assert.equal(directoryReads, 0, "the launch directory must not be scanned");
+});
+test("the new token's id comes from the confirmation when it has it, and from the chain's own pending record when it does not", async () => {
+  const config = { launchpadAppId: 999n };
+  const withInner = { innerTxns: [{ assetIndex: 4242n }] };
+  assert.equal(await resolveStartedAsset({ algodClient: {}, config, wallet, confirmation: withInner }), 4242n);
+
+  // a node that confirmed the launch but sent back no inner transactions; the pending record shows up on the second read
+  const zero = new Uint8Array(32);
+  const pendingBytes = algosdk.ABIType.from("(uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[])").encode([7777n, 1n, 1n, 2n, 2n, 3n, 3n, zero, zero]);
+  let reads = 0;
+  const client = {
+    getApplicationBoxByName: () => ({ do: async () => {
+      reads += 1;
+      if (reads < 2) throw Object.assign(new Error("box not found"), { status: 404 });
+      return { value: pendingBytes };
+    } }),
+  };
+  const id = await resolveStartedAsset({ algodClient: client, config, wallet, confirmation: { innerTxns: [] }, sleep: async () => {} });
+  assert.equal(id, 7777n);
+  assert.equal(reads, 2);
+
+  const empty = { getApplicationBoxByName: () => ({ do: async () => { throw Object.assign(new Error("box not found"), { status: 404 }); } }) };
+  await assert.rejects(resolveStartedAsset({ algodClient: empty, config, wallet, confirmation: {}, attempts: 2, sleep: async () => {} }), /Press Continue launch/);
 });

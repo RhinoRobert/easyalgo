@@ -408,6 +408,25 @@ export function assetIdFromCreateConfirmation(confirmation) {
   return BigInt(assetId);
 }
 
+/**
+ * The id of the token the start call just created. The confirmation's inner transactions are the quick answer, but a node can hand back a confirmed
+ * transaction without them (seen on MainNet: "did not contain an ASA creation" for a launch that had in fact succeeded), so the chain's own record is the
+ * fallback: the contract writes the new asset id into the wallet's pending-launch box in the same transaction.
+ */
+export async function resolveStartedAsset({ algodClient, config, wallet, confirmation, attempts = 10, delayMs = 1000, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) }) {
+  try {
+    return assetIdFromCreateConfirmation(confirmation);
+  } catch {
+    // fall through to the pending-launch record
+  }
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const pending = decodePending(await readBox(algodClient, config.launchpadAppId, pendingBoxName(wallet), PENDING_TYPE));
+    if (pending) return pending.assetId;
+    await sleep(delayMs);
+  }
+  throw new Error("Your token was created, but its id could not be read yet. Press Continue launch to carry on.");
+}
+
 // -- chain reads --------------------------------------------------------------------------------------------------------------
 
 export async function readBox(algodClient, appId, name, abiType) {
