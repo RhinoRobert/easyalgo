@@ -231,8 +231,8 @@ button, a, summary, input { touch-action: manipulation; }
   .launchlab-page .af-cta-btn, .launchlab-page .af-btn-ghost, .wallet-connect, .wallet-account, .tab, .main-site-link, .wallet-menu button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
   .launchlab-page .af-cta-btn { width: 100%; }
   .wallet-menu button { justify-content: flex-start; }
-  .terms summary { padding: .7rem 0; }
-  .terms .main-site-link { display: inline; min-height: 0; padding: .5rem .15rem; }
+  .terms summary { padding: .85rem 0; }
+  .terms .main-site-link { display: inline-block; min-height: 0; padding: .75rem .2rem; }
 }
 
 @media (max-width: 640px) {
