@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import LaunchRow from "../components/LaunchRow";
 import "../LaunchLab.css";
-import { useAlgorand } from "../hooks/useAlgorand";
+import { IS_MAINNET, useAlgorand } from "../hooks/useAlgorand";
 import { usePeraWallet } from "../hooks/usePeraWallet";
 import { CANCEL_DELAY_ROUNDS, launchNetwork } from "../launchpad/config";
 import { clearDirectoryCache, loadMyLaunches } from "../launchpad/directory";
 import { buildCancelGroup, buildClaimLpGroup, buildVestigeGroup } from "../launchpad/launchpadClient";
+import { vestigeManagerUrl } from "../launchpad/links";
 import { simulateSignerGroup } from "../launchpad/simulation";
 
 function friendly(cause) {
@@ -99,6 +100,11 @@ export default function MyLaunchesPage({ active }) {
                       {busy === `claim-${id}` ? "Working…" : "Claim my LP"}
                     </button>
                   ) : null}
+                  {IS_MAINNET && item.status === 2n && item.vestigeGranted === 1n ? (
+                    <a className="af-btn-ghost link-button" href={vestigeManagerUrl(item.assetId)} target="_blank" rel="noopener noreferrer">
+                      Edit on Vestige <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : null}
                   {item.status === 2n && item.vestigeGranted === 0n ? (
                     <button className="af-btn-ghost" disabled={Boolean(busy)} onClick={() => act("Vestige access", `vestige-${id}`, () => buildVestigeGroup({ ...base, assetId: item.assetId }))}>
                       {busy === `vestige-${id}` ? "Working…" : "Grant Vestige access"}
@@ -108,6 +114,9 @@ export default function MyLaunchesPage({ active }) {
               );
             })}
           </ol>
+          {IS_MAINNET && state.items.some((item) => item.status === 2n) ? (
+            <p className="field-hint">After launch you can add a logo, description and links to your token on Vestige.</p>
+          ) : null}
         </>
       )}
     </section>
