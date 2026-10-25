@@ -49,6 +49,14 @@ describe("TokenBadge", () => {
     expect(screen.getByText("EX")).toBeInTheDocument();
   });
 
+  it("loads the big logo at the top of a token page at once, and the small card logos lazily", () => {
+    const { unmount } = render(<TokenBadge assetId={5n} unit="EXM" name="Example" size="lg" image="https://ipfs.vestigelabs.org/ipfs/Qm" />);
+    expect(document.querySelector("img")).toHaveAttribute("loading", "eager");
+    unmount();
+    render(<TokenBadge assetId={5n} unit="EXM" name="Example" image="https://ipfs.vestigelabs.org/ipfs/Qm" />);
+    expect(document.querySelector("img")).toHaveAttribute("loading", "lazy");
+  });
+
   it("is a coloured mark when there is no logo", () => {
     render(<TokenBadge assetId={5n} unit="EXM" name="Example" />);
     expect(document.querySelector("img")).toBeNull();
