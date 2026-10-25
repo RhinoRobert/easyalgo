@@ -10,6 +10,9 @@ import {
   buildClaimLpGroup,
   buildLaunchFinishGroup,
   buildLaunchStartGroup,
+  buildOptInGroup,
+  buildReleaseAllocationGroup,
+  buildReleaseCancelledPnetGroup,
   buildVestigeGroup,
   readLaunchSnapshot,
   verifyCompletedLaunch,
@@ -157,4 +160,34 @@ test("a launch that cannot finish is cancelled in one approval after the delay",
   const holdings = (await algod.accountInformation(user.address).do()).assets;
   const held = holdings.find((h) => BigInt(h.assetId) === assetId);
   assert.equal(held.amount, form.totalRaw / 2n);
+});
+
+test("the platform releases its LP allocation and deferred PNET with the app's builders; nobody else can", { skip }, async () => {
+  const { algod, config, account } = context();
+  const user = account(fx.users[3]);
+  const platform = account(fx.platform);
+  const quote = await quoteFor(algod, config, form.totalRaw);
+  const assetId = assetIdFromCreateConfirmation(await run(
+    algod, await buildLaunchStartGroup({ algodClient: algod, config, wallet: user.address, form: { ...form, name: "Platform", unitName: "PLT" }, quote }), {}, user,
+  ));
+  const pool = await readPool({ algodClient: algod, validatorAppId: config.tinymanAppId, assetA: assetId, assetB: config.pnetAssetId });
+  const finish = await buildLaunchFinishGroup({ algodClient: algod, config, wallet: user.address, assetId, pool, grantVestige: true });
+  await run(algod, finish.entries, finish.presigned, user);
+  const record = (await readLaunchSnapshot({ algodClient: algod, config, wallet: user.address, assetId })).launch;
+
+  // someone who is not the platform authority is refused by the contract (the page's disabled buttons are only a convenience)
+  await assert.rejects(
+    simulateSignerGroup(algod, await buildReleaseAllocationGroup({
+      algodClient: algod, config, wallet: user.address, launchAssetId: assetId, holdingAssetId: record.lpAssetId, receiver: user.address, amount: record.platformLp,
+    })),
+    /assert failed/, // the contract's own check (the bytecode carries no message text; the Python suite asserts the exact reason)
+  );
+
+  await run(algod, await buildOptInGroup({ algodClient: algod, wallet: platform.address, assetId: record.lpAssetId }), {}, platform);
+  await run(algod, await buildReleaseAllocationGroup({
+    algodClient: algod, config, wallet: platform.address, launchAssetId: assetId, holdingAssetId: record.lpAssetId, receiver: platform.address, amount: record.platformLp,
+  }), {}, platform);
+  const held = (await algod.accountInformation(platform.address).do()).assets.find((h) => BigInt(h.assetId) === BigInt(record.lpAssetId));
+  assert.equal(held.amount, record.platformLp);
+  await assert.rejects(simulateSignerGroup(algod, await buildReleaseCancelledPnetGroup({ algodClient: algod, config, wallet: platform.address, launchAssetId: assetId })), /assert failed/);
 });

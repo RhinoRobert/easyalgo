@@ -379,6 +379,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
         </p>
         <div className="instant-badges">
           <span className="instant-network">{launchNetwork.label}</span>
+          <span className="instant-prototype">Beta</span>
           <span className="instant-prototype">Contract-enforced · resumable · no loose creator ASA</span>
         </div>
       </div>

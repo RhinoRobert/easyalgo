@@ -32,7 +32,7 @@ half of the PNET back (the other half belongs to the platform wallet).
 
 **In scope (please focus here):** `contracts/launchpad_v3/contract.py`, and how it uses Tinyman v2, ARC-54 and Vestige.
 
-**Secondary:** the group builders `src/launchpad/launchpadClient.js`, `src/launchpad/tinymanAdapter.js`, the unsigned deployment tooling `contracts/launchpad_v3/deploy.py`,
+**Secondary:** the website's read-only views (src/launchpad/directory.js: recent, popular and wallet launches, and the operations page, whose release buttons build calls only the platform wallet can make), the group builders `src/launchpad/launchpadClient.js`, `src/launchpad/tinymanAdapter.js`, the unsigned deployment tooling `contracts/launchpad_v3/deploy.py`,
 and the build and hosting pipeline (`.github/workflows/pages.yml`, `docs/CLOUDFLARE_SETUP.md`).
 
 **Out of scope:** Tinyman, ARC-54, Vestige and Pera Wallet themselves (we only rely on them); the legacy contract 3609729732; `contracts/launchpad_v2/` (an earlier version kept only as a
@@ -97,6 +97,11 @@ group-position assumption.
 
 ## 8. Known limitations (we know about these)
 
+* **Minimum supply (found by our own re-review, 2026-10-25).** `launch_start` accepts a supply of 2,000 base units or more, but Tinyman v2 refuses a first deposit of less than 1,000,000 base units
+  of either asset. A launch below 1,000,000 therefore starts but can never finish; the launcher must cancel and gets half of the token and PNET back (losing half of the PNET bought). The website
+  refuses supplies under one whole token, and `test_supply_below_tinyman_minimum_starts_but_cannot_finish_and_cancel_recovers` pins the contract's behaviour. We did not change the contract for this
+  (it would need a redeploy); please tell us if you think it should be.
+* **`initialize` is not restricted to the platform account.** Anyone could have called it first, but it needed an exact 0.5 ALGO payment and ran once; it already ran on MainNet (`init` = 1), so this is moot for the deployed app.
 * **No content rules on names.** `launch_start` checks only lengths (name ≤ 32, unit ≤ 8, URL ≤ 96 bytes), not character sets. Anyone can launch a token called "USDC". The website shows the contract's data; there is no moderation.
 * **One source pool.** PNET is bought from one pinned pool. Thin liquidity makes launches fail (refused, no loss).
 * **Sandwiching** of the 1 ALGO swap is possible within the 1% slippage floor (about 0.01 ALGO).

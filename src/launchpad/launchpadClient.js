@@ -11,13 +11,13 @@ import { buildBootstrapTxns, signWithPoolLogicSig } from "./tinymanAdapter.js";
 
 const encoder = new TextEncoder();
 const ZERO_ADDRESS = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ";
-const PENDING_TYPE = algosdk.ABIType.from("(uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[])");
+export const PENDING_TYPE = algosdk.ABIType.from("(uint64,uint64,uint64,uint64,uint64,uint64,uint64,byte[],byte[])");
 // launcher, asset, total, status, created, swap, terminal, pool, lp, seed, burned, creatorLp, creatorLpClaimed, platformLp,
 // five cancellation amounts, vestigeGranted, vestigeFunding, five 32-byte transaction ids (must match contract.py's LaunchRecord).
-const LAUNCH_TYPE = algosdk.ABIType.from(
+export const LAUNCH_TYPE = algosdk.ABIType.from(
   `(address,${Array(6).fill("uint64").join(",")},address,${Array(6).fill("uint64").join(",")},${Array(7).fill("uint64").join(",")},${Array(5).fill("byte[]").join(",")})`,
 );
-const ALLOCATION_TYPE = algosdk.ABIType.from("(uint64,uint64,uint64,uint64)");
+export const ALLOCATION_TYPE = algosdk.ABIType.from("(uint64,uint64,uint64,uint64)");
 const UINT64_TYPE = algosdk.ABIType.from("uint64");
 const STRING_TYPE = algosdk.ABIType.from("string");
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -28,6 +28,9 @@ const SIG_BUDGET = "budget()void";
 const SIG_CLAIM = "claim_creator_lp(axfer,uint64)void";
 const SIG_CANCEL = "cancel_launch(uint64)void";
 const SIG_VESTIGE = "grant_vestige_access(pay,uint64)void";
+const SIG_RELEASE_ALLOCATION = "release_platform_allocation(uint64,address,uint64)uint64";
+const SIG_RELEASE_PNET = "release_cancelled_pnet(uint64)uint64";
+const RELEASE_FEE = 3_000n;
 
 // Minimum fees measured against the real Tinyman, ARC-54 and Vestige programs (contracts/tests), plus one spare transaction fee.
 export const START_FEE = 6_000n;
@@ -344,6 +347,59 @@ export async function buildVestigeGroup({ algodClient, config, wallet, assetId }
   return signerGroup(algosdk.assignGroupID([funding, call]), wallet);
 }
 
+// -- platform authority actions (the contract accepts these only from the hardcoded platform wallet) ---------------------------------
+
+export async function buildOptInGroup({ algodClient, wallet, assetId }) {
+  const params = await algodClient.getTransactionParams().do();
+  const optIn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+    sender: wallet,
+    receiver: wallet,
+    assetIndex: Number(assetId),
+    amount: 0n,
+    suggestedParams: pinnedParams(params, 1_000),
+    note: encoder.encode("PNET Launchpad v3 platform opt-in"),
+  });
+  return signerGroup([optIn], wallet);
+}
+
+/** Pay a recorded platform allocation (platform LP, or the platform's half of a cancelled launch's token) to `receiver`. */
+export async function buildReleaseAllocationGroup({ algodClient, config, wallet, launchAssetId, holdingAssetId, receiver, amount }) {
+  const params = await algodClient.getTransactionParams().do();
+  const call = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: Number(config.launchpadAppId),
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [
+      selector(SIG_RELEASE_ALLOCATION),
+      encodeUint64(launchAssetId),
+      algosdk.decodeAddress(receiver).publicKey,
+      encodeUint64(amount),
+    ],
+    accounts: [receiver],
+    foreignAssets: [Number(holdingAssetId)],
+    boxes: boxesFor(allocationBoxName(launchAssetId), launchBoxName(launchAssetId)),
+    suggestedParams: pinnedParams(params, RELEASE_FEE),
+    note: encoder.encode("PNET Launchpad v3 release platform allocation"),
+  });
+  return signerGroup([call], wallet);
+}
+
+/** Pay PNET the platform was owed from a cancelled launch (deferred when the platform was not opted in at the time). */
+export async function buildReleaseCancelledPnetGroup({ algodClient, config, wallet, launchAssetId }) {
+  const params = await algodClient.getTransactionParams().do();
+  const call = algosdk.makeApplicationCallTxnFromObject({
+    sender: wallet,
+    appIndex: Number(config.launchpadAppId),
+    onComplete: algosdk.OnApplicationComplete.NoOpOC,
+    appArgs: [selector(SIG_RELEASE_PNET), encodeUint64(launchAssetId)],
+    foreignAssets: [Number(config.pnetAssetId)],
+    boxes: boxesFor(launchBoxName(launchAssetId)),
+    suggestedParams: pinnedParams(params, RELEASE_FEE),
+    note: encoder.encode("PNET Launchpad v3 release deferred PNET"),
+  });
+  return signerGroup([call], wallet);
+}
+
 export function assetIdFromCreateConfirmation(confirmation) {
   const inner = confirmation.innerTxns ?? confirmation["inner-txns"] ?? [];
   const created = inner.find((txn) => (txn.assetIndex ?? txn["asset-index"]) != null);
@@ -354,7 +410,7 @@ export function assetIdFromCreateConfirmation(confirmation) {
 
 // -- chain reads --------------------------------------------------------------------------------------------------------------
 
-async function readBox(algodClient, appId, name, abiType) {
+export async function readBox(algodClient, appId, name, abiType) {
   try {
     const response = await algodClient.getApplicationBoxByName(Number(appId), name).do();
     return abiType.decode(response.value);
