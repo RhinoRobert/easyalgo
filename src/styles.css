@@ -524,3 +524,24 @@ button:not(:disabled), .trade-button, .tab { transition: filter .15s, transform 
 .empty-state .trade-button { margin-top: .5rem; }
 .launchlab-page .instant-step small { text-transform: none; }
 @media (pointer: coarse), (max-width: 640px) { .chip { min-height: 44px; padding: .5rem 1rem; } .supply-chips { gap: .5rem; } }
+
+/* the progress card stays in view while the form scrolls (desktop only) */
+@media (min-width: 900px) { .launchlab-page .instant-launch .instant-grid > #launch-details + .instant-card, .instant-launch > .instant-grid > #launch-details + .instant-card { position: sticky; top: 5.5rem; } }
+.token-stats strong { font-size: 1rem; }
+.token-stats > div { align-content: start; }
+
+/* king of the hill: a space after the number, and a compact banner on phones so the launch form is not pushed off the first screen */
+.king-stats span { margin-left: .45rem; }
+@media (max-width: 640px) {
+  .king { gap: .55rem; padding: .85rem .95rem; margin-bottom: 1rem; }
+  .king-stats { padding-bottom: .5rem; }
+  .king-stats strong { font-size: 1.6rem; }
+  .king-main { gap: .35rem; }
+  .king-title strong { font-size: 1.3rem; }
+  .king-tvl { font-size: 1.1rem; }
+  .king-challenge { font-size: .85rem; line-height: 1.4; }
+  .king-links { flex-wrap: nowrap; overflow-x: auto; gap: .9rem; padding-bottom: .15rem; scrollbar-width: none; }
+  .king-links::-webkit-scrollbar { display: none; }
+  .king-links a { white-space: nowrap; }
+  .king .trade-button { width: auto; flex: none; padding: .45rem .9rem; }
+}

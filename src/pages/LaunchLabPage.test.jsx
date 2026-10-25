@@ -46,6 +46,7 @@ describe("LaunchLabPage", () => {
     expect(supply).toHaveValue("1000000");
     fireEvent.click(page.getByRole("button", { name: "1 billion" }));
     expect(supply).toHaveValue("1000000000");
+    expect(page.getByText(/^1,000,000,000 supply/)).toBeInTheDocument();
     fireEvent.click(page.getByRole("button", { name: "1 trillion" }));
     expect(supply).toHaveValue("1000000000000");
     fireEvent.change(page.getByLabelText(/^asset name/i), { target: { value: "Moon Cat" } });

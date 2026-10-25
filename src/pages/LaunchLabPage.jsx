@@ -65,6 +65,12 @@ const SUPPLY_PRESETS = [
   { label: "1 billion", value: "1000000000" },
   { label: "1 trillion", value: "1000000000000" },
 ];
+/** "1000000" as "1,000,000" for the preview; anything that is not a plain number is shown as typed. */
+function prettySupply(text) {
+  const value = Number(String(text).replaceAll(",", ""));
+  return Number.isFinite(value) && value > 0 ? value.toLocaleString("en-US", { maximumFractionDigits: 6 }) : (String(text).trim() || "0");
+}
+
 // What each step's internal status means to the person launching
 const STEP_STATUS = {
   pending: "Not started",
@@ -449,7 +455,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
           <div className="token-preview" aria-label="Preview of your token">
             <TokenBadge assetId={BigInt([...(form.unitName || form.name)].reduce((sum, char) => sum + char.charCodeAt(0), 0))} unit={form.unitName} name={form.name || "?"} />
             <strong>{form.name.trim() || "Your token name"} <span className="launch-unit">{form.unitName.trim() || "TICKER"}</span></strong>
-            <small>{form.displaySupply || "0"} supply · 100% into the pool · 80% of liquidity burned · token cannot be changed after launch</small>
+            <small>{prettySupply(form.displaySupply)} supply · 100% into the pool · 80% of liquidity burned · token cannot be changed after launch</small>
           </div>
           <div className="instant-summary"><span>ALGO swapped</span><strong>Exactly 1 ALGO</strong></div>
           <div className="instant-summary"><span>ASA placed in pool</span><strong>100%</strong></div>
