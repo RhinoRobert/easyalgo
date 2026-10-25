@@ -46,7 +46,7 @@ export function renderTokenPage(detail, { assetTags, builtAt }) {
   ] };
   const webPage = { "@context": "https://schema.org", "@type": "WebPage", name: model.title, description: model.description, url, inLanguage: "en", isPartOf: { "@type": "WebSite", name: SITE.name, url: abs("/") } };
   return `<!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     ${head({ title: model.title, description: model.description, path: model.path, css: [], extra: `${assetTags.join("\n    ")}\n    ${jsonLd(breadcrumb)}\n    ${jsonLd(webPage)}` })}
   </head>

@@ -1,7 +1,25 @@
 // Fine print only: nothing here asks for a click, a tick box or typing before the app works.
 import { GUIDE_LINKS } from "../seoContent";
+import { useSyncExternalStore } from "react";
+import { getTheme, setTheme, subscribeTheme, THEME_CHOICES } from "../launchpad/themePrefs";
 import MainSiteLink from "./MainSiteLink";
 import { AlertsToggle } from "./TradeToasts";
+
+/** Theme: auto (follows the system) / dark / light, as plain links in the footer. */
+export function ThemeToggle() {
+  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => "auto");
+  return (
+    <span className="theme-toggle" role="group" aria-label="Colour theme">
+      Theme:{" "}
+      {THEME_CHOICES.map((choice, index) => (
+        <span key={choice}>
+          {index ? " · " : ""}
+          <button type="button" className="alerts-toggle theme-choice" onClick={() => setTheme(choice)} aria-pressed={theme === choice}>{choice}</button>
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export default function TermsFooter() {
   return (
@@ -13,7 +31,7 @@ export default function TermsFooter() {
       <nav className="terms-line terms-guides" aria-label="Guides">
         <strong>Guides:</strong> {GUIDE_LINKS.map((link, index) => (<span key={link.href}>{index ? " · " : ""}<a href={link.href}>{link.label}</a></span>))}
       </nav>
-      <p className="terms-line"><AlertsToggle /></p>
+      <p className="terms-line"><AlertsToggle /> <ThemeToggle /></p>
       <details>
         <summary>Terms and risks</summary>
         <ol>

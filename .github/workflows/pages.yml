@@ -53,6 +53,7 @@ jobs:
           test -f dist/og-image.png
           test -f dist/algorand-launchpad/index.html
           test -f dist/faq/index.html
+          test -f dist/theme.js
           test -f dist/404.html
           test -f dist/feed.xml
           test "$(ls dist/token/*/index.html | wc -l)" -ge 1

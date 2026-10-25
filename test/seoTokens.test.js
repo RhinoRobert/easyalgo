@@ -53,7 +53,7 @@ test("whatever a token is called, it can not inject markup into its page", () =>
   assert.ok(!html.includes("<img src=x"), "image tag escaped");
   assert.ok(!html.includes("<b></span>") && html.includes("&lt;b&gt;"), "the ticker is escaped too");
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
-  assert.equal((html.match(/<script/g) ?? []).length, 1 + 2, "only the app script and the two structured-data blocks");
+  assert.equal((html.match(/<script/g) ?? []).length, 1 + 2 + 1, "only the app script, the two structured-data blocks and the theme script");
 });
 
 test("a very long name is shortened in the title and description, not allowed to overflow them", () => {

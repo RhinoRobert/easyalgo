@@ -49,7 +49,7 @@ test("each static page has one h1, a canonical URL, valid structured data and re
     assert.ok(jsonLdBlocks(page.html).length >= 2, `${page.path} structured data`);
     assert.ok(text(page.html).split(" ").length >= 380, `${page.path} has too little text`);
     assert.match(page.html, /og:image" content="https:\/\/easyalgo\.org\/og-image\.png"/);
-    assert.ok(!/<script(?![^>]*ld\+json)/.test(page.html), `${page.path} must not need scripts`);
+    assert.ok(!/<script(?![^>]*(?:ld\+json|src="\/theme\.js"))/.test(page.html), `${page.path} must not need scripts`);
   }
   const notFound = notFoundHtml(CSS);
   assert.match(notFound, /noindex/);

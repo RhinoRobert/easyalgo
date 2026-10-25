@@ -71,3 +71,8 @@ results are mostly forum posts and project pages, so a focused page has a realis
 * Old-style token links (`/#token/...`) still work inside the app but can not be indexed, because search engines ignore `#`. Every launched token now also has a real page at `/token/<asset id>/` (see below); that is the address to share.
 * The main script bundle is large (about 870 kB), which slows the first load on phones. Splitting the wallet library out would help speed scores.
 * Older commits in the public repository still contain a mention of another project in a test comment (history was not rewritten).
+
+## Look and feel (2026-10-25)
+
+* The FAQ is native `<details>` accordions on the static pages and in the app (no script needed, crawlers still read every answer).
+* Colours are theme tokens in `src/styles.css`. Dark is the default; light follows the visitor's system setting, and the footer has Theme: auto / dark / light (stored in this browser only). `public/theme.js` applies a saved choice before first paint; it is an external file so the content security policy needs no inline-script exception. `test/theme.test.js` keeps the two light blocks identical and every token defined.

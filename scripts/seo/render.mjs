@@ -31,8 +31,10 @@ export function head({ title, description, path, type = "website", css, extra = 
   const url = abs(path);
   return `<meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#08071a" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#08071a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3f6fb" media="(prefers-color-scheme: light)" />
+    <script src="/theme.js"></script>
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
     <meta name="robots" content="${robots}" />
@@ -80,7 +82,7 @@ const cta = () => `<p class="seo-cta"><a class="trade-button" href="/#launch">La
 
 function pageShell({ title, description, path, type, css, extra, body, breadcrumb }) {
   return `<!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     ${head({ title, description, path, type, css, extra })}
   </head>
@@ -134,7 +136,7 @@ export function renderFaqPage(css) {
     body: `<article>
       <h1>${escapeHtml(FAQ_PAGE.h1)}</h1>
       <p class="seo-lead">${inline(FAQ_PAGE.lead)}</p>
-      <div class="seo-faq">${FAQ.map((item) => `<section><h2>${escapeHtml(item.q)}</h2><p>${inline(item.a)}</p></section>`).join("\n      ")}</div>
+      <div class="seo-faq">${FAQ.map((item) => `<details><summary>${escapeHtml(item.q)}</summary><p>${inline(item.a)}</p></details>`).join("\n      ")}</div>
       ${cta()}
       <p class="seo-updated">Last updated ${SITE.updated}.</p>
       </article>`,
@@ -156,7 +158,7 @@ export function renderHomePrerender() {
       <ul class="seo-facts">${HOME.facts.map((fact) => `<li>${escapeHtml(fact)}</li>`).join("")}</ul>
       <p class="seo-cta"><a class="trade-button" href="/#launch">Launch a token</a> <a class="trade-button trade-button--ghost" href="/#recent">See recent launches</a></p>
       <h2>Frequently asked questions</h2>
-      <div class="seo-faq">${FAQ.map((item) => `<section><h3>${escapeHtml(item.q)}</h3><p>${inline(item.a)}</p></section>`).join("")}</div>
+      <div class="seo-faq">${FAQ.map((item) => `<details><summary>${escapeHtml(item.q)}</summary><p>${inline(item.a)}</p></details>`).join("")}</div>
       <h2>Guides</h2>
       ${guideList()}
     </section></main>
@@ -190,7 +192,7 @@ export const robotsTxt = () => `User-agent: *\nAllow: /\n\nSitemap: ${abs("/site
  */
 export function notFoundHtml(css, assetTags = []) {
   return `<!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     ${head({ title: HOME.title, description: HOME.description, path: "/", css: assetTags.length ? [] : css, robots: "noindex,follow", extra: assetTags.join("\n    ") })}
   </head>
