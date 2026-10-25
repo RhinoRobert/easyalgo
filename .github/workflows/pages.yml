@@ -1,0 +1,58 @@
+# Builds the app and publishes it to GitHub Pages (https://easyalgo.org).
+# Pages used to serve the repository's source files, which a browser cannot run; this publishes the built `dist/` instead.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Public network identifiers only; nothing here is a secret. They are compiled into the page.
+      VITE_NETWORK: mainnet
+      VITE_LAUNCHPAD_APP_ID: "3753531793"
+      # MainNet launching stays OFF until the repository variable ENABLE_MAINNET_LAUNCHPAD is set to
+      # I_ACCEPT_CONTROLLED_MAINNET_CANARY (Settings > Secrets and variables > Actions > Variables). Unset = read-only page.
+      VITE_ENABLE_MAINNET_LAUNCHPAD: ${{ vars.ENABLE_MAINNET_LAUNCHPAD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Tests
+        run: npm test
+      - run: npm run build
+      - name: Refuse to publish source files or the deployment console
+        run: |
+          test -f dist/index.html
+          ! grep -q "/src/main.jsx" dist/index.html
+          test -f dist/CNAME
+          ! grep -rq "LOCAL-ONLY DEPLOYMENT GATE" dist/assets
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
