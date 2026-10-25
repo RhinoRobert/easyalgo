@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import algosdk from "algosdk";
 import LaunchpadDeploymentConsole from "../components/LaunchpadDeploymentConsole";
 import { usePeraWallet } from "../hooks/usePeraWallet";
+import { useWakeLock } from "../hooks/useWakeLock";
 import "../LaunchLab.css";
 import {
   explorerAddrUrl,
@@ -105,6 +106,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
   const [round, setRound] = useState(0);
   const issues = useMemo(() => configurationIssues(), []);
   const step = session ? nextPendingStep(session) : "quote";
+  useWakeLock(busy);
 
   useEffect(() => {
     if (launchNetwork.launchpadAppId === 0n) return undefined;

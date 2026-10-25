@@ -1,4 +1,5 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import MainSiteLink from "./MainSiteLink";
 
 export const TABS = [
   { id: "launch", label: "Launch" },
@@ -21,13 +22,19 @@ export function useActiveTab() {
 }
 
 export default function Tabs({ active }) {
+  const nav = useRef(null);
+  // On a phone the row scrolls sideways: bring the chosen tab into view.
+  useEffect(() => {
+    nav.current?.querySelector("[aria-current='page']")?.scrollIntoView?.({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [active]);
   return (
-    <nav className="tabs" aria-label="Sections">
+    <nav className="tabs" aria-label="Sections" ref={nav}>
       {TABS.map((tab) => (
         <a key={tab.id} href={`#${tab.id}`} className={`tab${active === tab.id ? " tab--active" : ""}`} aria-current={active === tab.id ? "page" : undefined}>
           {tab.label}
         </a>
       ))}
+      <MainSiteLink className="tab tab--external mobile-only">Main website</MainSiteLink>
     </nav>
   );
 }

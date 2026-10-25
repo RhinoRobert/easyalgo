@@ -214,3 +214,56 @@ a { color: #5eead4; }
 .main-site-link:hover, .main-site-link:focus-visible { color: var(--text); border-color: var(--border-strong); background: rgba(255, 255, 255, .04); }
 .terms .main-site-link { padding: 0; font-size: inherit; color: #5eead4; text-decoration: underline; }
 @media (max-width: 640px) { .shell-actions { gap: .4rem; } .shell-header .main-site-link { font-size: .78rem; padding: .3rem .4rem; } }
+
+/* ---- phones and touch screens ---- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, a, summary, input { touch-action: manipulation; }
+.tabs .mobile-only { display: none; }
+.tabs { scrollbar-width: none; scroll-snap-type: x proximity; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { scroll-snap-align: center; white-space: nowrap; }
+.shell-header { padding-top: max(.75rem, env(safe-area-inset-top)); padding-left: max(clamp(1rem, 3vw, 2rem), env(safe-area-inset-left)); padding-right: max(clamp(1rem, 3vw, 2rem), env(safe-area-inset-right)); }
+.terms { padding-bottom: max(0rem, env(safe-area-inset-bottom)); }
+
+/* fingers need 44 px targets, and inputs under 16 px make iPhones zoom the page in on focus */
+@media (pointer: coarse) {
+  .launchlab-page .instant-card input { font-size: 16px; min-height: 48px; }
+  .launchlab-page .af-cta-btn, .launchlab-page .af-btn-ghost, .wallet-connect, .wallet-account, .tab, .main-site-link, .wallet-menu button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .launchlab-page .af-cta-btn { width: 100%; }
+  .wallet-menu button { justify-content: flex-start; }
+  .terms summary { padding: .7rem 0; }
+  .terms .main-site-link { display: inline; min-height: 0; padding: .5rem .15rem; }
+}
+
+@media (max-width: 640px) {
+  .shell-header { padding-bottom: .6rem; gap: .5rem; flex-wrap: nowrap; }
+  .shell-brand { min-width: 0; gap: .55rem; }
+  .shell-brand strong { font-size: .98rem; white-space: nowrap; }
+  .shell-mark { width: 2rem; height: 2rem; font-size: 1rem; border-radius: .55rem; }
+  .shell-actions { flex: 0 0 auto; }
+  .shell-header .main-site-link { display: none; }
+  .tabs .mobile-only { display: inline-flex; }
+  .tabs { flex-wrap: nowrap; overflow-x: auto; padding-left: max(.75rem, env(safe-area-inset-left)); padding-right: max(.75rem, env(safe-area-inset-right)); mask-image: linear-gradient(90deg, transparent 0, #000 .8rem, #000 calc(100% - 1.4rem), transparent 100%); }
+  .tab { padding: .6rem .8rem; }
+  .tab--external { color: #5eead4; }
+
+  .launchlab-page { padding: 1rem max(.85rem, env(safe-area-inset-left)) 3rem; }
+  .launchlab-page .instant-hero { margin-bottom: 1.1rem; }
+  .launchlab-page .instant-hero h1 { font-size: 1.85rem; }
+  .launchlab-page .instant-hero p { font-size: .95rem; line-height: 1.55; }
+  .launchlab-page .instant-card, .launchlab-page .instant-lifecycle { padding: 1rem; border-radius: .9rem; }
+  .launchlab-page .instant-summary { flex-wrap: wrap; gap: .15rem .75rem; }
+  .launchlab-page .instant-summary strong { text-align: left; }
+  .launchlab-page .instant-badges { gap: .4rem; }
+  .launchlab-page .instant-receipt { overflow-wrap: anywhere; }
+  .launchlab-page .instant-warning, .launchlab-page .instant-error { font-size: .9rem; }
+  .launchlab-page .instant-warning button, .launchlab-page .instant-error button { display: block; width: 100%; }
+  .launch-row { padding: .85rem .9rem; }
+  .launch-actions .af-btn-ghost, .launch-actions .link-button { flex: 1 1 9rem; text-align: center; }
+  .ops-list li { flex-direction: column; align-items: stretch; }
+  .ops-list .af-btn-ghost { width: 100%; white-space: normal; }
+  .directory-bar { flex-wrap: wrap; }
+  .wallet { gap: .4rem; }
+  .wallet-account { max-width: 11.5rem; }
+  .wallet-menu { position: fixed; left: .75rem; right: .75rem; top: auto; bottom: max(.75rem, env(safe-area-inset-bottom)); min-width: 0; max-width: none; }
+}
