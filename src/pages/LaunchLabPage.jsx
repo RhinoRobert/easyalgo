@@ -39,6 +39,7 @@ import {
   verifyCompletedLaunch,
 } from "../launchpad/launchpadClient";
 import {
+  clearSession,
   confirmStep,
   createLaunchSession,
   LAUNCH_STEPS,
@@ -140,6 +141,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
       config: launchNetwork,
       wallet: account,
       assetId: pendingReconciled.assetId,
+      scanDirectory: false, // a session that has no asset yet must not adopt the wallet's previous finished launch
     });
     const assetId = snapshot.pending?.assetId ?? snapshot.launch?.assetId ?? pendingReconciled.assetId;
     let pool = { exists: false };
@@ -356,6 +358,8 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
   }));
 
   const startAnother = () => {
+    clearSession(launchNetworkName, account);
+    setForm({ name: "", unitName: "", displaySupply: "1000000", url: "" });
     setSession(null);
     setChain(null);
     setVerification(null);

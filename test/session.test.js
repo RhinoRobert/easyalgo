@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   confirmStep,
   createLaunchSession,
+  clearSession,
   loadSession,
   nextPendingStep,
   reconcileSessionFromChain,
@@ -50,4 +51,22 @@ test("chain state alone reconstructs the session (no local storage needed)", () 
   });
   assert.equal(cancelled.terminalStatus, "cancelled");
   assert.equal(nextPendingStep(cancelled), null);
+});
+
+test("a new launch never adopts a finished launch of the same wallet (the 'Prepare another launch' bug)", () => {
+  const next = { ...createLaunchSession({ network: "testnet", wallet: "WALLET", form: {}, quote: {} }), assetId: 7n };
+  const oldLaunch = { assetId: 5n, status: 2n, pnetSeed: 9n, poolAddress: "POOL", lpAssetId: 6n, createTxId: "S", createdRound: 3n, terminalTxId: "F", terminalRound: 4n };
+  const out = reconcileSessionFromChain(next, { launch: oldLaunch, pending: { assetId: 5n, pnetOutput: 1n, createTxId: "S", createdRound: 3n } });
+  assert.equal(out.terminalStatus, null);
+  assert.equal(nextPendingStep(out), "start");
+  assert.equal(out.assetId, 7n);
+});
+
+test("clearSession forgets only that wallet's saved launch", () => {
+  const storage = { data: new Map(), getItem(k) { return this.data.get(k) ?? null; }, setItem(k, v) { this.data.set(k, v); }, removeItem(k) { this.data.delete(k); } };
+  saveSession(createLaunchSession({ network: "testnet", wallet: "A", form: {}, quote: {} }), storage);
+  saveSession(createLaunchSession({ network: "testnet", wallet: "B", form: {}, quote: {} }), storage);
+  clearSession("testnet", "A", storage);
+  assert.equal(loadSession("testnet", "A", storage), null);
+  assert.ok(loadSession("testnet", "B", storage));
 });

@@ -17,6 +17,7 @@ import {
   launchBoxName,
   pendingBoxName,
   readLaunchDirectory,
+  readLaunchSnapshot,
   vestigeManagerBoxName,
 } from "../src/launchpad/launchpadClient.js";
 import { LAUNCH_START_FUNDING } from "../src/launchpad/config.js";
@@ -184,4 +185,16 @@ test("the start builder refuses a supply Tinyman could not take", async () => {
   await assert.rejects(buildLaunchStartGroup({
     algodClient: baseClient, config, wallet, form: { name: "Tiny", unitName: "TNY", totalRaw: 999_999n, url: "" }, quote: { createdRound: 1, minimumPnet: 1n },
   }), /at least 1 whole token/);
+});
+
+test("a launch that has not started reads only the unfinished-launch box, never the wallet's older finished launches", async () => {
+  let directoryReads = 0;
+  const client = {
+    getApplicationByID: () => ({ do: async () => { directoryReads += 1; return { params: { globalState: [{ key: new TextEncoder().encode("total"), value: { type: 2, uint: 5n } }] } }; } }),
+    getApplicationBoxByName: () => ({ do: async () => { throw Object.assign(new Error("box not found"), { status: 404 }); } }),
+  };
+  const snapshot = await readLaunchSnapshot({ algodClient: client, config: { launchpadAppId: 999n }, wallet, assetId: null, scanDirectory: false });
+  assert.equal(snapshot.pending, null);
+  assert.equal(snapshot.launch, null);
+  assert.equal(directoryReads, 0, "the launch directory must not be scanned");
 });

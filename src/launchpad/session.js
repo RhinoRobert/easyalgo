@@ -44,6 +44,10 @@ export function saveSession(session, storage = globalThis.localStorage) {
   return next;
 }
 
+export function clearSession(network, wallet, storage = globalThis.localStorage) {
+  try { storage.removeItem(sessionKey(network, wallet)); } catch { /* storage unavailable: nothing to clear */ }
+}
+
 export function loadSession(network, wallet, storage = globalThis.localStorage) {
   const raw = storage.getItem(sessionKey(network, wallet));
   if (!raw) return null;
@@ -97,8 +101,10 @@ export async function reconcilePendingTransactions(session, algodClient) {
 
 export function reconcileSessionFromChain(session, snapshot) {
   let current = { ...session };
-  const pending = snapshot?.pending ?? null;
-  const launch = snapshot?.launch ?? null;
+  // A chain record only counts if it is this session's own launch (or the session does not know its asset yet and is being recovered).
+  const mine = (record) => record && (current.assetId == null || BigInt(record.assetId) === BigInt(current.assetId));
+  const pending = mine(snapshot?.pending) ? snapshot.pending : null;
+  const launch = mine(snapshot?.launch) ? snapshot.launch : null;
   if (pending) {
     // A pending record only exists after the start call: the token is created and the PNET is escrowed.
     current.assetId = pending.assetId;

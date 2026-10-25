@@ -525,7 +525,12 @@ export function decodeLaunch(values) {
   };
 }
 
-export async function readLaunchSnapshot({ algodClient, config, wallet, assetId = null }) {
+/**
+ * Reads a wallet's launch state from the chain. With no ssetId it reads the unfinished launch (the wallet's pending box). scanDirectory additionally looks
+ * up the wallet's newest finished launch, which is what recovery wants when the browser has forgotten everything, but it must be off for a launch that has not
+ * started yet: otherwise the previous finished launch is mistaken for the new one.
+ */
+export async function readLaunchSnapshot({ algodClient, config, wallet, assetId = null, scanDirectory = true }) {
   const pendingValues = await readBox(
     algodClient, config.launchpadAppId, pendingBoxName(wallet), PENDING_TYPE,
   );
@@ -533,8 +538,10 @@ export async function readLaunchSnapshot({ algodClient, config, wallet, assetId 
   let resolvedAssetId = assetId ?? pending?.assetId ?? null;
   let launch = null;
   if (resolvedAssetId == null) {
-    launch = await findLatestLaunchForWallet({ algodClient, config, wallet });
-    resolvedAssetId = launch?.assetId ?? null;
+    if (scanDirectory) {
+      launch = await findLatestLaunchForWallet({ algodClient, config, wallet });
+      resolvedAssetId = launch?.assetId ?? null;
+    }
   } else {
     const launchValues = await readBox(
       algodClient, config.launchpadAppId, launchBoxName(resolvedAssetId), LAUNCH_TYPE,
