@@ -1,7 +1,10 @@
 // Fine print only: nothing here asks for a click, a tick box or typing before the app works.
+import MainSiteLink from "./MainSiteLink";
+
 export default function TermsFooter() {
   return (
     <footer className="terms" id="terms">
+      <p className="terms-line">A <MainSiteLink>TestedProfit</MainSiteLink> project.</p>
       <p className="terms-line">
         Beta. Tokens launched here are permanent and nothing on this site is financial, legal or tax advice. Use only amounts you can afford to lose.
       </p>

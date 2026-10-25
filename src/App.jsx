@@ -6,6 +6,7 @@ import OperationsPage from "./pages/OperationsPage";
 import WalletButton from "./components/WalletButton";
 import Tabs, { useActiveTab } from "./components/Tabs";
 import TermsFooter from "./components/TermsFooter";
+import MainSiteLink from "./components/MainSiteLink";
 
 // There is no router and no backend: the address fragment picks the view and every view stays mounted (hidden when not shown), so switching tabs
 // never interrupts a launch that is waiting for the wallet. The wallet (Pera) signs every transaction group.
@@ -24,7 +25,10 @@ export default function App() {
             <span>Algorand asset + Tinyman liquidity launcher</span>
           </div>
         </div>
-        <WalletButton />
+        <div className="shell-actions">
+          <MainSiteLink />
+          <WalletButton />
+        </div>
       </header>
       <Tabs active={active} />
       <main className="shell-main">

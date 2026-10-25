@@ -13,7 +13,7 @@ unit test keeps this page in step with it. If you change a header, change the JS
 | `Content-Security-Policy` | see below | Only this site's own script may run; connections only to the Algorand API (Algonode) and Pera Wallet; nothing may frame the page |
 | `X-Frame-Options` | `DENY` | Same framing ban for older browsers (clickjacking: tricking a click on a hidden wallet page) |
 | `X-Content-Type-Options` | `nosniff` | Browsers must not guess a file's type |
-| `Referrer-Policy` | `no-referrer` | The page's address is never sent to other sites |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Other sites only ever learn this site's name (never the path or anything after it), and only over HTTPS. This is what lets the main website see that visitors came from here |
 | `Permissions-Policy` | camera, microphone, geolocation, payment, usb, serial, bluetooth all off | The app needs none of them |
 | `Strict-Transport-Security` | set with the HSTS switch (step 6), at least 6 months | Browsers only ever use HTTPS for the domain |
 
@@ -83,7 +83,7 @@ Rules → Transform Rules → **Modify Response Header** → Create rule. Name i
 |---|---|
 | `X-Frame-Options` | `DENY` |
 | `X-Content-Type-Options` | `nosniff` |
-| `Referrer-Policy` | `no-referrer` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()` |
 | `Content-Security-Policy-Report-Only` | the policy above on one line, directives separated by `; ` (copy it from `deploy/security-headers.json`) |
 

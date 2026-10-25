@@ -207,3 +207,10 @@ a { color: #5eead4; }
   .launch-figures { text-align: left; }
   .tabs { overflow-x: auto; flex-wrap: nowrap; }
 }
+
+/* link back to the main website */
+.shell-actions { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; justify-content: flex-end; }
+.main-site-link { color: var(--text-secondary); text-decoration: none; font-weight: 700; font-size: .85rem; padding: .35rem .6rem; border-radius: .5rem; border: 1px solid transparent; white-space: nowrap; }
+.main-site-link:hover, .main-site-link:focus-visible { color: var(--text); border-color: var(--border-strong); background: rgba(255, 255, 255, .04); }
+.terms .main-site-link { padding: 0; font-size: inherit; color: #5eead4; text-decoration: underline; }
+@media (max-width: 640px) { .shell-actions { gap: .4rem; } .shell-header .main-site-link { font-size: .78rem; padding: .3rem .4rem; } }
