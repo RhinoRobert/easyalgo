@@ -6,10 +6,11 @@ vi.mock("../hooks/useAlgorand", () => ({
   IS_MAINNET: true,
   explorerAssetUrl: (id) => `https://explorer.example/asset/${id}`,
   explorerAddrUrl: (address) => `https://explorer.example/address/${address}`,
+  explorerTxUrl: (id) => `https://explorer.example/tx/${id}`,
 }));
 import LaunchRow from "./LaunchRow";
 
-const base = { assetId: 3753721447n, name: "Example", unit: "EXM", launcher: "ABCDEFGHIJKLMNOP", tvlMicroAlgo: 2_000_000n, url: "" };
+const base = { assetId: 3753721447n, name: "Example", unit: "EXM", launcher: "ABCDEFGHIJKLMNOP", tvlMicroAlgo: 2_000_000n, url: "", burnedLp: 114_184_414_080n, terminalTxId: "FINISHTXID" };
 
 describe("LaunchRow trade button", () => {
   it("links live launches to the token's page on Vestige", () => {
@@ -26,5 +27,20 @@ describe("LaunchRow trade button", () => {
       <LaunchRow item={{ ...base, assetId: 2n, name: "Cancelled", status: 3n }} round={20} />
     </ul>);
     expect(screen.queryByRole("link", { name: /trade/i })).toBeNull();
+  });
+
+  it("links live launches to the transaction that burned 80% of the liquidity tokens", () => {
+    render(<ul><LaunchRow item={{ ...base, status: 2n, poolAddress: "POOL", terminalRound: 10n }} round={20} /></ul>);
+    const link = screen.getByRole("link", { name: /burn lp/i });
+    expect(link).toHaveAttribute("href", "https://explorer.example/tx/FINISHTXID");
+    expect(link.getAttribute("title")).toMatch(/114184\.41408 liquidity tokens/);
+  });
+
+  it("shows no burn link where nothing was burned (cancelled or unfinished launches)", () => {
+    render(<ul>
+      <LaunchRow item={{ ...base, assetId: 2n, name: "Cancelled", status: 3n }} round={20} />
+      <LaunchRow item={{ ...base, assetId: 1n, name: "Pending", status: 1n }} round={20} />
+    </ul>);
+    expect(screen.queryByRole("link", { name: /burn lp/i })).toBeNull();
   });
 });

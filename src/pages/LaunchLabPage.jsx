@@ -472,6 +472,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
             <a href={explorerAssetUrl(session.assetId)} target="_blank" rel="noreferrer">Immutable ASA ↗</a>
             {session.poolAddress && <a href={explorerAddrUrl(session.poolAddress)} target="_blank" rel="noreferrer">Tinyman pool ↗</a>}
             {session.lpAssetId && <a href={explorerAssetUrl(session.lpAssetId)} target="_blank" rel="noreferrer">LP asset ↗</a>}
+            {terminal === "complete" && session.steps.finish?.txId && <a href={explorerTxUrl(session.steps.finish.txId)} target="_blank" rel="noreferrer" title="The transaction that sent 80% of the liquidity tokens to the ARC-54 burn account">Burn LP (80%) ↗</a>}
             {Object.values(session.steps).flatMap((item) => [item.txId, ...(item.transactionIds || [])]).filter(Boolean).map((txId) => (
               <a key={txId} href={explorerTxUrl(txId)} target="_blank" rel="noreferrer">Transaction {txId.slice(0, 8)}… ↗</a>
             ))}

@@ -273,3 +273,6 @@ button, a, summary, input { touch-action: manipulation; }
 .trade-button:hover, .trade-button:focus-visible { filter: brightness(1.08); }
 @media (pointer: coarse) { .trade-button { min-height: 44px; } }
 @media (max-width: 640px) { .launch-figures { grid-template-columns: 1fr; } .trade-button { width: 100%; } }
+
+.launch-meta a.burn-link { color: #fbbf24; }
+

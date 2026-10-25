@@ -1,4 +1,4 @@
-import { IS_MAINNET, explorerAddrUrl, explorerAssetUrl } from "../hooks/useAlgorand";
+import { IS_MAINNET, explorerAddrUrl, explorerAssetUrl, explorerTxUrl } from "../hooks/useAlgorand";
 import { vestigeAssetUrl } from "../launchpad/links";
 import { formatUnits } from "../launchpad/amounts";
 import { roundsAgo, shortAddress } from "../launchpad/format";
@@ -20,6 +20,17 @@ export default function LaunchRow({ item, round, rank, children }) {
         <div className="launch-meta">
           <a href={explorerAssetUrl(item.assetId)} target="_blank" rel="noreferrer noopener">Asset {item.assetId.toString()} ↗</a>
           {item.poolAddress ? <a href={explorerAddrUrl(item.poolAddress)} target="_blank" rel="noreferrer noopener">Pool ↗</a> : null}
+          {finished && item.terminalTxId ? (
+            <a
+              className="burn-link"
+              href={explorerTxUrl(item.terminalTxId)}
+              target="_blank"
+              rel="noreferrer noopener"
+              title={`The transaction that sent ${formatUnits(item.burnedLp)} liquidity tokens (80%) to the ARC-54 burn account, where they can never be withdrawn`}
+            >
+              Burn LP ↗
+            </a>
+          ) : null}
           {item.launcher ? <span title={item.launcher}>by {shortAddress(item.launcher)}</span> : null}
           {finished && item.terminalRound ? <span>{roundsAgo(round, item.terminalRound)}</span> : null}
           {item.url ? <span className="launch-url" title="Written by the token's creator; shown as plain text only">{item.url}</span> : null}
