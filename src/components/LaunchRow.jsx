@@ -1,4 +1,5 @@
-import { explorerAddrUrl, explorerAssetUrl } from "../hooks/useAlgorand";
+import { IS_MAINNET, explorerAddrUrl, explorerAssetUrl } from "../hooks/useAlgorand";
+import { vestigeAssetUrl } from "../launchpad/links";
 import { formatUnits } from "../launchpad/amounts";
 import { roundsAgo, shortAddress } from "../launchpad/format";
 
@@ -29,6 +30,11 @@ export default function LaunchRow({ item, round, rank, children }) {
           <>
             <strong>{formatUnits(item.tvlMicroAlgo)} ALGO</strong>
             <small>in the pool</small>
+            {IS_MAINNET ? (
+              <a className="trade-button" href={vestigeAssetUrl(item.assetId)} target="_blank" rel="noopener noreferrer" aria-label={`Trade ${item.name} on Vestige`}>
+                Trade now <span aria-hidden="true">↗</span>
+              </a>
+            ) : null}
           </>
         ) : (
           <small>{item.status === 3n ? "no pool" : "not live yet"}</small>

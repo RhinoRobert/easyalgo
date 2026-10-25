@@ -267,3 +267,9 @@ button, a, summary, input { touch-action: manipulation; }
   .wallet-account { max-width: 11.5rem; }
   .wallet-menu { position: fixed; left: .75rem; right: .75rem; top: auto; bottom: max(.75rem, env(safe-area-inset-bottom)); min-width: 0; max-width: none; }
 }
+
+/* trade button on live launches */
+.trade-button { display: inline-flex; align-items: center; justify-content: center; gap: .25rem; margin-top: .45rem; padding: .5rem .95rem; border-radius: .65rem; font-weight: 800; font-size: .85rem; text-decoration: none; color: #031c1a; background: linear-gradient(135deg, #2dd4bf, #18a4e0); white-space: nowrap; }
+.trade-button:hover, .trade-button:focus-visible { filter: brightness(1.08); }
+@media (pointer: coarse) { .trade-button { min-height: 44px; } }
+@media (max-width: 640px) { .launch-figures { grid-template-columns: 1fr; } .trade-button { width: 100%; } }
