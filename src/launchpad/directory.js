@@ -15,6 +15,7 @@ import {
 } from "./launchpadClient.js";
 import { mapLimit, poolTvlMicroAlgo, safeText } from "./format.js";
 import { quoteFixedInput } from "./quote.js";
+import { reconcileBooks } from "./reconcile.js";
 import { readTinymanPoolState, readTinymanSourcePool } from "./tinymanAdapter.js";
 
 const CONCURRENCY = 8;
@@ -198,8 +199,13 @@ export async function loadOperations({ algodClient, config }) {
     const values = await readBox(algodClient, config.launchpadAppId, name, PENDING_TYPE);
     const record = decodePending(values);
     if (!record) return null;
-    return { launcher: algosdk.encodeAddress(name.slice(1)), assetId: record.assetId, swapRound: record.swapRound, pnetOutput: record.pnetOutput };
+    return { launcher: algosdk.encodeAddress(name.slice(1)), assetId: record.assetId, totalRaw: record.totalRaw, swapRound: record.swapRound, pnetOutput: record.pnetOutput };
   })).filter(Boolean);
+
+  // every finished or cancelled launch record ("l" + asset id), for checking the books against what the account holds
+  const launchNames = boxNames.filter((name) => String.fromCharCode(name[0]) === "l" && name.length === 9);
+  const launchRecords = (await mapLimit(launchNames, CONCURRENCY, async (name) => decodeLaunch(await readBox(algodClient, config.launchpadAppId, name, LAUNCH_TYPE))))
+    .filter(Boolean);
 
   const allocations = (await mapLimit(allocationNames, CONCURRENCY, async (name) => {
     const values = await readBox(algodClient, config.launchpadAppId, name, ALLOCATION_TYPE);
@@ -219,7 +225,15 @@ export async function loadOperations({ algodClient, config }) {
   const stuck = pendingLaunches.filter((launch) => BigInt(round) - launch.swapRound > BigInt(globals.delay ?? 3000n));
   if (stuck.length) alerts.push(`${stuck.length} launch(es) have been pending longer than the cancel delay.`);
   if (deferredPnet > 0n) alerts.push("PNET is owed to the platform from cancelled launches (use Release deferred PNET).");
+  const books = reconcileBooks({
+    holdings,
+    algo: { amount: BigInt(account.amount), minBalance: BigInt(account.minBalance ?? account["min-balance"] ?? 0) },
+    globals: { reserved: globals.reserved ?? 0n, platpnet: deferredPnet },
+    pending: pendingLaunches, launches: launchRecords, allocations, pnetAssetId: config.pnetAssetId,
+  });
+  for (const failure of books.failing) alerts.push(`The contract's books do not match the chain: ${failure.title}. ${failure.detail}`);
   return {
+    books,
     round,
     appAddress,
     appBalanceMicroAlgo: BigInt(account.amount),

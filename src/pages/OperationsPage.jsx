@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import BooksCheck from "../components/BooksCheck";
 import "../LaunchLab.css";
 import { explorerAddrUrl, explorerAppUrl, explorerAssetUrl, useAlgorand } from "../hooks/useAlgorand";
 import { usePeraWallet } from "../hooks/usePeraWallet";
@@ -149,6 +150,8 @@ export default function OperationsPage({ active }) {
               <div className="instant-summary"><span>Price impact of a launch</span><strong>{(Number(data.oneAlgoSwap.priceImpactBps) / 100).toFixed(2)}% (refused above 5%)</strong></div>
             </div>
           </div>
+
+          <BooksCheck books={data.books} />
 
           <section className="instant-lifecycle">
             <h2>Launches in progress ({data.pendingLaunches.length})</h2>

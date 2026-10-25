@@ -218,13 +218,14 @@ class Launchpad:
     def _composer_call(
         self, atc: AtomicTransactionComposer, signature: str, user: str, user_sk: str, args: list[Any], fee: int,
         boxes: list[bytes], accounts: list[str] | None = None, apps: list[int] | None = None,
-        assets: list[int] | None = None, box_refs: list[tuple[int, bytes]] | None = None,
+        assets: list[int] | None = None, box_refs: list[tuple[int, bytes]] | None = None, rekey_to: str | None = None,
     ) -> None:
         sp = self.dev.params(fee)
         refs = [(0, b) for b in boxes] + (box_refs or [])
         atc.add_method_call(
             self.app_id, Method.from_signature(signature), user, sp, AccountTransactionSigner(user_sk),
             method_args=args, boxes=refs, accounts=accounts or [], foreign_apps=apps or [], foreign_assets=assets or [],
+            rekey_to=rekey_to,
         )
 
     def _run(self, atc: AtomicTransactionComposer) -> Any:
@@ -238,17 +239,22 @@ class Launchpad:
     def start_group(
         self, user: str, user_sk: str, name: str, unit: str, total_raw: int, url: str = "",
         quote_round: int | None = None, minimum_pnet: int = 0, fee: int = 5 * MIN_FEE, funding: int | None = None,
-        budget_calls: int = 0,
+        budget_calls: int = 0, funding_payer: tuple[str, str] | None = None, funding_receiver: str | None = None,
+        funding_close_to: str | None = None, funding_rekey_to: str | None = None, call_rekey_to: str | None = None,
     ) -> AtomicTransactionComposer:
         dev = self.dev
         atc = AtomicTransactionComposer()
-        pay = tx.PaymentTxn(user, dev.params(), self.address, C["LAUNCH_START_FUNDING"] if funding is None else funding)
+        payer_sk, payer = funding_payer or (user_sk, user)  # the attack tests let someone else (or a forged payment) fund the call
+        pay = tx.PaymentTxn(
+            payer, dev.params(), funding_receiver or self.address, C["LAUNCH_START_FUNDING"] if funding is None else funding,
+            close_remainder_to=funding_close_to, rekey_to=funding_rekey_to,
+        )
         quote_round = dev.round() if quote_round is None else quote_round
         self._composer_call(
             atc, M_START, user, user_sk,
-            [TransactionWithSigner(pay, AccountTransactionSigner(user_sk)), name, unit, total_raw, url, quote_round, minimum_pnet],
+            [TransactionWithSigner(pay, AccountTransactionSigner(payer_sk)), name, unit, total_raw, url, quote_round, minimum_pnet],
             fee, [pending_box(user)], accounts=[self.proto.source_pool], apps=[self.proto.tm.app_id],
-            assets=[self.proto.pnet, ALGO],
+            assets=[self.proto.pnet, ALGO], rekey_to=call_rekey_to,
         )
         return atc
 
@@ -342,10 +348,12 @@ class Launchpad:
         )
         return atc
 
-    def release_pnet_group(self, launch_asset_id: int, fee: int = 3 * MIN_FEE) -> AtomicTransactionComposer:
+    def release_pnet_group(self, launch_asset_id: int, fee: int = 3 * MIN_FEE,
+                           sender: tuple[str, str] | None = None) -> AtomicTransactionComposer:
+        sk, addr = sender or (self.admin_sk, self.admin)
         atc = AtomicTransactionComposer()
         self._composer_call(
-            atc, M_RELEASE_PNET, self.admin, self.admin_sk, [launch_asset_id], fee, [launch_box(launch_asset_id)],
+            atc, M_RELEASE_PNET, addr, sk, [launch_asset_id], fee, [launch_box(launch_asset_id)],
             assets=[self.proto.pnet],
         )
         return atc

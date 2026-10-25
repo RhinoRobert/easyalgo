@@ -18,7 +18,7 @@ About 1.16 ALGO in total, about 1.16 of it committed to the contract permanently
 
 ## Before this runbook: the gates that were run
 
-* `contracts/tests` (pytest): 24 end-to-end tests on a private devnet against unchanged copies of the real MainNet Tinyman v2, ARC-54 and Vestige programs.
+* `contracts/tests` (pytest): 35 end-to-end tests on a private devnet against unchanged copies of the real MainNet Tinyman v2, ARC-54 and Vestige programs.
 * `test/devnetFlow.test.js`: the exact groups the UI builds are simulated, signed and submitted on the same devnet (full launch, claim, Vestige retry, cancel).
 * `contracts/tests/test_frontend_parity.py`: the pinned hashes and money constants in the app equal the compiled contract's.
 

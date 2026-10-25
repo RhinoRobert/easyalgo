@@ -452,3 +452,4 @@ button, a, summary, input { touch-action: manipulation; }
 @media (pointer: coarse) { .trade-banner-close, .trade-banner-mute { min-height: 44px; min-width: 44px; } }
 @media (max-width: 640px) { .trade-banner { gap: .5rem; padding: .65rem .7rem; } .trade-banner-link { gap: .6rem; } .trade-banner-cta { display: none; } .trade-banner-link .token-badge--md, .trade-banner-count { width: 2.4rem; height: 2.4rem; } }
 @media (pointer: coarse) { .alerts-toggle { min-height: 44px; min-width: 44px; } }
+.books-list { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .6rem; }

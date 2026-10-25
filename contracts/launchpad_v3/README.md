@@ -28,7 +28,7 @@ another node) and writes the connection details to `contracts/tests/devnet.local
 
 ```bash
 bash contracts/tests/devnet/start.sh
-cd contracts && python -m pytest tests                  # 24 tests: happy path, exact accounting, every refusal with its own assertion text, cancel, frontend parity
+cd contracts && python -m pytest tests                  # 35 tests: happy path, attack attempts, exact accounting, every refusal with its own assertion text, cancel, frontend parity
 python tests/js_fixture.py && cd .. && node --test test/devnetFlow.test.js     # the UI's exact groups, simulated, signed and submitted
 bash contracts/tests/devnet/stop.sh
 ```

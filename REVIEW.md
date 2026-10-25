@@ -138,7 +138,7 @@ Run the tests on a private devnet (needs `goal`/`algod` on Linux or WSL; the scr
 
 ```bash
 bash contracts/tests/devnet/start.sh            # writes contracts/tests/devnet.local.json (git-ignored, throwaway keys)
-cd contracts && .venv-v2/bin/python -m pytest tests     # 24 tests
+cd contracts && .venv-v2/bin/python -m pytest tests     # 35 tests
 .venv-v2/bin/python tests/js_fixture.py && cd .. && node --test test/devnetFlow.test.js   # the app's exact groups, signed and submitted
 bash contracts/tests/devnet/stop.sh
 ```
@@ -152,5 +152,8 @@ formal verification, or MainNet conditions such as a live price race.
 
 ## 11. Reporting
 
+The suite includes attack-style tests (`contracts/tests/test_attacks.py`): a stranger or the launcher using platform-only calls, over-releasing or reaching the creator's liquidity tokens, presenting a look-alike or someone else's asset as their own launch, claiming another creator's share, forging the funding payment (wrong receiver, wrong payer, close-out, rekey, extra transactions), updating, deleting or opting into the contract, donating to it, and moving the source pool price before a launch. Each must be refused for the exact assertion meant to stop it. As a check that these tests can fail, five guards were removed one at a time from a temporary copy of the compiled program (asset match in `launch_finish`, both platform-authority checks, the release cap, the creator-only claim) and the matching test failed every time; the shipped program was not changed. Two guards, `No close remainder` and `No funding rekey`, cannot be reached because Algorand itself refuses those transactions first; they are a second lock, and the tests only require that the attempt fails and leaves nothing behind.
+
+The Operations tab also compares the contract's real balances with its own records (`src/launchpad/reconcile.js`): PNET counters against the launch records, the full supply of in-progress launches, the platform's cancelled-token halves, creators' unclaimed and the platform's liquidity tokens, minimum ALGO, and any asset the records do not explain.
 Please send findings with: severity, the method and line, a concrete failing scenario (ideally as a pytest case using `contracts/tests/lp.py`), and a suggested fix.
 Findings that change the contract mean a new deployment; we will not deploy again until the review is complete.
