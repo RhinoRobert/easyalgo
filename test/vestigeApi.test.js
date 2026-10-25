@@ -21,7 +21,9 @@ test("asset rows keep only checked numbers and the 24h change is worked out here
   assert.ok(Math.abs(row.change1d - 10) < 1e-9);
   assert.equal(row.volume1d, 5.5);
   const bad = parseAsset({ price: "1", price1d: 0, volume1d: NaN, swaps1d: null });
-  assert.deepEqual(bad, { image: "", price: null, change1d: null, volume1d: null, swaps1d: null });
+  assert.deepEqual(bad, { name: "", ticker: "", image: "", price: null, change1d: null, volume1d: null, swaps1d: null });
+  assert.equal(parseAsset({ name: "Can‮ary", ticker: "CN\nRY" }).name, "Canary");
+  assert.equal(parseAsset({ ticker: "CN\nRY" }).ticker, "CNRY");
 });
 
 test("fetching assets batches ids, asks without cookies or referrer, and never throws", async () => {

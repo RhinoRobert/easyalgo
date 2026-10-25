@@ -5,6 +5,7 @@ import DirectoryPage from "./pages/DirectoryPage";
 import WalletButton from "./components/WalletButton";
 import Tabs, { useRoute } from "./components/Tabs";
 import TermsFooter from "./components/TermsFooter";
+import TradeToasts from "./components/TradeToasts";
 import MainSiteLink from "./components/MainSiteLink";
 import { usePeraWallet } from "./hooks/usePeraWallet";
 import { PLATFORM_WALLET } from "./launchpad/config";
@@ -58,6 +59,7 @@ export default function App() {
         )}
       </main>
       <TermsFooter />
+      <TradeToasts />
     </div>
   );
 }
