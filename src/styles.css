@@ -545,3 +545,4 @@ button:not(:disabled), .trade-button, .tab { transition: filter .15s, transform 
   .king-links a { white-space: nowrap; }
   .king .trade-button { width: auto; flex: none; padding: .45rem .9rem; }
 }
+.supply-chips .chip { flex: 1 1 0; min-width: 3.4rem; text-align: center; }

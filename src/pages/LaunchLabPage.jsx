@@ -60,10 +60,10 @@ const encoder = new TextEncoder();
 const SHOW_DEPLOYMENT_CONSOLE = import.meta.env.DEV
   && import.meta.env.VITE_SHOW_DEPLOYMENT_CONSOLE === "LOCAL_ONLY";
 const SUPPLY_PRESETS = [
-  { label: "1 million", value: "1000000" },
-  { label: "100 million", value: "100000000" },
-  { label: "1 billion", value: "1000000000" },
-  { label: "1 trillion", value: "1000000000000" },
+  { label: "1M", name: "1 million", value: "1000000" },
+  { label: "100M", name: "100 million", value: "100000000" },
+  { label: "1B", name: "1 billion", value: "1000000000" },
+  { label: "1T", name: "1 trillion", value: "1000000000000" },
 ];
 /** "1000000" as "1,000,000" for the preview; anything that is not a plain number is shown as typed. */
 function prettySupply(text) {
@@ -446,6 +446,7 @@ function TinymanAutoPool({ account, connect, connectionError, isConnecting, sign
             <span className="supply-chips" role="group" aria-label="Common supplies">
               {SUPPLY_PRESETS.map((preset) => (
                 <button type="button" key={preset.value} className={`chip${form.displaySupply === preset.value ? " chip--active" : ""}`} disabled={!!session}
+                  aria-label={preset.name} title={preset.name} aria-pressed={form.displaySupply === preset.value}
                   onClick={() => setForm({ ...form, displaySupply: preset.value })}>{preset.label}</button>
               ))}
             </span>
