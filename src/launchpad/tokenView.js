@@ -6,9 +6,11 @@ const UINT64_MAX = (1n << 64n) - 1n;
 const ROLES = ["manager", "reserve", "freeze", "clawback"];
 
 /** `#token/<asset id>` opens a token page and `#creator/<wallet>` a creator page; anything else is a tab id. An id that is not valid is treated as neither. */
-export function parseRoute(hash) {
+export function parseRoute(hash, pathname = "") {
   const id = String(hash ?? "").replace(/^#/, "");
-  const match = /^token\/(\d{1,20})$/.exec(id);
+  // A token's own address (`/token/<id>/`, the page a shared link opens) is the route while there is no `#` part; a `#` part always wins.
+  const fromPath = id === "" ? /^\/token\/(\d{1,20})\/?$/.exec(String(pathname)) : null;
+  const match = /^token\/(\d{1,20})$/.exec(id) ?? fromPath;
   if (match) {
     const assetId = BigInt(match[1]);
     if (assetId > 0n && assetId <= UINT64_MAX) return { tab: "token", assetId, address: null };
@@ -141,7 +143,10 @@ export function shareOnXUrl({ name, unit, assetId, burnedPct, pageUrl }) {
   const ticker = safeText(unit, 12).replace(/[^A-Za-z0-9]/g, "");
   const burn = burnedPct !== null && burnedPct !== undefined && burnedPct >= 79 ? ` ${burnedPct.toFixed(0)}% of its liquidity is burned.` : "";
   const text = `${title}${ticker ? ` ($${ticker})` : ""} just launched on PNET LaunchLab.${burn}`;
-  const link = `${String(pageUrl).replace(/#.*$/, "")}${tokenHash(assetId)}`;
+  // The token's own page, so the post's preview shows this token (its title and description) and not the site's general card.
+  let origin;
+  try { origin = new URL(pageUrl).origin; } catch { origin = String(pageUrl).replace(/[#?].*$/, "").replace(/\/+$/, ""); }
+  const link = `${origin}/token/${BigInt(assetId)}/`;
   return `https://x.com/intent/post?${new URLSearchParams({ text, url: link }).toString()}`;
 }
 

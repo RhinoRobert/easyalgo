@@ -24,6 +24,19 @@ project on the site.
 | Per-page browser titles | `src/App.jsx`, `src/pages/TokenPage.jsx` |
 | Tests that keep all of it true | `test/seo.test.js` |
 
+## Token pages, the feed and the 20-minute rebuild
+
+* Every finished launch gets its own page at `/token/<asset id>/`, written at build time from the chain (`scripts/seo/tokens.mjs`): its own title,
+  description, canonical address, social card text, a snapshot of its numbers and its safety checklist. The live app loads over the same address, so
+  a visitor sees the full interactive page (chart, holders, replies) while a crawler or a link preview reads the static text.
+* The Share on X button now links to that page, so a post shows the token's name and numbers instead of the generic site card.
+* `.github/workflows/pages.yml` also runs every 20 minutes. A token launched since the last run gets its page on the next run; until then its link
+  opens the live app (through `404.html`) but shows the generic card. If the chain can not be read during a run, the run fails and the previous site
+  stays live, so pages never disappear. GitHub pauses scheduled runs after 60 days without a commit, so push something now and then.
+* `/feed.xml` is an Atom feed of the newest launches (entry dates are the launches' block times). A free automation tool (for example IFTTT or Zapier)
+  can watch it and post each new launch to X; that is optional and needs your own account on that tool.
+* A token named with the banned name just gets no page; it does not stop the deploy.
+
 The deploy refuses to publish if the sitemap, pre-render or social image is missing, or if the banned name appears in any published file.
 
 ## Changing the text
@@ -55,7 +68,6 @@ results are mostly forum posts and project pages, so a focused page has a realis
 
 ## Limits to know about
 
-* Token pages (`/#token/...`) cannot be indexed, because search engines ignore `#`. Giving each token its own URL would need real path routing and
-  pre-rendering, which is a larger change.
+* Old-style token links (`/#token/...`) still work inside the app but can not be indexed, because search engines ignore `#`. Every launched token now also has a real page at `/token/<asset id>/` (see below); that is the address to share.
 * The main script bundle is large (about 870 kB), which slows the first load on phones. Splitting the wallet library out would help speed scores.
 * Older commits in the public repository still contain a mention of another project in a test comment (history was not rewritten).

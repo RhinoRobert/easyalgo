@@ -21,6 +21,11 @@ test("routes: #token/<id> opens a token, bad ids are not tokens", () => {
     assert.notEqual(parseRoute(bad).tab, "token", bad);
   }
   assert.equal(tokenHash(5n), "#token/5");
+  // a token's own address opens it, but only while there is no # part
+  assert.deepEqual(parseRoute("", "/token/3753533790/"), { tab: "token", assetId: 3753533790n, address: null });
+  assert.equal(parseRoute("#", "/token/5").assetId, 5n);
+  assert.equal(parseRoute("#recent", "/token/5/").tab, "recent", "a # part wins over the path");
+  for (const path of ["/", "/token/", "/token/abc/", "/token/0/", "/token/5/extra/", "/faq/", "/token/18446744073709551616/"]) assert.equal(parseRoute("", path).tab, "", path);
   const wallet = "CIVTUU6KLTYO26SPVEBDFBKP3UMZM2DPEO5RINODUVCI5NVIFC6HVNWS7E";
   assert.deepEqual(parseRoute(`#creator/${wallet}`), { tab: "creator", assetId: null, address: wallet });
   for (const bad of ["#creator/", "#creator/abc", `#creator/${wallet}x`, `#creator/${wallet.toLowerCase()}`, `#creator/${wallet.slice(1)}`]) assert.notEqual(parseRoute(bad).tab, "creator", bad);
@@ -105,7 +110,7 @@ test("search, cancelled filter and sorting", () => {
 test("share link: X intent with the token page, burn line only when the record shows it", () => {
   const url = new URL(shareOnXUrl({ name: "Tok‮en", unit: "TOK", assetId: 5n, burnedPct: 80, pageUrl: "https://easyalgo.org/#launch" }));
   assert.equal(url.origin + url.pathname, "https://x.com/intent/post");
-  assert.equal(url.searchParams.get("url"), "https://easyalgo.org/#token/5");
+  assert.equal(url.searchParams.get("url"), "https://easyalgo.org/token/5/");
   assert.match(url.searchParams.get("text"), /^Token \(\$TOK\) just launched on PNET LaunchLab\. 80% of its liquidity is burned\.$/);
   const plain = new URL(shareOnXUrl({ name: "Tok", unit: "", assetId: 5n, burnedPct: null, pageUrl: "https://easyalgo.org/" }));
   assert.equal(plain.searchParams.get("text"), "Tok just launched on PNET LaunchLab.");

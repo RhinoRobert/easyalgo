@@ -5,6 +5,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Rebuilt every 20 minutes so each newly launched token gets its own page and appears in the sitemap and feed. If the chain can not be read during
+  # the build, the build fails and the previous site stays live. (GitHub pauses scheduled runs after 60 days without a commit to the repository.)
+  schedule:
+    - cron: "7,27,47 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -49,6 +53,10 @@ jobs:
           test -f dist/og-image.png
           test -f dist/algorand-launchpad/index.html
           test -f dist/faq/index.html
+          test -f dist/404.html
+          test -f dist/feed.xml
+          test "$(ls dist/token/*/index.html | wc -l)" -ge 1
+          grep -q 'application/atom+xml' dist/index.html
           grep -q '<div id="root"><div class="shell">' dist/index.html
           grep -q 'application/ld+json' dist/index.html
           ! grep -rqiE 'rug[[:space:]]?\.?[[:space:]]?ninja' dist

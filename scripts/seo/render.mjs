@@ -18,16 +18,16 @@ export function inline(text) {
   });
 }
 
-const abs = (path) => `${SITE.origin}${path}`;
-const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>`;
+export const abs = (path) => `${SITE.origin}${path}`;
+export const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>`;
 
 export function faqJsonLd(items = FAQ) {
   return { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: items.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: plain(item.a) } })) };
 }
 
-const guideList = () => `<ul class="seo-related">${GUIDE_LINKS.map((link) => `<li><a href="${link.href}">${escapeHtml(link.label)}</a></li>`).join("")}</ul>`;
+export const guideList = () => `<ul class="seo-related">${GUIDE_LINKS.map((link) => `<li><a href="${link.href}">${escapeHtml(link.label)}</a></li>`).join("")}</ul>`;
 
-function head({ title, description, path, type = "website", css, extra = "", robots = "index,follow,max-snippet:-1,max-image-preview:large" }) {
+export function head({ title, description, path, type = "website", css, extra = "", robots = "index,follow,max-snippet:-1,max-image-preview:large" }) {
   const url = abs(path);
   return `<meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -57,12 +57,12 @@ function head({ title, description, path, type = "website", css, extra = "", rob
     ${extra}`;
 }
 
-const header = () => `<header class="shell-header">
+export const header = () => `<header class="shell-header">
       <a class="shell-brand seo-brand" href="/"><span class="shell-mark" aria-hidden="true">P</span><div><strong>${SITE.name}</strong><span>Algorand asset + Tinyman liquidity launcher</span></div></a>
       <nav class="seo-nav" aria-label="Main"><a href="/#launch">Launch a token</a><a href="/#recent">Recent launches</a><a href="/faq/">FAQ</a></nav>
     </header>`;
 
-const footer = () => `<footer class="terms">
+export const footer = () => `<footer class="terms">
       <nav aria-label="Guides"><strong>Guides</strong>${guideList()}</nav>
       <p class="terms-line">A <a href="${SITE.parent.url}" target="_blank" rel="noopener noreferrer">${SITE.parent.name}</a> project. Source code on <a href="${SITE.source}" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
       <p class="terms-line">Beta software. Tokens launched here are permanent, and nothing on this site is financial, legal or tax advice. Use only amounts you can afford to lose.</p>
@@ -173,25 +173,33 @@ export function buildHomeHtml(indexHtml) {
     .replace('<div id="root"></div>', `<div id="root">${renderHomePrerender()}</div>`);
 }
 
-export function sitemapXml() {
-  const urls = ALL_PATHS.map((path) => `  <url><loc>${abs(path)}</loc><lastmod>${SITE.updated}</lastmod><changefreq>${path === "/" ? "daily" : "monthly"}</changefreq><priority>${path === "/" ? "1.0" : "0.7"}</priority></url>`);
+export function sitemapXml(tokenPaths = [], builtOn = SITE.updated) {
+  const urls = [
+    ...ALL_PATHS.map((path) => `  <url><loc>${abs(path)}</loc><lastmod>${SITE.updated}</lastmod><changefreq>${path === "/" ? "daily" : "monthly"}</changefreq><priority>${path === "/" ? "1.0" : "0.7"}</priority></url>`),
+    ...tokenPaths.map((path) => `  <url><loc>${abs(path)}</loc><lastmod>${builtOn}</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>`),
+  ];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`;
 }
 
 export const robotsTxt = () => `User-agent: *\nAllow: /\n\nSitemap: ${abs("/sitemap.xml")}\n`;
 
-export function notFoundHtml(css) {
+/**
+ * The page GitHub Pages serves, with a 404 status, for any address that is not a file. It carries the app, so a token page that was launched after the
+ * last rebuild (`/token/<id>/`) still opens as the live app; search engines see the 404 status and the noindex tag. Its social card is the site's own,
+ * so a link shared before the token's own page exists still shows the brand instead of "not found".
+ */
+export function notFoundHtml(css, assetTags = []) {
   return `<!doctype html>
 <html lang="en" data-theme="dark">
   <head>
-    ${head({ title: "Page not found | PNET LaunchLab", description: "This page does not exist. Go back to the Algorand launchpad.", path: "/404.html", css, robots: "noindex,follow" })}
+    ${head({ title: HOME.title, description: HOME.description, path: "/", css: assetTags.length ? [] : css, robots: "noindex,follow", extra: assetTags.join("\n    ") })}
   </head>
   <body>
-    <div class="shell">
+    <div id="root"><div class="shell">
     ${header()}
     <main class="seo-page"><article><h1>Page not found</h1><p class="seo-lead">That page does not exist. Try the <a href="/">Algorand launchpad</a> or one of the guides below.</p>${guideList()}</article></main>
     ${footer()}
-    </div>
+    </div></div>
   </body>
 </html>
 `;
