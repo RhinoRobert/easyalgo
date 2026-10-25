@@ -44,7 +44,7 @@ export default function KingOfTheHill({ onChallenge }) {
   return (
     <section className="king" aria-label="King of the hill">
       <div className="king-stats">
-        <div><strong>{data ? data.tokensCreated.toString() : "…"}</strong><span>tokens created</span></div>
+        <div><strong>{data ? data.tokensLaunched.toString() : "…"}</strong><span>tokens launched</span></div>
       </div>
       <div className="king-main">
         <div className="king-badge"><Crown /><span>King of the hill</span></div>

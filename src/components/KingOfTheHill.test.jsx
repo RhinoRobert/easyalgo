@@ -25,12 +25,12 @@ describe("KingOfTheHill", () => {
   beforeEach(() => { loader.fail = false; loader.result = null; });
 
   it("shows how many tokens exist, the reigning token, what to beat, and where to trade it", async () => {
-    loader.result = { tokensCreated: 7n, king, runnerUp: null, round: 1 };
+    loader.result = { tokensLaunched: 7n, king, runnerUp: null, round: 1 };
     const challenge = vi.fn();
     render(<KingOfTheHill onChallenge={challenge} />);
     await waitFor(() => expect(screen.getByText("Moon Cat")).toBeInTheDocument());
     expect(screen.getByText("7")).toBeInTheDocument();
-    expect(screen.getByText("tokens created")).toBeInTheDocument();
+    expect(screen.getByText("tokens launched")).toBeInTheDocument();
     expect(screen.getByText("King of the hill")).toBeInTheDocument();
     expect(screen.getAllByText(/12\.35 ALGO/).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /trade moon cat on vestige/i })).toHaveAttribute("href", "https://vestige.fi/asset/3753721447");
@@ -40,7 +40,7 @@ describe("KingOfTheHill", () => {
   });
 
   it("invites the first launch when the crown is empty", async () => {
-    loader.result = { tokensCreated: 0n, king: null, runnerUp: null, round: 1 };
+    loader.result = { tokensLaunched: 0n, king: null, runnerUp: null, round: 1 };
     render(<KingOfTheHill />);
     await waitFor(() => expect(screen.getByText("The crown is empty.")).toBeInTheDocument());
     expect(screen.getByText("0")).toBeInTheDocument();
