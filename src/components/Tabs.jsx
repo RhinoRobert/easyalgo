@@ -21,7 +21,8 @@ export function useActiveTab() {
   return TABS.some((tab) => tab.id === id) ? id : "launch";
 }
 
-export default function Tabs({ active }) {
+/** `showOperations` is true only for the platform authority wallet: nobody else is shown that the tab exists. */
+export default function Tabs({ active, showOperations = false }) {
   const nav = useRef(null);
   // On a phone the row scrolls sideways: bring the chosen tab into view.
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function Tabs({ active }) {
   }, [active]);
   return (
     <nav className="tabs" aria-label="Sections" ref={nav}>
-      {TABS.map((tab) => (
+      {TABS.filter((tab) => tab.id !== "ops" || showOperations).map((tab) => (
         <a key={tab.id} href={`#${tab.id}`} className={`tab${active === tab.id ? " tab--active" : ""}`} aria-current={active === tab.id ? "page" : undefined}>
           {tab.label}
         </a>

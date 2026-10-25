@@ -32,7 +32,7 @@ half of the PNET back (the other half belongs to the platform wallet).
 
 **In scope (please focus here):** `contracts/launchpad_v3/contract.py`, and how it uses Tinyman v2, ARC-54 and Vestige.
 
-**Secondary:** the website's read-only views (src/launchpad/directory.js: recent, popular and wallet launches, and the operations page, whose release buttons build calls only the platform wallet can make), the group builders `src/launchpad/launchpadClient.js`, `src/launchpad/tinymanAdapter.js`, the unsigned deployment tooling `contracts/launchpad_v3/deploy.py`,
+**Secondary:** the website's read-only views (src/launchpad/directory.js: recent, popular and wallet launches, and the operations page, which the site shows only while the platform wallet is connected and whose release buttons build calls only that wallet can make), the group builders `src/launchpad/launchpadClient.js`, `src/launchpad/tinymanAdapter.js`, the unsigned deployment tooling `contracts/launchpad_v3/deploy.py`,
 and the build and hosting pipeline (`.github/workflows/pages.yml`, `docs/CLOUDFLARE_SETUP.md`).
 
 **Out of scope:** Tinyman, ARC-54, Vestige and Pera Wallet themselves (we only rely on them); the legacy contract 3609729732; `contracts/launchpad_v2/` (an earlier version kept only as a

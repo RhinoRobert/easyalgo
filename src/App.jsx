@@ -1,17 +1,26 @@
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import LaunchLabPage from "./pages/LaunchLabPage";
 import MyLaunchesPage from "./pages/MyLaunchesPage";
 import DirectoryPage from "./pages/DirectoryPage";
-import OperationsPage from "./pages/OperationsPage";
 import WalletButton from "./components/WalletButton";
 import Tabs, { useActiveTab } from "./components/Tabs";
 import TermsFooter from "./components/TermsFooter";
 import MainSiteLink from "./components/MainSiteLink";
+import { usePeraWallet } from "./hooks/usePeraWallet";
+import { PLATFORM_WALLET } from "./launchpad/config";
+
+// The operations view is fetched as a separate piece of code and only when the platform authority wallet is connected: for everyone else it is
+// not listed, not loaded and #ops behaves like any unknown address (the Launch page). This is a convenience, not security: the figures on it are
+// public chain data and the contract itself refuses every authority action from any other wallet.
+const OperationsPage = lazy(() => import("./pages/OperationsPage"));
 
 // There is no router and no backend: the address fragment picks the view and every view stays mounted (hidden when not shown), so switching tabs
 // never interrupts a launch that is waiting for the wallet. The wallet (Pera) signs every transaction group.
 export default function App() {
-  const active = useActiveTab();
+  const { account } = usePeraWallet();
+  const isAuthority = account === PLATFORM_WALLET;
+  const requested = useActiveTab();
+  const active = requested === "ops" && !isAuthority ? "launch" : requested;
   // A view loads its data the first time it is opened, not at page load.
   const [opened, setOpened] = useState(() => new Set([active]));
   if (!opened.has(active)) setOpened(new Set([...opened, active]));
@@ -30,13 +39,17 @@ export default function App() {
           <WalletButton />
         </div>
       </header>
-      <Tabs active={active} />
+      <Tabs active={active} showOperations={isAuthority} />
       <main className="shell-main">
         <div hidden={active !== "launch"}><LaunchLabPage /></div>
         {opened.has("mine") && <MyLaunchesPage active={active === "mine"} />}
         {opened.has("recent") && <DirectoryPage mode="recent" active={active === "recent"} />}
         {opened.has("popular") && <DirectoryPage mode="popular" active={active === "popular"} />}
-        {opened.has("ops") && <OperationsPage active={active === "ops"} />}
+        {isAuthority && opened.has("ops") && (
+          <Suspense fallback={null}>
+            <OperationsPage active={active === "ops"} />
+          </Suspense>
+        )}
       </main>
       <TermsFooter />
     </div>

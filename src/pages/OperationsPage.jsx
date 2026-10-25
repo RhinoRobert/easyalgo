@@ -23,12 +23,12 @@ function friendly(cause) {
 }
 
 /**
- * Operations: read-only for everyone (it is all public chain data). The controls only work for the platform authority wallet, and the
- * contract enforces that too, so disabling them here is a convenience and not the protection.
+ * Operations. App.jsx shows this page only while the platform authority wallet is connected. The buttons also check the wallet themselves (if the
+ * connected account changes while the page is open), and the contract refuses every authority action from any other account.
  */
 export default function OperationsPage({ active }) {
   const { algodClient } = useAlgorand();
-  const { account, connect, isConnecting, signAndSubmit } = usePeraWallet();
+  const { account, signAndSubmit } = usePeraWallet();
   const [state, setState] = useState({ status: "idle", data: null, deferred: [], error: "" });
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
@@ -99,23 +99,17 @@ export default function OperationsPage({ active }) {
   };
 
   const data = state.data;
-  const lock = !isAuthority ? "Connect the platform authority wallet to use this" : "";
+  const lock = "Only the platform authority wallet can do this";
   return (
     <section className="launchlab-page directory" hidden={!active}>
       <div className="instant-hero">
         <div className="af-section-eyebrow">Operations</div>
         <h1>Launchpad operations</h1>
-        <p>Health of the contract and its source pool, launches that need attention, and what the platform is owed. Anyone can read this: it is all public chain data. The controls work only for the platform authority wallet.</p>
+        <p>Health of the contract and its source pool, launches that need attention, and what the platform is owed. This page is shown only while the platform authority wallet is connected.</p>
       </div>
       {!configured && <div className="instant-warning">No launchpad application is configured for this build.</div>}
       {state.error && <div className="instant-error">Could not load operations data: {state.error}</div>}
       {notice && <div className="instant-warning">{notice}</div>}
-      {!isAuthority && (
-        <div className="instant-card ops-lock">
-          <p>{account ? `Connected as ${shortAddress(account)}, which is not the platform authority. Controls are switched off.` : "Controls are switched off until the platform authority wallet is connected."}</p>
-          {!account && <button className="af-btn-ghost" disabled={isConnecting} onClick={connect}>{isConnecting ? "Opening Pera…" : "Connect Pera"}</button>}
-        </div>
-      )}
       <div className="directory-bar">
         <span>{state.status === "loading" ? "Loading…" : data ? `Read at round ${data.round}` : ""}</span>
         <button className="af-btn-ghost" disabled={state.status === "loading" || Boolean(busy)} onClick={load}>Refresh</button>
